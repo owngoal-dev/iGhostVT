@@ -43,9 +43,4 @@ if [ -x "$launchctl" ]; then
     fi
 fi
 
-uicache=@PREFIX@/usr/bin/uicache
-if [ -x "$uicache" ]; then
-    "$uicache" -p @PREFIX@/Applications/iGhostVT.app || true
-fi
-
 exit 0

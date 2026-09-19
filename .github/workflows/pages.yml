@@ -10,6 +10,11 @@ on:
     paths:
       - Documents/Site/**
       - .github/workflows/pages.yml
+  release:
+    types: [published, edited]
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -23,13 +28,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  refresh-release:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Refresh Pages from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run pages.yml --ref main
+
   deploy:
+    if: github.event_name != 'release' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check out the shared depiction updater
+        uses: actions/checkout@v4
+        with:
+          repository: owngoal-dev/owngoal-packages
+          ref: 96d9a6e43f6501f6086239db3325b2fa0136574b
+          path: .depiction-tools
+          sparse-checkout: scripts/update-depiction-changelogs.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Fetch GitHub release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .depiction-tools/scripts/update-depiction-changelogs.py --workspace "$(dirname "$GITHUB_WORKSPACE")" --repo iGhostVT
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -8,6 +8,8 @@ Description: Ghostty-powered terminal for iOS and visionOS
  is still going when you switch apps and still there when you come back.
  Runs on iPhone, iPad and Apple Vision Pro.
 Icon: https://owngoal-dev.github.io/iGhostVT/icon.png
+Depiction: https://owngoal-dev.github.io/iGhostVT/
+SileoDepiction: https://owngoal-dev.github.io/iGhostVT/depiction.json
 Maintainer: OwnGoal Studio <not-gonna-reply@owngoal.dev>
 Author: OwnGoal Studio <not-gonna-reply@owngoal.dev>
 Section: Utilities

@@ -20,15 +20,6 @@ if [ "${1:-}" = remove ] || [ "${1:-}" = purge ]; then
         "$killall" -9 ighostvtd 2>/dev/null || true
         "$killall" -9 ighostvtd-io 2>/dev/null || true
     fi
-
-    # The bundle is gone; -u by its old path drops any registration prerm
-    # missed. If uikittools refuses the dead path, rebuilding the whole
-    # cache is the reliable way to make the icon disappear.
-    uicache=@PREFIX@/usr/bin/uicache
-    if [ -x "$uicache" ]; then
-        "$uicache" -u @PREFIX@/Applications/iGhostVT.app 2>/dev/null ||
-            "$uicache" -a || true
-    fi
 fi
 
 exit 0

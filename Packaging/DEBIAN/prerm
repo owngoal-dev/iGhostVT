@@ -25,14 +25,6 @@ if [ "${1:-}" = remove ] || [ "${1:-}" = deconfigure ]; then
         "$killall" -9 ighostvtd 2>/dev/null || true
         "$killall" -9 ighostvtd-io 2>/dev/null || true
     fi
-
-    # Unregister while the bundle still exists — uicache -u takes the app
-    # path, and after dpkg deletes the files the postrm fallback is all
-    # that's left.
-    uicache=@PREFIX@/usr/bin/uicache
-    if [ -x "$uicache" ]; then
-        "$uicache" -u @PREFIX@/Applications/iGhostVT.app || true
-    fi
 fi
 
 exit 0
