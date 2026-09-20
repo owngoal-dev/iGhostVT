@@ -142,7 +142,7 @@ the CI matrix the `visionos` group. `MSDisplayLink`, `GhosttyKit`,
 ### 5. The app
 
 landed as the tree's `#if os(visionOS)` guards (see the visionOS section of
-CLAUDE.md), seven files:
+AGENTS.md), seven files:
 
 - `project.pbxproj` — app target: `SUPPORTED_PLATFORMS = "iphoneos
   iphonesimulator macosx xros xrsimulator"`, `TARGETED_DEVICE_FAMILY =

@@ -11,9 +11,9 @@ A real terminal on iPhone, iPad, Apple Vision Pro, and Mac, drawn by the same en
 
 ## Install
 
-On a jailbroken device, add the OwnGoal Studio repository in Sileo, Zebra, or another package manager:
+On a jailbroken device, add the OwnGoal Studio repository in your preferred package manager:
 
-**[Add to Sileo](sileo://source/https://apt.owngoal.dev)** · [apt.owngoal.dev](https://apt.owngoal.dev/)
+**[apt.owngoal.dev](https://apt.owngoal.dev/)**
 
 Packages are also on [GitHub Releases](https://github.com/owngoal-dev/iGhostVT/releases). Choose the file that matches your device.
 

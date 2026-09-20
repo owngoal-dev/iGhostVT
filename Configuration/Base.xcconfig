@@ -10,7 +10,7 @@
 // visionOS. The app and the daemon build for xros (a jailbroken Vision Pro is
 // the same product as a jailbroken iPad: the app renders, ighostvtd owns the
 // shells). 1.0 is the lowest the SDK offers and what libghostty-spm declares;
-// the visionOS section of CLAUDE.md lists the one construct that would raise
+// the visionOS section of AGENTS.md lists the one construct that would raise
 // it (a multi-child `#available` branch, whose TupleContent is visionOS 26+).
 XROS_DEPLOYMENT_TARGET = 1.0
 
