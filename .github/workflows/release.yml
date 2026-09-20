@@ -97,10 +97,18 @@ jobs:
       - name: Build roothide package (iphoneos-arm64e)
         run: make deb-roothide
 
+      # Each job is its own build, so each ships the dSYMs of its own
+      # binaries; neither strip nor ldid touches LC_UUID, so they match.
+      - name: Archive dSYMs
+        run: |
+          version="$(make --no-print-directory print-version)"
+          cd /private/tmp/ighostvt-deriveddata/Build/Products/Release-iphoneos
+          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-roothide-dSYMs.zip" *.dSYM
+
       - name: Checksums
         run: |
           cd build/Packages
-          shasum -a 256 *.deb | tee SHA256SUMS.roothide
+          shasum -a 256 *.deb *-dSYMs.zip | tee SHA256SUMS.roothide
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -108,6 +116,7 @@ jobs:
           name: ighostvt-roothide
           path: |
             build/Packages/*.deb
+            build/Packages/*-dSYMs.zip
             build/Packages/SHA256SUMS.roothide
           if-no-files-found: error
 
@@ -140,10 +149,16 @@ jobs:
       - name: Build rootless package (iphoneos-arm64)
         run: make deb-rootless
 
+      - name: Archive dSYMs
+        run: |
+          version="$(make --no-print-directory print-version)"
+          cd /private/tmp/ighostvt-deriveddata/Build/Products/Release-iphoneos
+          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-rootless-dSYMs.zip" *.dSYM
+
       - name: Checksums
         run: |
           cd build/Packages
-          shasum -a 256 *.deb | tee SHA256SUMS.rootless
+          shasum -a 256 *.deb *-dSYMs.zip | tee SHA256SUMS.rootless
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -151,6 +166,7 @@ jobs:
           name: ighostvt-rootless
           path: |
             build/Packages/*.deb
+            build/Packages/*-dSYMs.zip
             build/Packages/SHA256SUMS.rootless
           if-no-files-found: error
 
@@ -187,10 +203,16 @@ jobs:
       - name: Build visionOS package (xros-arm64e)
         run: make deb-xros
 
+      - name: Archive dSYMs
+        run: |
+          version="$(make --no-print-directory print-version)"
+          cd /private/tmp/ighostvt-deriveddata/Build/Products/Release-xros
+          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-xros-dSYMs.zip" *.dSYM
+
       - name: Checksums
         run: |
           cd build/Packages
-          shasum -a 256 *.deb | tee SHA256SUMS.xros
+          shasum -a 256 *.deb *-dSYMs.zip | tee SHA256SUMS.xros
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -198,6 +220,7 @@ jobs:
           name: ighostvt-xros
           path: |
             build/Packages/*.deb
+            build/Packages/*-dSYMs.zip
             build/Packages/SHA256SUMS.xros
           if-no-files-found: error
 
@@ -233,6 +256,14 @@ jobs:
       # (arm64 + x86_64) and hardened-runtime; see the header of this file.
       - name: Build the macOS app
         run: make mac-zip
+
+      # The app is the Catalyst build, the helper and CLI the plain macOS one.
+      - name: Archive dSYMs
+        run: |
+          version="$(make --no-print-directory print-version)"
+          cd /private/tmp/ighostvt-deriveddata/Build/Products
+          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-macos-dSYMs.zip" \
+            Release-maccatalyst/*.dSYM Release/*.dSYM
 
       - name: Checksums
         run: |
@@ -300,9 +331,11 @@ jobs:
           rm -f dist/SHA256SUMS.roothide dist/SHA256SUMS.rootless dist/SHA256SUMS.xros
           shopt -s nullglob
           debs=(dist/*.deb)
-          zips=(dist/*.zip)
+          zips=(dist/*-macos.zip)
+          dsyms=(dist/*-dSYMs.zip)
           [[ "${#debs[@]}" -eq 3 ]] || { echo "expected 3 debs, got ${#debs[@]}" >&2; exit 1; }
           [[ "${#zips[@]}" -eq 1 ]] || { echo "expected 1 zip, got ${#zips[@]}" >&2; exit 1; }
+          [[ "${#dsyms[@]}" -eq 4 ]] || { echo "expected 4 dSYM zips, got ${#dsyms[@]}" >&2; exit 1; }
 
       - name: Publish GitHub Release
         env:
