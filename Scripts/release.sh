@@ -104,11 +104,13 @@ for _ in $(seq 1 30); do
     served="$(curl -fsSL "$apt_index" 2>/dev/null \
         | awk '/^Package: wiki.qaq.ighostvt$/{p=1} p&&/^Version:/{print $2; p=0}' \
         | sort -u || true)"
-    [[ "$served" == "$version" ]] && break
+    # The repository keeps earlier versions beside the new one.
+    grep -qxF "$version" <<<"$served" && break
     sleep 10
 done
-[[ "$served" == "$version" ]] || die "the APT repository still serves '$served'"
-echo "    served for every architecture"
+grep -qxF "$version" <<<"$served" \
+    || die "the APT repository serves '$(tr '\n' ' ' <<<"$served")', not $version"
+echo "    served"
 
 echo "==> released $version (build $build)"
 if [[ "${INSTALL:-0}" == "1" ]]; then
