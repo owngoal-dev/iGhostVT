@@ -77,7 +77,9 @@ left alone.
 
 ## Layout
 
-FlowDown-style: `iGhostVT/main.swift` (manual `UIApplicationMain`) +
+FlowDown-style: `iGhostVT/main.swift` (manual `UIApplicationMain`, which on
+iOS first deletes this bundle's `.savedState` through `SceneRestorationReset`
+— never on the Mac, where that folder holds AppKit's window frames) +
 `Application/` (delegates) + `Backend/` (sessions, theme, transport) +
 `Interface/<feature>/` + `Resources/`. The daemon is two programs:
 

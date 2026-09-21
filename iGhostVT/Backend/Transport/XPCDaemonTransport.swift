@@ -514,8 +514,10 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         xpc_connection_activate(connection)
 
         let hello = Self.makeMessage(.hello)
+        isAwaitingHello = true
         xpc_connection_send_message_with_reply(connection, hello, queue) { [weak self] reply in
             guard let self else { return }
+            isAwaitingHello = false
             guard Self.replyCode(of: reply) == .success else {
                 teardown(
                     reason: String(
@@ -526,7 +528,28 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             }
             openOrAttachSession()
         }
+        // A missing service answers the hello with an error at once. A
+        // daemon launchd has registered but that never picks the message up
+        // (hung, or crash-looping under KeepAlive) answers with nothing, and
+        // the tab would say "Connecting…" for good with no way to retry.
+        queue.asyncAfter(deadline: .now() + Self.helloTimeout) { [weak self] in
+            guard let self, isAwaitingHello,
+                  lock.locked({ self.connection === connection }) else { return }
+            isAwaitingHello = false
+            AppLog.error(.transport, "no hello reply after \(Int(Self.helloTimeout)) s")
+            teardown(
+                reason: String(
+                    localized: "Unable to connect to the terminal helper. Restart iGhostVT and try again."
+                )
+            )
+        }
     }
+
+    /// Generous on purpose: the minute after a userspace reboot runs at a
+    /// load of several hundred, and a slow hello is not a dead daemon.
+    private static let helloTimeout: TimeInterval = 20
+    /// Confined to `queue`.
+    private var isAwaitingHello = false
 
     private var hasLoggedFirstOutput = false
 

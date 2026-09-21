@@ -1,6 +1,6 @@
 import Foundation
 
-/// Tells a running app that an update has replaced it.
+/// Tells a running app that its executable was replaced or removed.
 ///
 /// dpkg installs each file by renaming the new copy over the old one, so the
 /// executable this process was launched from loses its last name while the
@@ -25,12 +25,17 @@ enum ExecutableWatch {
         let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: descriptor, eventMask: [.delete, .link], queue: .main)
         // The handler holds the source, so the watch outlives this call;
         // cancelling releases both.
-        source.setEventHandler {
+        let check = {
+            guard !source.isCancelled else { return }
             var status = stat()
             guard fstat(descriptor, &status) == 0, status.st_nlink == 0 else { return }
             source.cancel()
             replaced()
         }
+        source.setEventHandler(handler: check)
+        // Unlink may happen between open() and kernel registration. Check once
+        // registration completes as well as on subsequent filesystem events.
+        source.setRegistrationHandler(handler: check)
         source.setCancelHandler { close(descriptor) }
         source.resume()
     }

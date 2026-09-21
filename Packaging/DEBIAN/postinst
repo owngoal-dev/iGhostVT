@@ -3,42 +3,53 @@
 # @PREFIX@ is empty for roothide, whose package is installed inside the jbroot
 # it picked this boot and whose tools resolve every path against it anyway, and
 # /var/jb for a rootless bootstrap, where the prefix has to be spelled out.
-launch_plist=@PREFIX@/Library/LaunchDaemons/wiki.qaq.ighostvtd.plist
 
-launchctl=@PREFIX@/usr/bin/launchctl
-[ -x "$launchctl" ] || launchctl=/bin/launchctl
-killall=@PREFIX@/usr/bin/killall
-[ -x "$killall" ] || killall=/usr/bin/killall
+find_tool() {
+    for candidate in "@PREFIX@/usr/bin/$1" "/usr/bin/$1" "/bin/$1"; do
+        if [ -x "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# The daemon id is named once, alone on its line. A rename that swallows the
+# space before a redirect turns `system/<id> 2>/dev/null` into
+# `system/<id>2>/dev/null`: still valid sh, so `sh -n` passes, but launchctl is
+# handed the wrong label and its errors are no longer silenced.
+label=wiki.qaq.ighostvtd
+launch_plist="@PREFIX@/Library/LaunchDaemons/$label.plist"
 
 # A running app is executing the binary dpkg just replaced, attached to the
 # daemon this script is about to restart — kill it so the next launch runs
-# what was installed instead of a stale process on a dead XPC link. Sessions
-# survive: they live in the daemon, and the new daemon instance re-reads its
-# registry.
-if [ -x "$killall" ]; then
+# what was installed instead of a stale process on a dead XPC link. Its
+# sessions end with the upgrade either way: they live in ighostvtd-io, which
+# exits when the daemon it is a child of is booted out.
+if killall="$(find_tool killall)"; then
     "$killall" -9 iGhostVT 2>/dev/null || true
 fi
 
-if [ -x "$launchctl" ]; then
+if launchctl="$(find_tool launchctl)"; then
     # roothide's launchctl lands jbroot daemons in the per-user domain even
     # when asked for system, so an upgrade that only boots out system/ leaves
     # the old instance running and holding the mach service — the fresh one
     # then crash-loops on a dead listener and the app sees nothing but
     # "connection lost". Boot out every domain the service can live in.
-    "$launchctl" bootout system/wiki.qaq.ighostvtd 2>/dev/null || true
-    "$launchctl" bootout user/501/wiki.qaq.ighostvtd 2>/dev/null || true
-    "$launchctl" bootout gui/501/wiki.qaq.ighostvtd 2>/dev/null || true
+    "$launchctl" bootout "system/$label" 2>/dev/null || true
+    "$launchctl" bootout "user/501/$label" 2>/dev/null || true
+    "$launchctl" bootout "gui/501/$label" 2>/dev/null || true
     # A daemon disabled by an earlier bootout -w (or a failed remove) stays
     # disabled across bootstrap and fails with EPERM; clear the override
     # first.
-    "$launchctl" enable system/wiki.qaq.ighostvtd 2>/dev/null || true
+    "$launchctl" enable "system/$label" 2>/dev/null || true
     "$launchctl" bootstrap system "$launch_plist"
     # The bootout above races the bootstrap on some launchd builds; confirm
     # the service actually came up in one of its domains so a broken install
     # is loud here instead of a silent "connection lost" in the app.
-    if ! "$launchctl" print system/wiki.qaq.ighostvtd >/dev/null 2>&1 &&
-        ! "$launchctl" print user/501/wiki.qaq.ighostvtd >/dev/null 2>&1 &&
-        ! "$launchctl" print gui/501/wiki.qaq.ighostvtd >/dev/null 2>&1; then
+    if ! "$launchctl" print "system/$label" >/dev/null 2>&1 &&
+        ! "$launchctl" print "user/501/$label" >/dev/null 2>&1 &&
+        ! "$launchctl" print "gui/501/$label" >/dev/null 2>&1; then
         echo "warning: ighostvtd did not register with launchd; try a reboot" >&2
     fi
 fi

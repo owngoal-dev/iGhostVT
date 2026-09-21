@@ -19,7 +19,9 @@ ifeq ($(PLATFORM),ios)
 DEVICE_DESTINATION  := generic/platform=iOS
 PRODUCTS_SDK        := iphoneos
 DEB_ARCH_OS         := iphoneos
-DEB_DEPENDS         := firmware (>= 15.0), uikittools
+# uikittools' triggers register the app; the maintainer scripts run launchctl
+# and killall, and killall ships in shell-cmds.
+DEB_DEPENDS         := firmware (>= 15.0), uikittools, launchctl, shell-cmds
 else ifeq ($(PLATFORM),xros)
 DEVICE_DESTINATION  := generic/platform=visionOS
 PRODUCTS_SDK        := xros
@@ -28,7 +30,7 @@ PRODUCTS_SDK        := xros
 # id, same version, different binaries). Override PACKAGE_ARCHITECTURE if the
 # device's dpkg wants another label.
 DEB_ARCH_OS         := xros
-DEB_DEPENDS         := firmware (>= 1.0), uikittools
+DEB_DEPENDS         := firmware (>= 1.0), uikittools, launchctl, shell-cmds
 else
 $(error PLATFORM must be ios or xros, got '$(PLATFORM)')
 endif
@@ -179,6 +181,11 @@ check:
 	done
 	@[[ "$(APP_VERSION)" =~ ^[0-9]+\.[0-9]+\.[0-9]+$$ ]] || { echo "error: MARKETING_VERSION must look like 1.2.3, got '$(APP_VERSION)'" >&2; exit 65; }
 	@[[ "$(BUILD_NUMBER)" =~ ^[0-9]+$$ ]] || { echo "error: CURRENT_PROJECT_VERSION must be an integer, got '$(BUILD_NUMBER)'" >&2; exit 65; }
+	@for script in postinst prerm postrm; do \
+		sh -n "$(ROOT_DIR)/Packaging/DEBIAN/$$script" || { echo "error: Packaging/DEBIAN/$$script does not parse" >&2; exit 65; }; \
+	done
+	@! grep -nE '[A-Za-z0-9_@]2>' "$(ROOT_DIR)"/Packaging/DEBIAN/* \
+		|| { echo "error: a redirect is glued to the word before it above — launchctl would be handed '<label>2' and its errors would show" >&2; exit 65; }
 	@plutil -lint "$(ENTITLEMENTS)"
 	@plutil -lint "$(DAEMON_ENTITLEMENTS)" "$(CLI_ENTITLEMENTS)" "$(APPEX_ENTITLEMENTS)" "$(LAUNCH_DAEMON)"
 	@[[ "$$(/usr/libexec/PlistBuddy -c 'Print :SoftResourceLimits:NumberOfFiles' "$(LAUNCH_DAEMON)")" == "10240" ]] || { echo "error: the daemon and its shells require a 10240 soft file-descriptor limit" >&2; exit 65; }
@@ -202,8 +209,9 @@ check:
 			"$(ROOT_DIR)/iGhostVTIO" "$(ROOT_DIR)/iGhostVTCLI" "$(ROOT_DIR)/iGhostVTWidgets" \
 			"$(ROOT_DIR)/Shared" "$(ROOT_DIR)/Tests" || true)"; \
 		if [[ -n "$$hits" ]]; then \
-			echo "warning: an SDK XPC macro is named in Swift below — that links /usr/lib/swift/libswiftXPC.dylib, which iOS $$floor does not have, and dyld kills the process at launch. Use iGhostVTXPC (Shared/Protocol/iGhostVTXPC.swift):" >&2; \
+			echo "error: an SDK XPC macro is named in Swift below — that links /usr/lib/swift/libswiftXPC.dylib, which iOS $$floor does not have, and dyld kills the process at launch. Use iGhostVTXPC (Shared/Protocol/iGhostVTXPC.swift):" >&2; \
 			echo "$$hits" >&2; \
+			exit 65; \
 		fi; \
 	fi
 

@@ -351,6 +351,15 @@ for script in postinst prerm postrm; do
 done
 chmod 0644 "$debian/control"
 chmod 0755 "$debian/postinst" "$debian/prerm" "$debian/postrm"
+# What dpkg will run is the substituted copy, so that is the one checked: it
+# has to parse, and no packager placeholder may be left in anything shipped.
+for script in postinst prerm postrm; do
+    sh -n "$debian/$script"
+done
+if grep -nE '@[A-Z_]+@' "$debian/control" "$debian/postinst" "$debian/prerm" "$debian/postrm" "$installed_plist"; then
+    echo "error: an unsubstituted placeholder is left in the package (above)" >&2
+    exit 65
+fi
 
 dpkg-deb --root-owner-group -Zzstd -b "$staging" "$temporary_deb"
 [[ "$(dpkg-deb -f "$temporary_deb" Package)" == "$package_id" ]]
