@@ -43,6 +43,7 @@ def capture(args):
     schedule.sort(key=lambda item: item[0])
     frames = []
     events = []
+    start_epoch_ns = time.time_ns()
     start = time.monotonic_ns()
     interval_ns = round(1_000_000_000 / args.fps)
     index = 0
@@ -74,12 +75,14 @@ def capture(args):
                 "start_s": (before - start) / 1_000_000_000,
                 "end_s": (after - start) / 1_000_000_000,
                 "time_s": ((before + after) / 2 - start) / 1_000_000_000,
+                "epoch_s": (start_epoch_ns + (before + after) / 2 - start) / 1_000_000_000,
             })
             index += 1
     finally:
         (directory / "capture.json").write_text(
             json.dumps({
                 "source": "vphone virtual display screenshot",
+                "capture_start_epoch_s": start_epoch_ns / 1_000_000_000,
                 "requested_fps": args.fps,
                 "duration_s": args.duration,
                 "frames": frames,
@@ -184,6 +187,7 @@ def analyze(args):
             events.append({
                 "frame": index,
                 "time_s": float(times[index]),
+                "epoch_s": records[index].get("epoch_s"),
                 "reason": ",".join(name for name, active in (
                     ("ink_loss", blank), ("brightness", flash),
                     ("line_loss", line_loss), ("pixel_return", transient_pixels)
@@ -235,11 +239,13 @@ def analyze(args):
     (directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     with (directory / "metrics.csv").open("w", newline="") as output:
         writer = csv.writer(output)
-        writer.writerow(["frame", "time_s", "ink_fraction", "mean_gray", "flagged"])
+        writer.writerow(["frame", "time_s", "epoch_s", "ink_fraction", "mean_gray", "flagged"])
         flagged = {event["frame"] for event in events}
         for index, row in enumerate(rows):
-            writer.writerow([index, f"{row['time_s']:.6f}", f"{row['ink']:.6f}",
-                             f"{row['mean']:.3f}", index in flagged])
+            epoch_s = records[index].get("epoch_s")
+            writer.writerow([index, f"{row['time_s']:.6f}",
+                             f"{epoch_s:.6f}" if epoch_s is not None else "",
+                             f"{row['ink']:.6f}", f"{row['mean']:.3f}", index in flagged])
     for number, finding in enumerate(findings, 1):
         index = finding["example"]["frame"]
         images = []

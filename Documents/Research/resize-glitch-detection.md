@@ -117,7 +117,8 @@ terminal-grid, and IOSurface observations recorded together.
 patch for that run. It samples the active grid's nonblank row/byte counts and
 the presented IOSurface dimensions, identity, and scale at each display tick,
 then writes a 30-second CSV in the app's Documents directory. Match its epoch
-timestamps to the pixel capture. A screenshot that clears while the grid
+timestamps to the pixel capture's per-frame `epoch_s`; the earlier A/B
+captures predate this timestamp field. A screenshot that clears while the grid
 stays populated and the IOSurface disappears suggests presentation; a grid
 that clears while the IOSurface remains valid directs the investigation to
 Ghostty's resize logic or PTY output. The per-frame grid read adds CPU load,
