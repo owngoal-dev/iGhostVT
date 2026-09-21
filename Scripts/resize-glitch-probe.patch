@@ -1,0 +1,18 @@
+diff --git a/iGhostVT/Interface/Main/RootView.swift b/iGhostVT/Interface/Main/RootView.swift
+index f0550cb..762959e 100644
+--- a/iGhostVT/Interface/Main/RootView.swift
++++ b/iGhostVT/Interface/Main/RootView.swift
+@@ -283,0 +284 @@ private struct TerminalPane: View {
++    @State private var resizeProbeInset: CGFloat = 0
+@@ -287,0 +289,11 @@ private struct TerminalPane: View {
++            .padding(.trailing, resizeProbeInset)
++            .task {
++                guard isActive else { return }
++                try? await Task.sleep(nanoseconds: 3_000_000_000)
++                for _ in 0..<4 {
++                    withAnimation(.linear(duration: 1.2)) { resizeProbeInset = 90 }
++                    try? await Task.sleep(nanoseconds: 1_400_000_000)
++                    withAnimation(.linear(duration: 1.2)) { resizeProbeInset = 0 }
++                    try? await Task.sleep(nanoseconds: 1_400_000_000)
++                }
++            }

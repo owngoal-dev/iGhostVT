@@ -1,0 +1,59 @@
+diff --git a/iGhostVT/Backend/Session/LockableTerminalView.swift b/iGhostVT/Backend/Session/LockableTerminalView.swift
+index 9f0e2fd..6e27eed 100644
+--- a/iGhostVT/Backend/Session/LockableTerminalView.swift
++++ b/iGhostVT/Backend/Session/LockableTerminalView.swift
+@@ -7,0 +8 @@ import GhosttyTerminal
++import IOSurface
+@@ -19,0 +21,36 @@ final class LockableTerminalView: TerminalView {
++    weak var resizeProbeSession: InMemoryTerminalSession?
++    private var resizeProbeLink: CADisplayLink?
++    private var resizeProbeStarted: TimeInterval?
++    private var resizeProbeRows: [String] = []
++
++    @objc private func sampleResizeProbe(_: CADisplayLink) {
++        guard let started = resizeProbeStarted else { return }
++        let sublayer = layer.sublayers?.first
++        let surface = sublayer?.contents as? IOSurface
++        let frame = sublayer?.frame ?? .zero
++        let grid = resizeProbeSession?.readViewportText()
++        let gridLines = grid?.split(separator: "\n", omittingEmptySubsequences: false) ?? []
++        let nonblankRows = gridLines.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
++        let nonblankBytes = grid?.utf8.filter { $0 != 32 && $0 != 10 && $0 != 13 }.count ?? -1
++        let identity = surface.map { ObjectIdentifier($0).hashValue } ?? 0
++        resizeProbeRows.append([
++            String(format: "%.6f", Date().timeIntervalSince1970),
++            String(format: "%.3f", bounds.width), String(format: "%.3f", bounds.height),
++            String(format: "%.3f", frame.width), String(format: "%.3f", frame.height),
++            String(format: "%.6f", sublayer?.contentsScale ?? 0),
++            sublayer?.contentsGravity.rawValue ?? "none",
++            String(surface?.width ?? 0), String(surface?.height ?? 0),
++            String(surface?.seed ?? 0), String(identity),
++            String(nonblankRows), String(nonblankBytes), grid == nil ? "0" : "1"
++        ].joined(separator: ","))
++        guard Date().timeIntervalSince1970 - started >= 30 else { return }
++        resizeProbeLink?.invalidate()
++        resizeProbeLink = nil
++        let header = "time,viewWidth,viewHeight,layerWidth,layerHeight,scale,gravity,surfaceWidth,surfaceHeight,surfaceSeed,surfaceIdentity,nonblankRows,nonblankBytes,gridPresent\n"
++        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
++            .appendingPathComponent("resize-state-probe-\(UUID().uuidString).csv")
++        try? (header + resizeProbeRows.joined(separator: "\n") + "\n")
++            .write(to: url, atomically: true, encoding: .utf8)
++        AppLog.info(.ghostty, "resize state probe saved: \(url.path)")
++    }
++
+@@ -179,0 +217,9 @@ final class LockableTerminalView: TerminalView {
++        if window != nil, resizeProbeLink == nil, resizeProbeStarted == nil {
++            resizeProbeStarted = Date().timeIntervalSince1970
++            let link = CADisplayLink(target: self, selector: #selector(sampleResizeProbe))
++            link.add(to: .main, forMode: .common)
++            resizeProbeLink = link
++        } else if window == nil {
++            resizeProbeLink?.invalidate()
++            resizeProbeLink = nil
++        }
+diff --git a/iGhostVT/Backend/Session/TerminalTab.swift b/iGhostVT/Backend/Session/TerminalTab.swift
+index a65f440..3d56b5d 100644
+--- a/iGhostVT/Backend/Session/TerminalTab.swift
++++ b/iGhostVT/Backend/Session/TerminalTab.swift
+@@ -245,0 +246 @@ final class TerminalTab: ObservableObject, Identifiable {
++            view.resizeProbeSession = self?.store.session
