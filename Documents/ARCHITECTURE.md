@@ -219,7 +219,7 @@ anyway would hand over the root shell that was just refused.
   window of a cold launch claims the persisted IDs and recreates one tab per
   live session, which reattaches and replays.
 
-## Packaging (from CocoaInspector)
+## Packaging (from Inspector)
 
 - `Configuration/Version.xcconfig` is the single version source;
   `make set-version` writes it, the Debian control and .deb filename read it.
