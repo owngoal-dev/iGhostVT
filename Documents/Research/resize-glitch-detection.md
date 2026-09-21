@@ -17,18 +17,31 @@ python3 Scripts/resize-glitch-detector.py capture \
   --output /private/tmp/resize-capture --duration 25 --fps 60
 python3 Scripts/resize-glitch-detector.py analyze \
   /private/tmp/resize-capture --roi 0.02,0.64,0.58,0.82 \
-  --baseline-start 2 --analyze-from 6
+  --baseline-start 2 --analyze-from 6 --stable-content
 ```
 
 For a controlled run, fill the screen with numbered lines shorter than the
-smallest test width, clear prior scrollback with `ESC[3J`, and leave a silent
-program such as `sleep 120` in the foreground. That makes output and wrapping
-unlikely to be mistaken for a renderer defect. The iPhone vphone has no resize
-handle. `Scripts/resize-glitch-probe.patch` temporarily animates a 0–90 pt
-right inset four times, starting three seconds after the terminal mounts.
-Apply it to the app, build and install a `.deb` on vphone, capture the run, and
-reverse the patch before making a normal package. The tested grid varied
-between 43×37 and 34×37.
+smallest test width and leave a silent program such as `sleep 120` in the
+foreground. `Scripts/resize-repro/static.sh` does this; the prompt and
+synchronized-output cases have neighboring scripts. The `--stable-content`
+mode compares every frame to the settled baseline and flags a loss of at
+least 65% of its text ink. It is for fixed content only; the generic mode
+uses local before/after comparisons. Give a one-line prompt its own narrow
+crop, or other rows will dilute its disappearance. The detector keeps line
+bands at least eight pixels high, so cursor blinking in a narrow crop does
+not count as a lost row. The iPhone vphone has no resize handle.
+`Scripts/resize-glitch-probe.patch` temporarily animates a 0–90 pt right
+inset four times, starting three seconds after the terminal mounts.
+`Scripts/resize-glitch-zero-throttle.patch` makes foreground programs use
+0 ms during that experiment; the normal app uses 128 ms for them. Apply the
+animation patch to a clean checkout, add the zero-throttle patch for the
+0 ms runs, and add `Scripts/resize-glitch-state-probe.patch` when correlating
+pixels with the grid. Build and install a test `.deb`, copy a fixture from
+`Scripts/resize-repro/` to vphone,
+run it in an installed iGhostVT session through `ighostvt-cli send`, then
+terminate and relaunch the app while capturing so the animation runs over
+already settled content. Restore the three source files before building a
+normal package. The tested grid varied between 43×37 and 34×37.
 
 The detector found a deliberately inserted 90 ms erase and redraw, and found
 zero events in a 181-frame static baseline. A 120 fps request through this
@@ -68,8 +81,9 @@ allocate the next render target. The library normally anchors the old frame
 at the top-left while waiting for a new frame, but changing its scale defeats
 that geometry. A fixed library build rejects frames whose dimensions differ
 by more than one pixel, retaining the last presented contents until a matching
-frame finishes. The change is in the libghostty-spm working tree; it is not
-yet a published dependency or part of a normal iGhostVT build.
+frame finishes. That patch is committed on libghostty-spm branch
+`codex/ios-resize-stale-surface` (`670a88b`), but it is not yet a published
+dependency or part of a normal iGhostVT build.
 
 Earlier 0 ms runs had no displacement while 128 ms runs did. That correlation
 made throttling look like the cause. The library A/B at the *same* 128 ms
@@ -77,51 +91,84 @@ setting shows the stale-frame scale change is the immediate cause. The app's
 existing resize policy is therefore unchanged; the experimental alternate-
 screen mode tracker was removed.
 
-## Last-line blink and whole-screen clear
+## Prompt last-line blink
 
-These remain separate from the reproduced row shift. Ghostty's
-`Terminal.resize()` calls `Screen.clearPromptForRedraw()` on the primary
-screen when the cursor is on an OSC 133 prompt/input line. It replaces the
-prompt cells with spaces before the shell redraws them. `shell_redraws_prompt`
-defaults to true, and the bundled zsh/bash integration sends OSC 133;A/B
-without overriding that flag. This is a concrete mechanism for a last-line
-prompt blink, especially if the shell gets CPU time late. It has not yet been
-matched to a captured prompt blink; it does not explain a whole-screen clear
-while a TUI owns the active screen.
+All runs below used installed vphone `.deb` packages with the same 0 ms
+resize throttle, 0–90 pt four-cycle animation, and a real zsh prompt on the
+bottom row. `Scripts/resize-repro/prompt.sh` printed 45 short lines and
+returned to the interactive shell. The prompt's fixed crop was
+`--roi 0,0.879,0.45,0.902 --stable-content` on the 430×932 display.
 
-Ghostty also resets synchronized-output mode on every valid resize, even if
-the cell grid stays the same. If a TUI has begun a synchronized clear/repaint
-cycle when resize lands, an intermediate cleared grid could become visible
-before the replacement output arrives. That is a source-based possibility,
-not a reproduced cause. A TUI may also deliberately send `CSI 2J` and repaint
-in separate PTY writes. To tell those from a compositor blank, a future
-capture must pair display frames with timestamped PTY control-sequence events
-and layer `contents` identity/size. A clear with a valid, newly presented
-IOSurface and matching PTY erase sequence points to terminal content; a
-blank with no PTY erase and missing layer contents points to presentation.
+| OSC 133 prompt setting | Display frames | Prompt-blank frames | Grid samples without prompt |
+| --- | ---: | ---: | ---: |
+| Bundled zsh integration (default redraw) | 1,498 | 4 | 4 |
+| `OSC 133;A;redraw=0` before the next prompt | 1,498 | 0 | 0 |
 
-The stress runs so far did **not** reproduce a whole-screen clear: four CPU
-workers plus a static primary screen, a foreground zsh repainting on WINCH
-with and without synchronized output, and continuous foreground output all
-had no blank frames while the app remained visible. The most aggressive run
-eventually resprung the vphone, so frames after that event were excluded.
-This evidence does not rule out the reported defect on a weak physical
-device. An iOS 27 simulator host fed a controlled synchronized clear/repaint
-sequence, but `simctl` captured white frames covering the status bar and
-keyboard even in its no-resize control. Those captures cannot distinguish a
-terminal clear from a simulator capture failure and were excluded. Further
-runtime work needs the vphone unlocked after the respring, with display,
-terminal-grid, and IOSurface observations recorded together.
+The four blank screenshot frames each had zero text pixels in the prompt band
+while the 36 numbered rows stayed visible; the prompt returned on the next
+sample. Separately, the grid sampler recorded four 37-to-36-row changes,
+losing exactly the prompt's 15 nonspace bytes (879 to 864), while an IOSurface
+remained attached. The display and grid samplers are independently clocked,
+so their four hits are not the same four instants. The narrow-crop detector
+reported exactly 4 versus 0 events; a broad crop missed the prompt because
+the other rows stayed intact.
 
-`Scripts/resize-glitch-state-probe.patch` is a build-checked, test-only app
-patch for that run. It samples the active grid's nonblank row/byte counts and
-the presented IOSurface dimensions, identity, and scale at each display tick,
-then writes a 30-second CSV in the app's Documents directory. Match its epoch
-timestamps to the pixel capture's per-frame `epoch_s`; the earlier A/B
-captures predate this timestamp field. A screenshot that clears while the grid
-stays populated and the IOSurface disappears suggests presentation; a grid
-that clears while the IOSurface remains valid directs the investigation to
-Ghostty's resize logic or PTY output. The per-frame grid read adds CPU load,
-so repeat any finding without the probe before treating its frequency as
-representative. Apply this patch and the resize animation only to a test
-`.deb`, then reverse both before a normal package.
+`Terminal.resize()` passes `shell_redraws_prompt` to
+`Screen.clearPromptForRedraw()`. On a semantic prompt or input line it clears
+the prompt cells **before** the shell redraw arrives. The bundled zsh
+integration emits `OSC 133;A` without a `redraw` option; the terminal default
+is `true`. Sending `redraw=0` keeps the old prompt visible and eliminated the
+measured blink. This setting is a diagnostic control, not yet a general
+production fix: a multiline or edited input may need a shell repaint that
+fully erases old cells.
+
+## Whole-screen clear during synchronized repaint
+
+`Scripts/resize-repro/sync-clear.sh` fills an alternate screen with 32 lines.
+Each cycle starts DEC 2026 synchronized output, clears the grid, waits 120 ms,
+repaints all lines, and ends synchronization. With no resize, the renderer
+holds the previous complete frame throughout the empty-grid phase. With the
+same resize animation, the released Ghostty code resets synchronized-output
+mode in `Terminal.resize()` on **every** valid resize, including pixel-only
+ones; `renderer/generic.zig` then stops skipping renders and presents the
+empty intermediate grid. The app's view and IOSurface remain alive.
+
+| Build and condition | Frames after startup | Full-clear frames |
+| --- | ---: | ---: |
+| Released library, no resize | 660 | 0 |
+| Released library, resize | 1,188 | 259 |
+| Stale-IOSurface guard only, resize | 1,190 | 272 |
+| Guard plus preserved sync mode, resize | 1,164 | 0 |
+
+The fixed text crop was pixels `x=0..230, y=70..730`; a full-clear frame had
+zero dark text pixels against a baseline of 22,946. In the guard-only run,
+272 blank frames formed 43 detected episodes, typically about 100 ms each.
+Both the failing and fixed runs sampled an empty grid more than 1,000 times
+during synchronized transactions, and neither lost its IOSurface. Only the
+failing build displayed those intermediate grids. The preserved-sync build
+kept the old complete image until the program ended DEC 2026. Ghostty's
+existing termio watchdog still releases a transaction after one second if
+the program does not end it. The library patch is committed as `0cdcc5e`
+on `codex/ios-resize-stale-surface`; it has not been published.
+
+This confirms a full-screen clear mechanism for a program using DEC 2026.
+Whether a specific Codex/Claude version uses that sequence, or sends an
+ordinary unsynchronized `CSI 2J` followed by delayed output, still needs a
+timestamped PTY trace of that program. Heavy device load increases the gap
+before the shell or TUI redraws, so it makes both blank intervals easier to
+see. It also increases the chance of a stale IOSurface reaching the display
+callback. Those are three separate paths: prompt clearing, synchronization
+reset, and stale surface geometry.
+
+## Correlating pixels with internal state
+
+`Scripts/resize-glitch-state-probe.patch` is a test-only app patch. It samples
+the active grid's nonblank row/byte counts and the presented IOSurface
+dimensions, identity, and scale at each display tick, and flushes the CSV
+every second for a 30-second run in the app's Documents directory. Match its
+epoch timestamps to each capture frame's `epoch_s`. A screenshot that clears
+with a populated grid points to presentation; an empty grid with a valid
+IOSurface points to terminal content or PTY output. The grid read adds CPU
+load, so repeat a finding without the probe to measure its natural frequency.
+Apply this patch and the resize animation only to a test `.deb`, then reverse
+both before a normal package.

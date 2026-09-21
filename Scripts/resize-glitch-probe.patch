@@ -2,9 +2,15 @@ diff --git a/iGhostVT/Interface/Main/RootView.swift b/iGhostVT/Interface/Main/Ro
 index f0550cb..762959e 100644
 --- a/iGhostVT/Interface/Main/RootView.swift
 +++ b/iGhostVT/Interface/Main/RootView.swift
-@@ -283,0 +284 @@ private struct TerminalPane: View {
+@@ -281,10 +281,22 @@ private struct TerminalPane: View {
+     let onCloseTab: () -> Void
+     let onLockChange: () -> Void
+     let onStatusChange: (TerminalSessionStore.Status) -> Void
 +    @State private var resizeProbeInset: CGFloat = 0
-@@ -287,0 +289,11 @@ private struct TerminalPane: View {
+ 
+     var body: some View {
+         TerminalSurfaceView(context: tab.terminal)
+             .terminalFocused(focusedTabID, equals: tab.id)
 +            .padding(.trailing, resizeProbeInset)
 +            .task {
 +                guard isActive else { return }
@@ -16,3 +22,6 @@ index f0550cb..762959e 100644
 +                    try? await Task.sleep(nanoseconds: 1_400_000_000)
 +                }
 +            }
+             .overlay {
+                 SessionStatusOverlay(
+                     store: tab.store,

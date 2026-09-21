@@ -1,0 +1,13 @@
+diff --git a/iGhostVT/Backend/Session/TerminalTab.swift b/iGhostVT/Backend/Session/TerminalTab.swift
+index a65f440..05ad817 100644
+--- a/iGhostVT/Backend/Session/TerminalTab.swift
++++ b/iGhostVT/Backend/Session/TerminalTab.swift
+@@ -307,7 +307,7 @@ final class TerminalTab: ObservableObject, Identifiable {
+     /// it — a step above the library's 96 for full-repaint TUIs, enough for an
+     /// A12Z iPad; 200 was tried and taken back as too long a blank strip.
+     private static func resizeThrottle(isShellInForeground: Bool) -> Double {
+-        isShellInForeground ? 0 : 128
++        0
+     }
+ 
+     /// Whether closing this tab would interrupt something — the case the

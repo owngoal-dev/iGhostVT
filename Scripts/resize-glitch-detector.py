@@ -133,7 +133,9 @@ def analyze(args):
 
     rows = []
     small_frames = []
-    band_count = 16
+    # Keep each band at least eight pixels tall. Splitting a prompt-height ROI
+    # into 16 one-pixel bands makes a blinking cursor look like lost text rows.
+    band_count = min(16, max(1, (y1 - y0) // 8))
     for record in records:
         image = np.asarray(Image.open(directory / record["file"]).convert("L"))
         if image.shape != (first.height, first.width):
@@ -153,6 +155,11 @@ def analyze(args):
     means = np.array([row["mean"] for row in rows])
     bands = np.array([row["bands"] for row in rows])
     times = np.array([row["time_s"] for row in rows])
+    stable_ink = float(np.median(inks[
+        (times >= args.baseline_start) & (times < args.baseline_start + 0.25)
+    ]))
+    if args.stable_content and stable_ink <= 0.01:
+        raise ValueError("Stable-content baseline has too little text ink")
     events = []
     window = max(8, round(args.fps * 0.2))
     for index in range(window, len(rows) - window):
@@ -181,15 +188,21 @@ def analyze(args):
         transient_pixels = (min(changed_before, changed_after) >= 0.06
                             and return_difference < min(changed_before, changed_after) * 0.35)
         blank = expected_ink > 0.025 and ink_ratio < 0.6
+        stable_blank = args.stable_content and inks[index] < stable_ink * 0.35
         flash = dim > 25
         line_loss = lost_bands >= 3
-        if blank or flash or line_loss or transient_pixels:
+        if args.stable_content:
+            # The fixed-text experiment has a stronger reference than local
+            # neighbors. Suppress cursor and resize noise from generic rules.
+            blank = flash = line_loss = transient_pixels = False
+        if blank or stable_blank or flash or line_loss or transient_pixels:
             events.append({
                 "frame": index,
                 "time_s": float(times[index]),
                 "epoch_s": records[index].get("epoch_s"),
                 "reason": ",".join(name for name, active in (
-                    ("ink_loss", blank), ("brightness", flash),
+                    ("ink_loss", blank), ("stable_ink_loss", stable_blank),
+                    ("brightness", flash),
                     ("line_loss", line_loss), ("pixel_return", transient_pixels)
                 ) if active),
                 "ink_ratio": round(float(ink_ratio), 3),
@@ -226,6 +239,7 @@ def analyze(args):
         "size": first.size,
         "roi": roi,
         "background_gray": round(float(background), 1),
+        "stable_ink_fraction": round(stable_ink, 4) if args.stable_content else None,
         "baseline_start_s": args.baseline_start,
         "analyze_from_s": args.analyze_from,
         "cadence_ms": {
@@ -293,6 +307,8 @@ def main():
                                 help="start of a settled quarter-second baseline")
     analyze_parser.add_argument("--analyze-from", type=float, default=0,
                                 help="ignore capture startup before this time")
+    analyze_parser.add_argument("--stable-content", action="store_true",
+                                help="flag frames losing 65%% of baseline text ink; use only with fixed text")
     analyze_parser.set_defaults(run=analyze)
     args = parser.parse_args()
     args.run(args)
