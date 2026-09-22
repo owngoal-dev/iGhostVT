@@ -75,6 +75,7 @@ DEB_PACKAGER        := $(ROOT_DIR)/Scripts/package-deb.sh
 VERSION_APPLIER     := $(ROOT_DIR)/Scripts/apply-version.sh
 LICENSE_COLLECTOR   := $(ROOT_DIR)/Scripts/collect-licenses.py
 ACCESSIBILITY_CHECK := $(ROOT_DIR)/Scripts/check-accessibility.py
+STALE_STRINGS_CHECK := $(ROOT_DIR)/Scripts/check-stale-strings.py
 MAC_DAEMON_LOADER   := $(ROOT_DIR)/Scripts/mac-daemon.sh
 MAC_PACKAGER        := $(ROOT_DIR)/Scripts/package-mac.sh
 MAC_UPDATE_FROM_GITHUB := $(ROOT_DIR)/Scripts/mac-update-from-github.sh
@@ -221,6 +222,16 @@ check:
 	@# isAccessibilityElement is walked past and its sentence never spoken.
 	@# Only the app and the widget import UIKit or SwiftUI; nothing else does.
 	@"$(ACCESSIBILITY_CHECK)" "$(ROOT_DIR)/iGhostVT" "$(ROOT_DIR)/iGhostVTWidgets"
+	@# The menu titles and the intent strings are `extractionState: manual` on
+	@# purpose — nothing extracts them. `stale` is different: Xcode writes it
+	@# during a build, into a twelve-thousand-line file, and it rides into a
+	@# commit as one green line. One did. And it matters more here than
+	@# anywhere else, because one catalog serves iOS, visionOS and macOS: an
+	@# iOS build marks every Mac-only string stale while all of them are live,
+	@# so the answer is never a bulk delete. Scripts/prune-xcstrings.py keeps
+	@# what it cannot account for and needs every target's sources.
+	@test -x "$(STALE_STRINGS_CHECK)" || { echo "error: check-stale-strings.py is not executable" >&2; exit 66; }
+	@"$(STALE_STRINGS_CHECK)" "$(ROOT_DIR)/iGhostVT" "$(ROOT_DIR)/iGhostVTWidgets"
 
 # The app has no unit tests since the TCP transport left; the harness and
 # the CLI renderer tests are the whole suite until it grows some again.

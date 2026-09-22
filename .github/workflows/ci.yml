@@ -81,6 +81,17 @@ concurrency:
   group: ighostvt-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
+env:
+  # CFBundleVersion used to be the run number of the workflow that published:
+  # 0.9.8 shipped build 81, from release.yml's 81st run. The number
+  # `release.sh` commits to Version.xcconfig was never what shipped — CI
+  # overrode it at tag time — and it now stands at 74. Left alone, the next
+  # release would go backwards, and LaunchServices keeps the record of the
+  # higher build and goes on reading the old Info.plist from it. The floor
+  # carries this file's counter past the old workflow's last run. Raise it,
+  # never lower it.
+  BUILD_NUMBER_FLOOR: "100"
+
 jobs:
   package-roothide:
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'roothide'
@@ -106,11 +117,20 @@ jobs:
           ldid -h 2>&1 | head -n1 || true
           dpkg-deb --version | head -n1
 
-      # apply-version.sh strips the leading "v" and rejects anything that is
-      # not X.Y.Z; the run number keeps CFBundleVersion increasing per build.
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
+      # The version is the commit's — the tag branch is for a dispatch against
+      # a tag, the documented way back once an artifact has aged out. The
+      # build number is always this run's, floored so it keeps climbing past
+      # the counter the old publishing workflow left behind. All four jobs
+      # take the same number from the same run, so the four packages agree.
+      - name: Pin the build number to this run
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(make --no-print-directory print-version)"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          make set-version VERSION="$version" BUILD="$(( GITHUB_RUN_NUMBER + BUILD_NUMBER_FLOOR ))"
 
       - name: Build roothide package (iphoneos-arm64e)
         run: make deb-roothide
@@ -163,9 +183,15 @@ jobs:
           ldid -h 2>&1 | head -n1 || true
           dpkg-deb --version | head -n1
 
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
+      - name: Pin the build number to this run
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(make --no-print-directory print-version)"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          make set-version VERSION="$version" BUILD="$(( GITHUB_RUN_NUMBER + BUILD_NUMBER_FLOOR ))"
 
       - name: Build rootless package (iphoneos-arm64)
         run: make deb-rootless
@@ -218,9 +244,15 @@ jobs:
           ldid -h 2>&1 | head -n1 || true
           dpkg-deb --version | head -n1
 
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
+      - name: Pin the build number to this run
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(make --no-print-directory print-version)"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          make set-version VERSION="$version" BUILD="$(( GITHUB_RUN_NUMBER + BUILD_NUMBER_FLOOR ))"
 
       - name: Build visionOS package (xros-arm64e)
         run: make deb-xros
@@ -271,9 +303,15 @@ jobs:
 
       # Same tag and the same run number as the .deb jobs, so the version in
       # the app's About screen matches the one on the packages beside it.
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
+      - name: Pin the build number to this run
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(make --no-print-directory print-version)"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          make set-version VERSION="$version" BUILD="$(( GITHUB_RUN_NUMBER + BUILD_NUMBER_FLOOR ))"
 
       # MAC_ZIP_IDENTITY defaults to "-", so this is the ad-hoc path. Universal
       # (arm64 + x86_64) and hardened-runtime; see the header of this file.
