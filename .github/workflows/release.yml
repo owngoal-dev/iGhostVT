@@ -1,29 +1,24 @@
-# Tag vX.Y.Z → four independent package jobs, then one merge job that
-# attaches every artifact to a GitHub Release.
+# Tag vX.Y.Z → the packages CI built for the tagged commit, published.
 #
-# The package jobs share nothing: each is a machine recipe, and they run in
-# parallel so a roothide box, a rootless box, a Vision Pro box, and a Mac box
-# can all work at once. They communicate only by `upload-artifact`. The `release`
-# job is the merge — it downloads those artifacts and publishes. The same
-# merge is available locally as `Scripts/publish-release.sh` when the files
-# arrived some other way.
+# Nothing is tested, compiled or packaged here. The push of the commit to
+# main ran `ci.yml`: the roothide, rootless, visionOS and macOS packages each
+# compiled, packaged and verified on their own runner, merged into the
+# artifact `ighostvt-<sha>`. The tag publishes that artifact, and only once
+# that run has succeeded: a failed check fails the run, and the release with
+# it. What ships is the file CI verified, not a second build of the same
+# commit.
 #
-# workflow_dispatch can run all three or just one (`platform`), and can
-# pin each job to a runner label so the three machines do not have to be
-# GitHub-hosted. A dispatch without a tag still packages; it does not
-# publish. Publishing is the tag.
+# The commit says its version (`make set-version`, the release note, then the
+# tag), and the packages CI built are named for it: when they are not named
+# for the tag, the checksum step below finds nothing and nothing is
+# published.
 #
-# The terminal core comes from the released Lakr233/libghostty-spm package
-# (resolved by xcodebuild from Package.resolved), so this checkout is all
-# the build needs.
-#
-# The macOS zip is ad-hoc signed. A runner has no Developer ID certificate
-# and nothing here should invent one, so the artifact is exactly what
-# `make mac-zip` produces on a checkout with no signing identity: a
-# universal, hardened-runtime bundle that Gatekeeper will not trust on
-# sight. Whoever installs it clears the quarantine bit once — the release
-# notes say so, and so does the packager. Signing it properly is a local
-# `make mac-zip MAC_ZIP_IDENTITY=...` away.
+# The tag and the branch usually arrive together, so the run may not exist
+# yet when this starts, and it is waited for. A commit that never reached
+# main has no run: dispatch CI on the tag (`gh workflow run ci.yml --ref
+# vX.Y.Z`), which is also the way back once the artifact is past its thirty
+# days, and re-run this. Publishing by hand, when the files arrived some
+# other way, is `Scripts/publish-release.sh`.
 
 name: Release
 
@@ -32,314 +27,132 @@ on:
     tags:
       - "v[0-9]*.[0-9]*.[0-9]*"
   workflow_dispatch:
-    inputs:
-      platform:
-        description: Which package to build
-        type: choice
-        options:
-          - all
-          - roothide
-          - rootless
-          - xros
-          - macos
-        default: all
-      runner_roothide:
-        description: Runner label for the roothide .deb
-        type: string
-        default: macos-26
-      runner_rootless:
-        description: Runner label for the rootless .deb
-        type: string
-        default: macos-26
-      runner_xros:
-        description: Runner label for the visionOS .deb
-        type: string
-        default: macos-26
-      runner_macos:
-        description: Runner label for the macOS zip
-        type: string
-        default: macos-26
 
-permissions:
-  contents: write
+# One release per tag, and it is never cancelled: a half-uploaded set of
+# assets is worse than a slow one.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  package-roothide:
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'roothide'
-    runs-on: ${{ github.event.inputs.runner_roothide || 'macos-26' }}
-    timeout-minutes: 60
-
-    steps:
-      - name: Check out iGhostVT
-        uses: actions/checkout@v7
-
-      - name: Select newest Xcode
-        run: |
-          latest="$(ls -d /Applications/Xcode*.app | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          xcodebuild -version
-
-      # The runner image ships with third-party taps Homebrew no longer trusts
-      # by default and warns about on every invocation; none of them is used.
-      - name: Install packaging tools
-        run: |
-          brew untap aws/tap 2>/dev/null || true
-          brew install ldid dpkg xcbeautify
-          ldid -h 2>&1 | head -n1 || true
-          dpkg-deb --version | head -n1
-
-      # apply-version.sh strips the leading "v" and rejects anything that is
-      # not X.Y.Z; the run number keeps CFBundleVersion increasing per build.
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
-
-      - name: Build roothide package (iphoneos-arm64e)
-        run: make deb-roothide
-
-      # Each job is its own build, so each ships the dSYMs of its own
-      # binaries; neither strip nor ldid touches LC_UUID, so they match.
-      - name: Archive dSYMs
-        run: |
-          version="$(make --no-print-directory print-version)"
-          cd /private/tmp/ighostvt-deriveddata/Build/Products/Release-iphoneos
-          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-roothide-dSYMs.zip" *.dSYM
-
-      - name: Checksums
-        run: |
-          cd build/Packages
-          shasum -a 256 *.deb *-dSYMs.zip | tee SHA256SUMS.roothide
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ighostvt-roothide
-          path: |
-            build/Packages/*.deb
-            build/Packages/*-dSYMs.zip
-            build/Packages/SHA256SUMS.roothide
-          if-no-files-found: error
-
-  package-rootless:
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'rootless'
-    runs-on: ${{ github.event.inputs.runner_rootless || 'macos-26' }}
-    timeout-minutes: 60
-
-    steps:
-      - name: Check out iGhostVT
-        uses: actions/checkout@v7
-
-      - name: Select newest Xcode
-        run: |
-          latest="$(ls -d /Applications/Xcode*.app | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          xcodebuild -version
-
-      - name: Install packaging tools
-        run: |
-          brew untap aws/tap 2>/dev/null || true
-          brew install ldid dpkg xcbeautify
-          ldid -h 2>&1 | head -n1 || true
-          dpkg-deb --version | head -n1
-
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
-
-      - name: Build rootless package (iphoneos-arm64)
-        run: make deb-rootless
-
-      - name: Archive dSYMs
-        run: |
-          version="$(make --no-print-directory print-version)"
-          cd /private/tmp/ighostvt-deriveddata/Build/Products/Release-iphoneos
-          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-rootless-dSYMs.zip" *.dSYM
-
-      - name: Checksums
-        run: |
-          cd build/Packages
-          shasum -a 256 *.deb *-dSYMs.zip | tee SHA256SUMS.rootless
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ighostvt-rootless
-          path: |
-            build/Packages/*.deb
-            build/Packages/*-dSYMs.zip
-            build/Packages/SHA256SUMS.rootless
-          if-no-files-found: error
-
-  # The same app and daemon built against the visionOS SDK, for a jailbroken
-  # Apple Vision Pro. roothide layout; the architecture label is xros-arm64e
-  # so the package stays distinct from the iOS one in a shared repository.
-  package-xros:
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'xros'
-    runs-on: ${{ github.event.inputs.runner_xros || 'macos-26' }}
-    timeout-minutes: 60
-
-    steps:
-      - name: Check out iGhostVT
-        uses: actions/checkout@v7
-
-      - name: Select newest Xcode
-        run: |
-          latest="$(ls -d /Applications/Xcode*.app | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          xcodebuild -version
-          xcodebuild -showsdks | grep -- '-sdk xros' || { echo "the selected Xcode has no visionOS SDK" >&2; exit 1; }
-
-      - name: Install packaging tools
-        run: |
-          brew untap aws/tap 2>/dev/null || true
-          brew install ldid dpkg xcbeautify
-          ldid -h 2>&1 | head -n1 || true
-          dpkg-deb --version | head -n1
-
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
-
-      - name: Build visionOS package (xros-arm64e)
-        run: make deb-xros
-
-      - name: Archive dSYMs
-        run: |
-          version="$(make --no-print-directory print-version)"
-          cd /private/tmp/ighostvt-deriveddata/Build/Products/Release-xros
-          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-xros-dSYMs.zip" *.dSYM
-
-      - name: Checksums
-        run: |
-          cd build/Packages
-          shasum -a 256 *.deb *-dSYMs.zip | tee SHA256SUMS.xros
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ighostvt-xros
-          path: |
-            build/Packages/*.deb
-            build/Packages/*-dSYMs.zip
-            build/Packages/SHA256SUMS.xros
-          if-no-files-found: error
-
-  package-macos:
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos'
-    runs-on: ${{ github.event.inputs.runner_macos || 'macos-26' }}
-    timeout-minutes: 60
-
-    steps:
-      - name: Check out iGhostVT
-        uses: actions/checkout@v7
-
-      - name: Select newest Xcode
-        run: |
-          latest="$(ls -d /Applications/Xcode*.app | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          xcodebuild -version
-
-      # No ldid or dpkg here: `make mac-zip` deliberately does not depend on
-      # `make check`, so a machine with nothing but Xcode can produce the zip.
-      - name: Install build tools
-        run: |
-          brew untap aws/tap 2>/dev/null || true
-          brew install xcbeautify
-
-      # Same tag and the same run number as the .deb jobs, so the version in
-      # the app's About screen matches the one on the packages beside it.
-      - name: Override version from tag
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="${GITHUB_REF_NAME}" BUILD="${{ github.run_number }}"
-
-      # MAC_ZIP_IDENTITY defaults to "-", so this is the ad-hoc path. Universal
-      # (arm64 + x86_64) and hardened-runtime; see the header of this file.
-      - name: Build the macOS app
-        run: make mac-zip
-
-      # The app is the Catalyst build, the helper and CLI the plain macOS one.
-      - name: Archive dSYMs
-        run: |
-          version="$(make --no-print-directory print-version)"
-          cd /private/tmp/ighostvt-deriveddata/Build/Products
-          zip -qry "$GITHUB_WORKSPACE/build/Packages/iGhostVT-${version}-macos-dSYMs.zip" \
-            Release-maccatalyst/*.dSYM Release/*.dSYM
-
-      - name: Checksums
-        run: |
-          cd build/Packages
-          shasum -a 256 *.zip | tee SHA256SUMS.macos
-
-      - name: Verify the bundled helper
-        run: |
-          app="$(mktemp -d)/iGhostVT.app"
-          ditto -x -k build/Packages/iGhostVT-*-macos.zip "$(dirname "$app")"
-          test -x "$app/Contents/MacOS/ighostvtd" || { echo "the helper is missing" >&2; exit 1; }
-          test -x "$app/Contents/MacOS/ighostvt-cli" || { echo "the command-line client is missing" >&2; exit 1; }
-          test -f "$app/Contents/Library/LaunchAgents/wiki.qaq.ighostvtd.plist" \
-            || { echo "the bundled agent plist is missing" >&2; exit 1; }
-          lipo -info "$app/Contents/MacOS/iGhostVT"
-          lipo -info "$app/Contents/MacOS/ighostvtd"
-          lipo -info "$app/Contents/MacOS/ighostvt-cli"
-          # The daemon admits the CLI by this identifier, not by its filename.
-          codesign --display --verbose=2 "$app/Contents/MacOS/ighostvt-cli" 2>&1 \
-            | grep -qx 'Identifier=wiki.qaq.ighostvt-cli' \
-            || { echo "the CLI carries the wrong signing identifier" >&2; exit 1; }
-          codesign --verify --deep --strict --verbose=2 "$app"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ighostvt-macos
-          path: |
-            build/Packages/*.zip
-            build/Packages/SHA256SUMS.macos
-          if-no-files-found: error
-
-  # Merge. Needs every platform job; a skipped sibling (workflow_dispatch of a
-  # single platform) skips this too, which is what we want — a partial set of
-  # artifacts is not a release. Tag pushes run all three, then this.
-  release:
+  publish:
     if: github.ref_type == 'tag'
-    needs: [package-roothide, package-rootless, package-xros, package-macos]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 150
+    permissions:
+      contents: write
+      actions: read
 
     steps:
       - name: Check out iGhostVT
         uses: actions/checkout@v7
 
-      - name: Download platform artifacts
-        uses: actions/download-artifact@v7
-        with:
-          path: artifacts
-          pattern: ighostvt-*
-          merge-multiple: false
-
-      - name: Stage release assets
-        run: |
-          mkdir -p dist
-          find artifacts -type f \( -name '*.deb' -o -name '*.zip' -o -name 'SHA256SUMS*' \) -exec cp {} dist/ \;
-          ls -l dist
-          test -f dist/SHA256SUMS.roothide || { echo "roothide checksums missing" >&2; exit 1; }
-          test -f dist/SHA256SUMS.rootless || { echo "rootless checksums missing" >&2; exit 1; }
-          test -f dist/SHA256SUMS.xros || { echo "xros checksums missing" >&2; exit 1; }
-          test -f dist/SHA256SUMS.macos || { echo "macos checksums missing" >&2; exit 1; }
-          # One file for every .deb, matching the layout previous releases
-          # attached, plus the macOS checksums beside the zip.
-          cat dist/SHA256SUMS.roothide dist/SHA256SUMS.rootless dist/SHA256SUMS.xros > dist/SHA256SUMS
-          rm -f dist/SHA256SUMS.roothide dist/SHA256SUMS.rootless dist/SHA256SUMS.xros
-          shopt -s nullglob
-          debs=(dist/*.deb)
-          zips=(dist/*-macos.zip)
-          dsyms=(dist/*-dSYMs.zip)
-          [[ "${#debs[@]}" -eq 3 ]] || { echo "expected 3 debs, got ${#debs[@]}" >&2; exit 1; }
-          [[ "${#zips[@]}" -eq 1 ]] || { echo "expected 1 zip, got ${#zips[@]}" >&2; exit 1; }
-          [[ "${#dsyms[@]}" -eq 4 ]] || { echo "expected 4 dSYM zips, got ${#dsyms[@]}" >&2; exit 1; }
-
-      - name: Publish GitHub Release
+      # The newest run on the commit that a push or a dispatch started; a pull
+      # request's run names its packages for the merge commit, not this one.
+      - name: Wait for CI on the tagged commit
+        id: ci
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x Scripts/publish-release.sh
-          Scripts/publish-release.sh "${GITHUB_REF_NAME}" dist/*
+          set -euo pipefail
+          run=""
+          for _ in $(seq 30); do
+            run="$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --json databaseId,event \
+              --jq '[.[] | select(.event != "pull_request")][0].databaseId // empty')"
+            [ -n "$run" ] && break
+            sleep 20
+          done
+          if [ -z "$run" ]; then
+            echo "::error::CI has not run on $GITHUB_SHA: dispatch it on $GITHUB_REF_NAME, then re-run this"
+            exit 1
+          fi
+          echo "CI run $run on $GITHUB_SHA"
+          gh run watch "$run" --interval 30 > /dev/null
+          conclusion="$(gh run view "$run" --json conclusion --jq .conclusion)"
+          if [ "$conclusion" != success ]; then
+            echo "::error::CI run $run ended $conclusion: nothing is published"
+            exit 1
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+      - name: Download the packages CI built
+        uses: actions/download-artifact@v7
+        with:
+          name: ighostvt-${{ github.sha }}
+          path: build/Packages/
+          run-id: ${{ steps.ci.outputs.run }}
+          github-token: ${{ github.token }}
+
+      # CI's lists prove the transfer. The release's own lists are written for
+      # exactly the files it carries, named for the tag, and a missing one
+      # fails here. The macOS zip keeps its own list, as previous releases
+      # attached it — the .deb fetchers read `SHA256SUMS` alone.
+      - name: Verify the packages and write the release checksums
+        working-directory: build/Packages
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS
+          sha256sum --check SHA256SUMS.macos
+          version="${GITHUB_REF_NAME#v}"
+          sha256sum \
+            "wiki.qaq.ighostvt_${version}_iphoneos-arm64e.deb" \
+            "wiki.qaq.ighostvt_${version}_iphoneos-arm64.deb" \
+            "wiki.qaq.ighostvt_${version}_xros-arm64e.deb" \
+            "iGhostVT-${version}-roothide-dSYMs.zip" \
+            "iGhostVT-${version}-rootless-dSYMs.zip" \
+            "iGhostVT-${version}-xros-dSYMs.zip" > SHA256SUMS
+          sha256sum \
+            "iGhostVT-${version}-macos.zip" \
+            "iGhostVT-${version}-macos-dSYMs.zip" > SHA256SUMS.macos
+          cat SHA256SUMS SHA256SUMS.macos
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          notes="$RUNNER_TEMP/ighostvt-release.md"
+          if [ -f "Documents/Releases/$version.md" ]; then
+            cp "Documents/Releases/$version.md" "$notes"
+          else
+            cat > "$notes" <<NOTES
+          iGhostVT $version, for roothide and rootless (/var/jb) bootstraps, for a jailbroken Apple Vision Pro, and for the Mac.
+
+          The Mac app is ad-hoc signed; clear its quarantine once with \`xattr -dr com.apple.quarantine /Applications/iGhostVT.app\`.
+
+          SHA-256 sums are in \`SHA256SUMS\`, and the Mac app's in \`SHA256SUMS.macos\`.
+          NOTES
+          fi
+          files=("build/Packages/wiki.qaq.ighostvt_${version}_iphoneos-arm64e.deb"
+                 "build/Packages/wiki.qaq.ighostvt_${version}_iphoneos-arm64.deb"
+                 "build/Packages/wiki.qaq.ighostvt_${version}_xros-arm64e.deb"
+                 "build/Packages/iGhostVT-${version}-macos.zip"
+                 "build/Packages/iGhostVT-${version}-roothide-dSYMs.zip"
+                 "build/Packages/iGhostVT-${version}-rootless-dSYMs.zip"
+                 "build/Packages/iGhostVT-${version}-xros-dSYMs.zip"
+                 "build/Packages/iGhostVT-${version}-macos-dSYMs.zip"
+                 "build/Packages/SHA256SUMS"
+                 "build/Packages/SHA256SUMS.macos")
+          # Ten assets, and the dSYM zips are not small: a 5xx from the
+          # upload API must not end a release that already has a verified
+          # set of bytes in hand. `Scripts/publish-release.sh` retried for
+          # exactly this reason, and the retry comes across with it.
+          # `gh release view` decides create against upload on every round,
+          # so a create that half-succeeded is finished as an upload.
+          publish() {
+            if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              gh release upload "$GITHUB_REF_NAME" --clobber "${files[@]}" || return 1
+              gh release edit "$GITHUB_REF_NAME" --notes-file "$notes" || return 1
+            else
+              gh release create "$GITHUB_REF_NAME" --verify-tag \
+                --title "iGhostVT $version" --notes-file "$notes" "${files[@]}" || return 1
+            fi
+          }
+          for attempt in 1 2 3 4 5; do
+            publish && exit 0
+            echo "publish attempt $attempt failed; retrying in 20s" >&2
+            sleep 20
+          done
+          echo "::error::could not publish $GITHUB_REF_NAME after 5 attempts"
+          exit 1

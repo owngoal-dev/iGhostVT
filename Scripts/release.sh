@@ -38,6 +38,11 @@ git fetch origin
     || die "main and origin/main differ; pull or push first"
 git rev-parse -q --verify "refs/tags/v$version" >/dev/null \
     && die "tag v$version already exists"
+# release.yml publishes this file as the release notes and the Pages
+# depiction serves it as the changelog; without it the release goes out with
+# a one-paragraph fallback and the depiction says nothing about $version.
+[[ -f "Documents/Releases/$version.md" ]] \
+    || die "Documents/Releases/$version.md is missing; write the release note before cutting"
 
 build="${2:-}"
 if [[ -z "$build" ]]; then

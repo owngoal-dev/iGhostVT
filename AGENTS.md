@@ -68,6 +68,22 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   the `upstream.X.Y.Z` tags hold the XCFramework binaries. Terminal-library
   changes land in that repo and ship via a new package release — don't
   reintroduce a local path reference to a sibling checkout.
+- **CI builds; Release publishes what CI built.** `ci.yml` compiles, packages
+  and verifies all four flavours on every push and pull request, and keeps
+  `build/Packages/` as the artifact `ighostvt-<sha>` for thirty days.
+  `release.yml` runs on the tag, **compiles nothing**, waits for that commit's
+  CI run, refuses to publish unless it passed, and attaches the bytes CI
+  verified. Never rebuild at tag time: a second build is a different build
+  number, a different runner image and bytes no test ever ran against. The
+  workflow stays named `Release` — `pages.yml` watches for it, and
+  `Scripts/release.sh` finds the run by that name and then checks all ten
+  assets by name, so an asset that is renamed breaks the cut.
+- **The release note is a file in the repo**, `Documents/Releases/<version>.md`,
+  written before the tag: one headline sentence, one bullet per user-visible
+  change with the symptom first, and a closing line naming which package to
+  choose and `SHA256SUMS`. Never `--generate-notes`; the compare link it
+  produces says nothing, and this text is what the Pages depiction serves as
+  the changelog.
 
 Generated Ghostty configs live under `tmp/wiki.qaq.iGhostVT/`, using the
 library's `TerminalController.managedConfigDirectory`. `AppDelegate` calls
@@ -377,7 +393,7 @@ the catalog's generated symbols, which is why the menu's entry is keyed
 A jailbroken Apple Vision Pro is the same product as a jailbroken iPad — the
 app renders, `ighostvtd` owns the shells — so the tree builds for xros with
 `make deb PLATFORM=xros` (roothide layout, `xros-arm64e`; `deb-xros` and
-`deb-xros-rootless` are the shorthands, and release.yml has a `package-xros`
+`deb-xros-rootless` are the shorthands, and ci.yml has a `package-xros`
 job beside the two iOS ones). `PLATFORM` picks the SDK, the destination, the
 `Build/Products/<config>-xros` directory, the architecture label's OS half,
 and the control file's `Depends` (`firmware (>= 1.0)` there — the iOS
@@ -442,7 +458,7 @@ building *libghostty* locally does (see that repo's
 - `make release VERSION=x.y.z` — the whole cut in one command
   (`Scripts/release.sh`): clean-tree/main/tag preflight, `set-version`
   (BUILD defaults to current+1), `make check`, the `x.y.z` commit, the
-  tag, the push, waiting out the GitHub Release run, checking all six
+  tag, the push, waiting out the GitHub Release run, checking all ten
   assets, dispatching the APT repository build, and polling
   `https://apt.owngoal.dev/Packages` until the version is served — that
   poll is the acceptance test, because the APT run's own verify step has

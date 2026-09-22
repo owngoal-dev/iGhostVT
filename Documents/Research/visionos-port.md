@@ -23,7 +23,7 @@ xros/xrsimulator slices in every build script and CI matrix, and the
 `upstream.1.3.1-2` storage tag, and package release **1.5.0** is out. **Phase
 2 landed too**: `make deb PLATFORM=xros` builds the app and the daemon
 against the xros SDK and packages `wiki.qaq.ighostvt_<ver>_xros-arm64e.deb`,
-release.yml has a `package-xros` job, and the floor is visionOS 1.0. What is left here is small and specific: the app patch below,
+ci.yml has a `package-xros` job, and the floor is visionOS 1.0. What is left here is small and specific: the app patch below,
 the jailbreak's own layout and dpkg vocabulary (open questions, listed),
 and a device to run it on.
 
@@ -280,7 +280,7 @@ Landed 2026-08-31 in this repo:
   shorthands; `PACKAGE_FLAVOR` stays the layout axis.
 - `Scripts/package-deb.sh`: a `<depends>` argument and the empty-appex fix;
   `Packaging/DEBIAN/control` says iOS and visionOS and takes `@DEPENDS@`.
-- `.github/workflows/release.yml`: `package-xros` (macos-26, `make deb-xros`),
+- `.github/workflows/ci.yml`: `package-xros` (macos-26, `make deb-xros`),
   a `xros` choice for a single-platform dispatch, and a merge that expects
   three debs.
 - No visionOS app icon yet (the catalog has none for iOS either; the build

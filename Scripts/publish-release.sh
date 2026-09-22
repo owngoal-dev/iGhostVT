@@ -35,6 +35,19 @@ if [[ -n "$repo" ]]; then
     repo_flag=(-R "$repo")
 fi
 
+# The note is a file in the repo (`Documents/Releases/<version>.md`), and it
+# is what the Pages depiction serves as the changelog. `--generate-notes`
+# only ever produced a compare link, so it is the fallback for a tag whose
+# note was never written, not the default.
+root="$(cd "$(dirname "$0")/.." && pwd)"
+version="${tag#v}"
+notes_file="$root/Documents/Releases/$version.md"
+notes_flag=(--notes-file "$notes_file")
+if [[ ! -f "$notes_file" ]]; then
+    echo "warning: $notes_file is missing; falling back to a generated compare link" >&2
+    notes_flag=(--generate-notes)
+fi
+
 echo "==> publishing $# asset(s) to $tag"
 for attempt in 1 2 3 4 5; do
     # `${arr[@]+"${arr[@]}"}`: an empty array is an unbound variable under
@@ -43,8 +56,8 @@ for attempt in 1 2 3 4 5; do
         gh release upload ${repo_flag[@]+"${repo_flag[@]}"} "$tag" "$@" --clobber && exit 0
     else
         gh release create ${repo_flag[@]+"${repo_flag[@]}"} "$tag" \
-            --title "iGhostVT $tag" \
-            --generate-notes \
+            --title "iGhostVT $version" \
+            "${notes_flag[@]}" \
             "$@" && exit 0
     fi
     echo "publish attempt ${attempt} failed; retrying in 20s" >&2
