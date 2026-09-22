@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: owngoal-dev/owngoal-packages
-          ref: 96d9a6e43f6501f6086239db3325b2fa0136574b
+          ref: 31fb514e34f3d5f0d8eff8f02ab301a5293a5e28
           path: .depiction-tools
           sparse-checkout: scripts/update-depiction-changelogs.py
           sparse-checkout-cone-mode: false
@@ -62,7 +62,7 @@ jobs:
       - name: Fetch GitHub release notes
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 .depiction-tools/scripts/update-depiction-changelogs.py --workspace "$(dirname "$GITHUB_WORKSPACE")" --repo iGhostVT
+        run: python3 .depiction-tools/scripts/update-depiction-changelogs.py --repository owngoal-dev/iGhostVT --depiction Documents/Web/depiction.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
