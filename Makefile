@@ -74,6 +74,7 @@ XCODEBUILD_WRAPPER  := $(ROOT_DIR)/Scripts/run-xcodebuild.sh
 DEB_PACKAGER        := $(ROOT_DIR)/Scripts/package-deb.sh
 VERSION_APPLIER     := $(ROOT_DIR)/Scripts/apply-version.sh
 LICENSE_COLLECTOR   := $(ROOT_DIR)/Scripts/collect-licenses.py
+ACCESSIBILITY_CHECK := $(ROOT_DIR)/Scripts/check-accessibility.py
 MAC_DAEMON_LOADER   := $(ROOT_DIR)/Scripts/mac-daemon.sh
 MAC_PACKAGER        := $(ROOT_DIR)/Scripts/package-mac.sh
 MAC_UPDATE_FROM_GITHUB := $(ROOT_DIR)/Scripts/mac-update-from-github.sh
@@ -172,6 +173,7 @@ check:
 	@test -x "$(VERSION_APPLIER)" || { echo "error: apply-version.sh is not executable" >&2; exit 66; }
 	@test -x "$(MAC_DAEMON_LOADER)" || { echo "error: mac-daemon.sh is not executable" >&2; exit 66; }
 	@test -x "$(LICENSE_COLLECTOR)" || { echo "error: collect-licenses.py is not executable" >&2; exit 66; }
+	@test -x "$(ACCESSIBILITY_CHECK)" || { echo "error: check-accessibility.py is not executable" >&2; exit 66; }
 	@grep -qF 'collect-licenses.py' "$(PROJECT)/project.pbxproj" \
 		|| { echo "error: the Collect Licenses build phase is missing from the iGhostVT target — Settings ▸ About ▸ Licenses would be empty" >&2; exit 65; }
 	@test -f "$(ROOT_DIR)/Licenses/ghostty/LICENSE" -a -f "$(ROOT_DIR)/Licenses/ghostty/notice.json" \
@@ -214,6 +216,11 @@ check:
 			exit 65; \
 		fi; \
 	fi
+	@# UIKit reads an accessibilityLabel only off a view that is itself an
+	@# accessibility element, so a container that sets one without
+	@# isAccessibilityElement is walked past and its sentence never spoken.
+	@# Only the app and the widget import UIKit or SwiftUI; nothing else does.
+	@"$(ACCESSIBILITY_CHECK)" "$(ROOT_DIR)/iGhostVT" "$(ROOT_DIR)/iGhostVTWidgets"
 
 # The app has no unit tests since the TCP transport left; the harness and
 # the CLI renderer tests are the whole suite until it grows some again.
