@@ -23,7 +23,7 @@ iGhostVTIO/                  ighostvtd-io: the PTYs, buffers, and shells
 iGhostVTDaemonShared/        bootstrap paths, logging, the proxy <-> io wire
 iGhostVTCLI/                 ighostvt-cli: the one-shot command-line client
 iGhostVTWidgets/             WidgetKit appex: the Dynamic Island Live Activity
-Documents/                   these notes, Research/, and Site/ (the web page)
+Documents/                   these notes, Research/, CaseStudy/, and Web/ (Pages)
 ```
 
 `iGhostVT.xcodeproj` is checked in: objectVersion 77 with a

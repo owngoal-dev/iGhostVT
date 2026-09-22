@@ -1,4 +1,10 @@
-# Resize flicker investigation
+# Resize flicker: investigation and fix
+
+The three fixes described here shipped in
+[libghostty-spm 1.6.20260922](https://github.com/Lakr233/libghostty-spm/releases/tag/1.6.20260922),
+using Ghostty `3c47ca159368` and XCFramework revision
+`upstream.3c47ca159368-2`. The captures below are from the investigation;
+the release build passed the upstream XCFramework build and package checks.
 
 ## Pixel capture
 
@@ -37,7 +43,8 @@ inset four times, starting three seconds after the terminal mounts.
 animation patch to a clean checkout, add the zero-throttle patch for the
 0 ms runs, and add `Scripts/resize-glitch-state-probe.patch` when correlating
 pixels with the grid. Build and install a test `.deb`, copy a fixture from
-`Scripts/resize-repro/` to vphone,
+`Scripts/resize-repro/` or the delayed-prompt fixture
+`Documents/CaseStudy/resize-flicker/slow-prompt.sh` to vphone,
 run it in an installed iGhostVT session through `ighostvt-cli send`, then
 terminate and relaunch the app while capturing so the animation runs over
 already settled content. Restore the three source files before building a
@@ -81,9 +88,8 @@ allocate the next render target. The library normally anchors the old frame
 at the top-left while waiting for a new frame, but changing its scale defeats
 that geometry. A fixed library build rejects frames whose dimensions differ
 by more than one pixel, retaining the last presented contents until a matching
-frame finishes. That patch is committed on libghostty-spm branch
-`codex/ios-resize-stale-surface` (`670a88b`), but it is not yet a published
-dependency or part of a normal iGhostVT build.
+frame finishes. The stale-frame guard is included in the released package
+above and is now used by normal iGhostVT builds.
 
 Earlier 0 ms runs had no displacement while 128 ms runs did. That correlation
 made throttling look like the cause. The library A/B at the *same* 128 ms
@@ -118,9 +124,10 @@ the other rows stayed intact.
 the prompt cells **before** the shell redraw arrives. The bundled zsh
 integration emits `OSC 133;A` without a `redraw` option; the terminal default
 is `true`. Sending `redraw=0` keeps the old prompt visible and eliminated the
-measured blink. This setting is a diagnostic control, not yet a general
-production fix: a multiline or edited input may need a shell repaint that
-fully erases old cells.
+measured blink. This setting was a diagnostic control. The released fix still
+clears the grid for reflow, but the renderer holds its last frame until the
+shell redraws the prompt and input, with a bounded wait. That avoids leaving
+stale text behind for multiline or edited input.
 
 ## Whole-screen clear during synchronized repaint
 
@@ -148,8 +155,7 @@ during synchronized transactions, and neither lost its IOSurface. Only the
 failing build displayed those intermediate grids. The preserved-sync build
 kept the old complete image until the program ended DEC 2026. Ghostty's
 existing termio watchdog still releases a transaction after one second if
-the program does not end it. The library patch is committed as `0cdcc5e`
-on `codex/ios-resize-stale-surface`; it has not been published.
+the program does not end it. The fix shipped in the package above.
 
 This confirms a full-screen clear mechanism for a program using DEC 2026.
 Whether a specific Codex/Claude version uses that sequence, or sends an
@@ -172,3 +178,25 @@ IOSurface points to terminal content or PTY output. The grid read adds CPU
 load, so repeat a finding without the probe to measure its natural frequency.
 Apply this patch and the resize animation only to a test `.deb`, then reverse
 both before a normal package.
+
+## Final A/B on vphone
+
+The final probe used the same app source and four 0–90 pt resize animations
+for each arm. Only the library differed. A deliberately slow shell emitted
+OSC 133 B 150 ms after SIGWINCH, making the prompt gap visible at about 60
+sampled frames per second. The real zsh gap was too short for three control
+runs to catch reliably, so the fixture tests the frame-hold mechanism rather
+than the timing of a normal zsh prompt.
+
+| Case | Released 1.6.20260909 | Fixed test library |
+| --- | ---: | ---: |
+| Delayed prompt, blank prompt row | 398 / 1,201 frames | 0 / 1,201 frames |
+| DEC 2026 clear and repaint, blank fixed text area | 291 / 1,201 frames | 0 / 1,200 frames |
+
+The detector's `--stable-content` prompt report missed the blank row in this
+run; the counts above come directly from `metrics.csv` (`ink_fraction = 1.0`
+for an empty row) and inspection of captured frames. The clean app package
+was installed on vphone after removing the temporary instrumentation. These
+numbers describe the test library from that run; the published revision adds
+bounded redraw handling and focused regression tests, and has not been
+remeasured on the device.

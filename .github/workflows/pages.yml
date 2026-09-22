@@ -1,5 +1,5 @@
 # The project page used to be the legacy Pages source (branch main, folder
-# /docs). The folder moved to Documents/Site with the rest of the prose, and
+# /docs). The folder moved to Documents/Web with the rest of the prose, and
 # legacy Pages only accepts / or /docs — so the site is deployed from here
 # instead, and the repository's Pages source must be set to "GitHub Actions".
 name: Pages
@@ -8,7 +8,7 @@ on:
   push:
     branches: [main]
     paths:
-      - Documents/Site/**
+      - Documents/Web/**
       - .github/workflows/pages.yml
   release:
     types: [published, edited]
@@ -66,6 +66,6 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: Documents/Site
+          path: Documents/Web
       - id: deployment
         uses: actions/deploy-pages@v4

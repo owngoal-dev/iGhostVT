@@ -41,8 +41,10 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 1.6.20260909, Ghostty 82938b63 on Zig 0.16 — the
-  text primitive is `paste(text:)`; the `sendText` spellings it replaced are
+  (`upToNextMajor` from 1.6.20260922, Ghostty 3c47ca15 on Zig 0.16). This
+  revision fixes resize flicker from stale IOSurfaces, synchronized clears,
+  and semantic prompt redraws. The text primitive is `paste(text:)`; the
+  `sendText` spellings it replaced are
   gone, and they never typed keystrokes anyway. Below that: generated configs
   are scoped to the host's bundle id; the `<major.minor>.<YYYYMMDD>` track
   began in 1.5.20260903, Ghostty c4e16970a, with
@@ -113,10 +115,10 @@ Shared XPC protocol in `Shared/Protocol/`, `ActivityAttributes` in
 `iGhostVT/Backend/Transport/` beside its XPC implementation (a plain file
 in the app target — it was a local package once, and the module boundary
 bought nothing). Prose lives in
-`Documents/` — `ARCHITECTURE.md`, `Research/`, and `Site/`, which is the
-GitHub Pages source: `.github/workflows/pages.yml` publishes that folder, so
+`Documents/` — `ARCHITECTURE.md`, `Research/`, `CaseStudy/`, and `Web/`, which is the
+GitHub Pages source: `.github/workflows/pages.yml` publishes `Web/`, so
 the repo's Pages setting is **GitHub Actions**, not the legacy `/docs`
-branch folder. Keep the site's `index.html` and `icon.png` at `Site/` root —
+branch folder. Keep the site's `index.html` and `icon.png` at `Web/` root —
 `manifest.json` and the AltStore-style clients fetch
 `https://owngoal-dev.github.io/iGhostVT/icon.png`.
 
