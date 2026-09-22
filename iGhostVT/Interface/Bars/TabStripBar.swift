@@ -95,6 +95,9 @@ struct TabStripBar: View {
                         ObservedTabTitle(tab: tab)
                         ObservedTabSubtitle(tab: tab)
                     }
+                    // Title and subtitle name one tab: VoiceOver reads them
+                    // as one stop rather than stopping twice on the capsule.
+                    .accessibilityElement(children: .combine)
                     .padding(.horizontal, DS.Padding.l)
                     .contextMenu {
                         TabContextMenu(tab: tab, tabManager: tabManager, window: window)
@@ -239,6 +242,9 @@ private struct TabChip: View {
             // over instead of jumping.
             .animation(DS.Motion.smooth, value: tab.displayTitle)
         }
+        // Without it a chip gives VoiceOver no way to tell which tab the
+        // strip is on. The close button inside stays its own element.
+        .accessibilityAddTraits(isActive ? [.isSelected] : [])
     }
 }
 

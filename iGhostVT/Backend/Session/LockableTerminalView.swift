@@ -22,6 +22,7 @@ final class LockableTerminalView: TerminalView {
     /// which closes the hardware-key path too.
     var isInteractionLocked = false {
         didSet {
+            updateAccessibility()
             guard isInteractionLocked, isFirstResponder else { return }
             resignFirstResponder()
         }
@@ -40,6 +41,7 @@ final class LockableTerminalView: TerminalView {
     var isSoftwareKeyboardLocked = false {
         didSet {
             guard isSoftwareKeyboardLocked != oldValue else { return }
+            updateAccessibility()
             // The iPad shortcuts bar is not part of `inputAccessoryView`, and
             // an empty keyboard leaves it (and its dictation button) floating
             // over the terminal, stealing 40pt of grid. Empty its groups for
@@ -105,6 +107,24 @@ final class LockableTerminalView: TerminalView {
 
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         isInteractionLocked ? nil : super.hitTest(point, with: event)
+    }
+
+    // MARK: - Accessibility
+
+    /// The surface is one VoiceOver element: it draws its own grid, so there
+    /// is nothing underneath for assistive technology to walk into. An
+    /// interaction-locked view is no element at all — it refuses hit testing
+    /// and first responder there, and an element would be a way back in;
+    /// the pane's lock capsule still announces that state beside it.
+    private func updateAccessibility() {
+        isAccessibilityElement = !isInteractionLocked
+        accessibilityLabel = String(localized: "Terminal")
+        // Only the keyboard lock can be read here — the interaction lock
+        // removes the element above. `TabLock` owns the wording the badge
+        // and the capsule already speak.
+        accessibilityValue = isSoftwareKeyboardLocked ? TabLock.keyboard.badgeTitle : nil
+        // Output arrives without the user doing anything to prompt it.
+        accessibilityTraits.insert(.updatesFrequently)
     }
 
     // MARK: - The app's shortcuts
@@ -177,6 +197,7 @@ final class LockableTerminalView: TerminalView {
     /// there is a window it is there to remove.
     override func didMoveToWindow() {
         super.didMoveToWindow()
+        updateAccessibility()
         if !observesHardwareKeyboard {
             observeHardwareKeyboard()
         }

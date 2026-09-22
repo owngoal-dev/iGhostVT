@@ -18,6 +18,9 @@ struct AboutSettingsSection: View {
                 Text(Self.versionDescription)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Version")
+            .accessibilityValue(Self.versionDescription)
             NavigationLink {
                 LicensesView()
             } label: {

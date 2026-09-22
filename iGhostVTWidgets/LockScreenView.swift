@@ -40,6 +40,7 @@ struct LockScreenView: View {
                             .font(.subheadline)
                             .opacity(0.5)
                     }
+                    .accessibilityElement(children: .combine)
                     StatusBar(state: state)
                     HStack(alignment: .top, spacing: Spacing.card) {
                         if let running = state.runningSummary {
@@ -54,6 +55,7 @@ struct LockScreenView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 72)
+                    .accessibilityHidden(true)
             }
         }
         .padding(Spacing.card)
@@ -95,6 +97,8 @@ struct StatusBar: View {
             }
         }
         .frame(height: 6)
+        // Purely a rendering of the counts the summary line already speaks.
+        .accessibilityHidden(true)
     }
 }
 
@@ -112,6 +116,9 @@ private struct InfoPair: View {
                 .font(.subheadline)
                 .contentTransition(.numericText())
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(label))
+        .accessibilityValue(value)
     }
 }
 

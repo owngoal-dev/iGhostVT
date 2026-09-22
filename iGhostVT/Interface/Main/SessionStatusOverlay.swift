@@ -177,12 +177,17 @@ struct SessionStatusOverlay: View {
     private func pill(_ title: LocalizedStringKey) -> some View {
         HStack(spacing: DS.Padding.s) {
             ProgressView()
+                .accessibilityHidden(true)
             Text(title)
                 .font(DS.Font.labelEmphasis)
         }
         .padding(.horizontal, DS.Padding.l)
         .padding(.vertical, DS.Padding.m)
         .barGlass(in: Capsule(), interactive: false)
+        // One status element: the spinner adds nothing the phase does not
+        // already say, and the phase moves on by itself.
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.updatesFrequently)
         .transition(.opacity)
     }
 

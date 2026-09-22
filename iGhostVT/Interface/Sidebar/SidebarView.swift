@@ -106,6 +106,7 @@ struct SidebarView: View {
         HStack(spacing: DS.Padding.s) {
             Text(verbatim: "iGhostVT")
                 .font(DS.Font.title)
+                .accessibilityAddTraits(.isHeader)
                 .padding(.leading, DS.Padding.s)
             Spacer()
             Text(countLabel)
@@ -180,6 +181,9 @@ private struct SidebarRow: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
+                // Title and subtitle name one tab: one VoiceOver stop, not
+                // two. The row's close button stays its own element.
+                .accessibilityElement(children: .combine)
                 Spacer(minLength: 8)
                 // A locked row spends the close slot on the padlock — a
                 // second glyph beside the × crowds a title that is already
@@ -211,6 +215,8 @@ private struct SidebarRow: View {
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous))
         }
         .buttonStyle(.plain)
+        // The tinted slab is the only sign of which tab the window is on.
+        .accessibilityAddTraits(isActive ? [.isSelected] : [])
         .contextMenu {
             TabContextMenu(tab: tab, tabManager: tabManager, window: window)
         }
