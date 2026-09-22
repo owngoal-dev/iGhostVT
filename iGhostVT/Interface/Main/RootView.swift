@@ -304,6 +304,10 @@ private struct TerminalPane: View {
                     .padding(.vertical, DS.Padding.xs)
                     .background(.thinMaterial, in: Capsule())
                     .padding(DS.Padding.m)
+                    // Badge and caption carry the same word, so the capsule
+                    // is one element that says it once.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(lock.badgeTitle)
                     .transition(.opacity)
                 }
             }

@@ -20,6 +20,8 @@ struct AppearanceSettingsSection: View {
                     value: theme.selection.lightName ?? Self.defaultLabel(AppTheme.defaultLightName)
                 )
             }
+            .accessibilityLabel("Light Theme")
+            .accessibilityValue(theme.selection.lightName ?? Self.defaultLabel(AppTheme.defaultLightName))
             NavigationLink {
                 ThemeListView(slot: .dark)
             } label: {
@@ -29,6 +31,8 @@ struct AppearanceSettingsSection: View {
                     value: theme.selection.darkName ?? Self.defaultLabel(AppTheme.defaultDarkName)
                 )
             }
+            .accessibilityLabel("Dark Theme")
+            .accessibilityValue(theme.selection.darkName ?? Self.defaultLabel(AppTheme.defaultDarkName))
         } header: {
             Text("Appearance")
                 .font(DS.Font.caption)

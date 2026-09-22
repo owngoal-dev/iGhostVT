@@ -31,6 +31,7 @@ struct TerminalSessionActivityWidget: Widget {
                         .scaledToFit()
                         .frame(width: 22, height: 22)
                         .padding(.trailing, Spacing.line)
+                        .accessibilityHidden(true)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     IslandSummary(state: context.state)
@@ -41,6 +42,7 @@ struct TerminalSessionActivityWidget: Widget {
                     .scaledToFit()
                     .frame(width: 20, height: 20)
                     .frame(width: 24, alignment: .leading)
+                    .accessibilityLabel("iGhostVT")
             } compactTrailing: {
                 Text("\(context.state.totalCount)")
                     .font(.system(size: 20, weight: .bold, design: .rounded))
@@ -51,6 +53,7 @@ struct TerminalSessionActivityWidget: Widget {
                 Image("GhostGlyph")
                     .resizable()
                     .scaledToFit()
+                    .accessibilityLabel("iGhostVT")
             }
         }
     }
@@ -80,6 +83,7 @@ private struct IslandSummary: View {
                         .opacity(0.5)
                 }
             }
+            .accessibilityElement(children: .combine)
             StatusBar(state: state)
             if let summary = state.summaryLine {
                 Text(summary)

@@ -58,6 +58,10 @@ struct LicensesView: View {
                     } label: {
                         LicenseRow(entry: entry)
                     }
+                    // Component names and license identifiers are catalog
+                    // data, so the label is the row's own text, verbatim.
+                    .accessibilityLabel(Text(verbatim: entry.name))
+                    .accessibilityValue(entry.summary)
                 }
             }
             SettingsFormSpacer()

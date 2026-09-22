@@ -238,6 +238,7 @@ import SwiftUI
                         TextField(Self.placeholder, text: $text)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
+                            .accessibilityLabel("Custom Key")
                     } footer: {
                         Text("Up to three characters, sent exactly as typed. A single letter also works with Control.")
                             .font(DS.Font.detail)

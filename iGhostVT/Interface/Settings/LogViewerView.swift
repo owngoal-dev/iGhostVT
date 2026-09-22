@@ -69,6 +69,7 @@ struct LogViewerView: View {
     private func header(count: Int) -> some View {
         HStack(spacing: DS.Padding.s) {
             Image(systemName: "doc.text")
+                .accessibilityHidden(true)
             Text(verbatim: model.fileName)
             Text(String.localizedStringWithFormat(
                 NSLocalizedString("%lld entries", comment: "A log entry count"),
@@ -82,6 +83,7 @@ struct LogViewerView: View {
         .padding(.horizontal, DS.Padding.l)
         .padding(.vertical, DS.Padding.s)
         .background(Color(.secondarySystemGroupedBackground))
+        .accessibilityElement(children: .combine)
     }
 
     /// Nothing to show: still reading, an empty log, or no file at all.
@@ -93,6 +95,7 @@ struct LogViewerView: View {
                 Image(systemName: model.document.unreadable ? "doc.text.magnifyingglass" : "doc.text")
                     .font(DS.Font.heroSymbol)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
                 if model.document.unreadable {
                     Text("Unable to read the log file. Refresh to try again.")
                         .font(DS.Font.body)
@@ -196,6 +199,7 @@ struct LogViewerView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
+        .accessibilityLabel("Log Options")
     }
 
     private func share() {
@@ -218,10 +222,12 @@ private struct LogEntryRow: View {
                 if !entry.timestamp.isEmpty {
                     Text(verbatim: entry.timestamp)
                     Text(verbatim: "·")
+                        .accessibilityHidden(true)
                 }
                 Text(verbatim: entry.category)
                 if entry.level != .info {
                     Text(verbatim: "·")
+                        .accessibilityHidden(true)
                     Text(entry.level.title)
                 }
             }
@@ -229,6 +235,7 @@ private struct LogEntryRow: View {
             .foregroundColor(metaColor)
         }
         .padding(.vertical, DS.Padding.xs)
+        .accessibilityElement(children: .combine)
         .listRowBackground(rowBackground)
         .contextMenu {
             Button {

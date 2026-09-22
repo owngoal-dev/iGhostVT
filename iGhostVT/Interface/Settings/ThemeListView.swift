@@ -44,9 +44,12 @@ struct ThemeListView: View {
                         Image(systemName: "checkmark")
                             .foregroundColor(.accentColor)
                             .opacity(definition.name == selectedName ? 1 : 0)
-                            .accessibilityHidden(definition.name != selectedName)
+                            // The selection reaches VoiceOver as the row's
+                            // `.isSelected` trait, so the glyph stays silent.
+                            .accessibilityHidden(true)
                     }
                 }
+                .accessibilityAddTraits(definition.name == selectedName ? [.isSelected] : [])
             }
             SettingsFormSpacer()
         }
@@ -68,6 +71,7 @@ struct ThemeListView: View {
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
                 .foregroundColor(Color(hex: definition.foreground))
         }
+        .accessibilityHidden(true)
     }
 
     /// The eight base ANSI colors (0–7) as one segmented strip, so a theme's

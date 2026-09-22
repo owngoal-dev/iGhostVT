@@ -72,12 +72,25 @@ struct BottomBar: View {
                             .background(Color.accentColor, in: Circle())
                             .foregroundColor(.white)
                             .offset(x: 2, y: 2)
+                            // The badge is the button's value, spelled out
+                            // below; read as art it is a bare number.
+                            .accessibilityHidden(true)
                     }
                 }
                 .contentShape(Circle())
         }
         .barGlass(in: Circle())
         .accessibilityLabel("Show All Tabs")
+        .accessibilityValue(tabCountValue)
+    }
+
+    /// What the count badge says, as words — and said whether or not the
+    /// badge is showing, since one tab is worth announcing too.
+    private var tabCountValue: String {
+        String.localizedStringWithFormat(
+            NSLocalizedString("%lld Tabs", comment: "Count of open tabs, as a heading"),
+            tabManager.tabs.count
+        )
     }
 
     private var switchTabGesture: some Gesture {
@@ -106,6 +119,8 @@ private struct TitleCapsule: View {
                 .truncationMode(.middle)
             ObservedTabSubtitle(tab: tab)
         }
+        // Title and subtitle name one tab: one VoiceOver stop, not two.
+        .accessibilityElement(children: .combine)
         .padding(.horizontal, DS.Padding.l)
         .frame(maxWidth: .infinity, minHeight: 44)
         .contentShape(Capsule())

@@ -158,6 +158,9 @@ struct AdvancedSettingsView: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.trailing)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Status")
+                    .accessibilityValue(agentStatusDescription)
                 } header: {
                     Text("Terminal Helper")
                         .font(DS.Font.caption)
@@ -280,6 +283,7 @@ private struct ConfigurationFileView: View {
                 Image(systemName: "doc.text")
                     .font(DS.Font.captionEmphasis)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
                 // A file name, not copy: the same on every locale.
                 Text(verbatim: "ghostty.conf")
                     .font(DS.Font.captionEmphasis)
@@ -313,6 +317,9 @@ private struct ConfigurationFileView: View {
                                 .foregroundColor(Color.secondary.opacity(0.5))
                         }
                     }
+                    // A gutter of bare numbers read one by one is noise; the
+                    // lines themselves carry the file.
+                    .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(lines.indices, id: \.self) { index in
                             ConfigurationLine(text: lines[index])

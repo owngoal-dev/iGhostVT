@@ -23,6 +23,7 @@ struct TabSwitcherView: View {
             ScrollView {
                 Text(tabCountLabel)
                     .font(DS.Font.title)
+                    .accessibilityAddTraits(.isHeader)
                     .padding(.top, DS.Padding.m)
 
                 LazyVGrid(columns: columns, spacing: DS.Padding.m) {
@@ -210,6 +211,14 @@ private struct TabCard: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
+            // The card selects on a tap gesture, which VoiceOver cannot
+            // reach, and the picture below is hidden: without this the grid
+            // offers no way to switch tabs at all. Combining the two titles
+            // gives the card one stop that carries the tap as its action;
+            // the close button beside it stays its own element.
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(isActive ? [.isButton, .isSelected] : [.isButton])
+            .accessibilityAction { onSelect() }
             Spacer(minLength: 4)
             if let lock = tab.lock {
                 TabLockBadge(lock: lock)

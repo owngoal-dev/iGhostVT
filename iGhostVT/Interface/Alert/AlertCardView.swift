@@ -72,10 +72,14 @@ struct AlertCardView: View {
                 .scaledToFill()
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous))
+                // The app icon is the card's decoration; the title says what
+                // the alert is about.
+                .accessibilityHidden(true)
 
             Text(title)
                 .font(DS.Font.title)
                 .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
 
             if !message.isEmpty {
                 Text(message)
@@ -97,6 +101,12 @@ struct AlertCardView: View {
         .frame(maxWidth: 350)
         .cardGlass(in: RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
         .fixedSize(horizontal: false, vertical: true)
+        // The card stands in for `UIAlertController`, inline as well as
+        // presented: while it is up it is the whole screen as far as
+        // VoiceOver is concerned, and its title, message and buttons are
+        // what it contains.
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isModal)
         .background {
             if claimsFirstResponder {
                 AlertFirstResponder {
