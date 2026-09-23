@@ -48,7 +48,7 @@ struct AdvancedSettingsView: View {
     private var shellSection: some View {
         Section {
             HStack {
-                Label("Shell", systemImage: "terminal")
+                Text("Shell")
                     .layoutPriority(1)
                 Spacer()
                 // Buttons, not a Picker: Catalyst draws a Picker inside a
@@ -156,7 +156,7 @@ struct AdvancedSettingsView: View {
 
             if recents.isEnabled {
                 HStack {
-                    Label("Sort By", systemImage: "arrow.up.arrow.down")
+                    Text("Sort By")
                         .layoutPriority(1)
                     Spacer()
                     // Buttons rather than a Picker, as the shell choice
