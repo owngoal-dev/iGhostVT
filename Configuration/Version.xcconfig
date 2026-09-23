@@ -1,5 +1,5 @@
 // Single source of truth for the app and Debian package version.
 // Update with `make set-version VERSION=1.2.3`.
 
-MARKETING_VERSION = 1.0.0
-CURRENT_PROJECT_VERSION = 74
+MARKETING_VERSION = 1.0.1
+CURRENT_PROJECT_VERSION = 75
