@@ -256,6 +256,21 @@ enum ShellLaunch {
         return [RuntimeEnvironment.resolve(user.home), user.home].first(where: isDirectory)
     }
 
+    /// Where a session with no directory of its own starts, for the one
+    /// caller that needs to *recognise* it rather than use it: the
+    /// directory reporter, which shows it as `~`.
+    ///
+    /// Only the daemon can answer this. Under roothide the home is
+    /// `<jbroot>/var/mobile`, not `/var/mobile` — the passwd entry says
+    /// the latter and `resolve` finds the former — so an app matching
+    /// `/var/mobile` against the path would call the jbroot's home
+    /// something else and iOS's own `/var/mobile` the home. Both of those
+    /// are wrong, and it made the wrong one every time.
+    ///
+    /// Resolved once: the passwd file is not going to change under a
+    /// running daemon, and this is read on every directory report.
+    static let sessionHomeDirectory: String? = workingDirectory(for: sessionUser)
+
     private static func isDirectory(_ path: String) -> Bool {
         var info = stat()
         return stat(path, &info) == 0 && info.st_mode & S_IFMT == S_IFDIR

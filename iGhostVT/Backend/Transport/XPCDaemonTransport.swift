@@ -74,6 +74,13 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// daemon reads the path from the kernel; the app never names one.
     private let inheritDirectoryFrom: UInt64?
 
+    /// A directory a fresh open starts in when no live session can name it
+    /// — a row of the recent list. Only ever a path the daemon itself
+    /// reported (`TerminalDirectory.path`), handed straight back; the app
+    /// composes no paths of its own. Sent with the open only, and ignored
+    /// by the daemon when `inheritDirectoryFrom` names a live session.
+    private let startDirectory: String?
+
     var onEvent: (@Sendable (TerminalTransportEvent) -> Void)? {
         get { lock.locked { _onEvent } }
         set { lock.locked { _onEvent = newValue } }
@@ -117,12 +124,14 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     init(
         shellPath: String? = nil,
         resumeSessionID: UInt64? = nil,
-        inheritDirectoryFrom: UInt64? = nil
+        inheritDirectoryFrom: UInt64? = nil,
+        startDirectory: String? = nil
     ) {
         let trimmed = shellPath?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.shellPath = (trimmed?.isEmpty ?? true) ? nil : trimmed
         self.resumeSessionID = resumeSessionID
         self.inheritDirectoryFrom = inheritDirectoryFrom
+        self.startDirectory = startDirectory
     }
 
     deinit {
@@ -570,7 +579,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     let rows = Int(xpc_dictionary_get_uint64(reply, iGhostVTWireKey.rows))
                     appliedViewport = columns > 0 && rows > 0 ? (columns, rows) : nil
                     emit(.state(.connected))
-                    emitForegroundProcess(in: reply)
+                    emitSessionState(in: reply)
                     // Replayed scrollback so the surface rebuilds its screen.
                     // Repainted from a clean slate: on an in-app reconnect the
                     // surface still shows the session's last frame, and
@@ -618,6 +627,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         if let inheritDirectoryFrom {
             xpc_dictionary_set_uint64(message, iGhostVTWireKey.inheritDirectoryFrom, inheritDirectoryFrom)
         }
+        if let startDirectory {
+            xpc_dictionary_set_string(message, iGhostVTWireKey.startDirectory, startDirectory)
+        }
         xpc_connection_send_message_with_reply(connection, message, queue) { [weak self] reply in
             guard let self else { return }
             let code = Self.replyCode(of: reply)
@@ -633,7 +645,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             }
             appliedViewport = (Int(columns), Int(rows))
             emit(.state(.connected))
-            emitForegroundProcess(in: reply)
+            emitSessionState(in: reply)
         }
     }
 
@@ -679,7 +691,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                 emit(.received(data))
             }
         case .processName:
-            emitForegroundProcess(in: event)
+            emitSessionState(in: event)
         case .sessionExit:
             let exitCode = Int32(
                 truncatingIfNeeded: xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode)
@@ -766,14 +778,22 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         onEvent?(event)
     }
 
-    /// The foreground process as a reply or event 102 states it. An older
-    /// daemon sends no shell flag; `get_bool` reads false for the missing
-    /// key, which the app treats as "something may be running" — the
-    /// safe side.
-    private func emitForegroundProcess(in dictionary: xpc_object_t) {
-        guard let name = Self.string(iGhostVTWireKey.processName, in: dictionary) else { return }
-        let isShell = xpc_dictionary_get_bool(dictionary, iGhostVTWireKey.foregroundIsShell)
-        emit(.processName(name, isShell: isShell))
+    /// What a reply or event 102 says the session is doing: the foreground
+    /// process, and where its shell is. An older daemon sends no shell flag;
+    /// `get_bool` reads false for the missing key, which the app treats as
+    /// "something may be running" — the safe side. One that sends no
+    /// directory simply never moves the tab's.
+    private func emitSessionState(in dictionary: xpc_object_t) {
+        if let name = Self.string(iGhostVTWireKey.processName, in: dictionary) {
+            let isShell = xpc_dictionary_get_bool(dictionary, iGhostVTWireKey.foregroundIsShell)
+            emit(.processName(name, isShell: isShell))
+        }
+        if let path = Self.string(iGhostVTWireKey.currentDirectory, in: dictionary) {
+            emit(.currentDirectory(TerminalDirectory(
+                path: path,
+                display: Self.string(iGhostVTWireKey.displayDirectory, in: dictionary)
+            )))
+        }
     }
 
     private static func string(_ key: String, in dictionary: xpc_object_t) -> String? {

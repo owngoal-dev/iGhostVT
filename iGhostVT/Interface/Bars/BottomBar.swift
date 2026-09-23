@@ -19,14 +19,13 @@ struct BottomBar: View {
                     overflowMenu
                     switcherButton
                 } else {
-                    Button(action: { tabManager.newTab() }) {
+                    NewTabMenu(tabManager: tabManager) {
                         Image(systemName: "plus")
                             .font(DS.Font.control)
                             .frame(width: 44, height: 44)
                             .contentShape(Circle())
                     }
                     .barGlass(in: Circle())
-                    .accessibilityLabel("New Tab")
 
                     Button(action: onShowSettings) {
                         Image(systemName: "gearshape")

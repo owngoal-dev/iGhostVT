@@ -12,6 +12,7 @@ import SwiftUI
 /// keystroke-level log.
 struct AdvancedSettingsView: View {
     @ObservedObject private var agent = MacLaunchAgent.shared
+    @ObservedObject private var recents = RecentDirectoryStore.shared
 
     /// Read by the daemon when spawning shells. Empty means "let the daemon
     /// pick", using the session user's configured shell or its fallback.
@@ -32,6 +33,7 @@ struct AdvancedSettingsView: View {
     var body: some View {
         Form {
             shellSection
+            recentDirectoriesSection
             SessionsSettingsSection()
             terminalHelperSection
             debugSection
@@ -46,7 +48,7 @@ struct AdvancedSettingsView: View {
     private var shellSection: some View {
         Section {
             HStack {
-                Label("Shell", systemImage: "terminal")
+                Text("Shell")
                     .layoutPriority(1)
                 Spacer()
                 // Buttons, not a Picker: Catalyst draws a Picker inside a
@@ -139,6 +141,75 @@ struct AdvancedSettingsView: View {
             guard let paths else { return }
             Task { @MainActor in
                 availableShellPaths = paths
+            }
+        }
+    }
+
+    /// The new-tab menu's third group: the directories this app's sessions
+    /// have been in. Here rather than on the main sheet because it is a
+    /// setting about a menu — and because the switch is the one way to say
+    /// "do not keep this list", which is not a thing to bury but not a
+    /// first question either.
+    private var recentDirectoriesSection: some View {
+        Section {
+            Toggle("Remember Directories", isOn: $recents.isEnabled)
+
+            if recents.isEnabled {
+                HStack {
+                    Text("Sort By")
+                        .layoutPriority(1)
+                    Spacer()
+                    // Buttons rather than a Picker, as the shell choice
+                    // above: Catalyst draws a Picker inside a Menu as a
+                    // submenu titled with the picker's own label.
+                    Menu {
+                        ForEach(RecentDirectoryStore.SortOrder.allCases) { order in
+                            sortChoice(order)
+                        }
+                    } label: {
+                        HStack(spacing: DS.Padding.xs) {
+                            Text(verbatim: recents.sortOrder.title)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .imageScale(.small)
+                        }
+                    }
+                    .accessibilityLabel("Sort By")
+                    .accessibilityValue(recents.sortOrder.title)
+                }
+            }
+
+            if !recents.entries.isEmpty {
+                Button(role: .destructive, action: { recents.clear() }) {
+                    Text("Clear Recent Directories")
+                }
+            }
+        } header: {
+            Text("Recent Directories")
+                .font(DS.Font.caption)
+        } footer: {
+            Text(
+                """
+                New Tab offers the directories your terminals are in, then \
+                the ones they have been in before. Turn this off and that \
+                second list is neither offered nor added to; what is already \
+                remembered stays until you clear it.
+                """
+            )
+            .font(DS.Font.detail)
+        }
+    }
+
+    /// One row of the sort menu, checked when it is the current order.
+    @ViewBuilder
+    private func sortChoice(_ order: RecentDirectoryStore.SortOrder) -> some View {
+        Button {
+            recents.sortOrder = order
+        } label: {
+            if recents.sortOrder == order {
+                Label(order.title, systemImage: "checkmark")
+            } else {
+                Text(verbatim: order.title)
             }
         }
     }

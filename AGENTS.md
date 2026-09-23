@@ -252,18 +252,64 @@ naming the login shell to run interactively, with integration injected —
 what the app sends for its Settings choice. Neither key is the default
 shell.
 
-A new tab opens where the current one is, and the directory never crosses
-the wire: `TabManager.newTab` names the active tab's daemon session
-(`inheritDirectoryFrom`, sent with the open only — an attach reaches a shell
-that already sits somewhere), and `SessionRegistry` reads *that shell's*
-current directory from the kernel (`proc_pidinfo` / `PROC_PIDVNODEPATHINFO`
-on the child, not the foreground program) and `chdir`s the new child there
-before `execve`. Nothing is typed into a PTY, the app picks no path, it works
-for a shell with no OSC 7, and the kernel's spelling is the one `chdir`
-wants, whatever vocabulary a vroot-linked shell prints. A directory the
-session user can no longer enter falls back to the plan's home, never to
-launchd's `/`. The iOS SDK ships no `proc_info.h`, so the struct's ABI lives
-as constants in `ProcVnodePathInfo`.
+A new tab opens where the current one is, and for a live session the
+directory still never crosses the wire: `TabManager.newTab(.activeTab)`
+names the active tab's daemon session (`inheritDirectoryFrom`, sent with the
+open only — an attach reaches a shell that already sits somewhere), and
+`SessionRegistry` reads *that shell's* current directory from the kernel
+(`proc_pidinfo` / `PROC_PIDVNODEPATHINFO` on the child, not the foreground
+program) and `chdir`s the new child there before `execve`. Nothing is typed
+into a PTY, the app picks no path, it works for a shell with no OSC 7, and
+the kernel's spelling is the one `chdir` wants, whatever vocabulary a
+vroot-linked shell prints. A directory the session user can no longer enter
+falls back to the plan's home, never to launchd's `/`. The iOS SDK ships no
+`proc_info.h`, so the struct's ABI lives as constants in
+`ProcVnodePathInfo`.
+
+The new-tab menu needs the other half of that — a directory whose session is
+long gone — so `startDirectory` names one outright. Only a path the daemon
+itself reported may go there (`TerminalDirectory.path`, handed straight
+back); the app composes none, `inheritDirectoryFrom` wins when both are
+sent, and the registry checks it exactly as it checks an inherited one
+(`enterableDirectory`: absolute, a directory right now), so a path that went
+away means the home, never a failed open. That is also why the daemon
+reports *two* spellings. `currentDirectory` is the kernel's path, the only
+one `chdir` takes. `displayDirectory` is the same directory as a person
+should read it: the session user's home as `~`, anything else inside the
+bootstrap against `@jb` — nobody recognises
+`/var/containers/Bundle/Application/<uuid>/usr/src`, and `@jb/usr/src` also
+says which `/usr/src` it is — and absent for a path that is already its own
+best spelling. Neither reading is the app's to make. **The home is not
+`/var/mobile` under roothide**: the passwd entry says that, `resolve` finds
+`<jbroot>/var/mobile`, and the shell starts there — so an app matching
+`/var/mobile` renames iOS's own directory *and* misses the real home, which
+is exactly what it did before `ShellLaunch.sessionHomeDirectory` existed.
+`TerminalDirectory.label` therefore abbreviates nothing, and its `isHome`
+is just `display == "~"`, which is what keeps the home off the menu's other
+two groups.
+
+Both spellings go through `RuntimeEnvironment.spelling(of:under:as:)`, and
+it **canonicalises both sides**. `proc_pidinfo` answers `/var/mobile/…`
+where `realpath` of the daemon's own executable — which is where
+`Bootstrap.root` came from — gives `/private/var/mobile/…`; a plain prefix
+test compares those two spellings of one directory and finds nothing, so
+the marker never once appeared on a device. `Bootstrap.root` is the jbroot
+under roothide and, under rootless, the *canonical* directory `/var/jb`
+resolves to rather than the literal its binaries were built against, since
+that may be a symlink to a randomly named one. None of this is the inverse
+of `resolve`, and `~` and `@` begin no real path, so a display spelling can
+never be mistaken for one.
+
+Event 102 carries three things and fires when any of them moves: the
+foreground process's name, whether that process is the session's own shell,
+and where the shell is. The directory is read only while the shell *is* the
+foreground — `cd` is a builtin, so nothing else can move it — and at most
+once a second (`directoryPollInterval`), which is what notices a `cd` typed
+at a prompt, since that changes no process at all. A client applies each
+field on its own: an event may well say only that the directory moved.
+`TerminalSessionStore` publishes it, `RecentDirectoryStore` counts it as one
+visit (the transport emits changes only), and the Live Activity prefers it
+over the shell's own OSC 7.
 
 Tab titles have three sources. The daemon's is the one always there: each
 session polls `tcgetpgrp` on its PTY (and re-checks as output drains, rate
@@ -295,7 +341,40 @@ tab whose shell is at its prompt closes on the spot (`hasRunningProgram`). A
 detached tab's last report is stale, so it still asks; an unknown state reads
 as running. On the regular-width bar the trailing ⋯ button opens this same
 menu for the active tab with New Tab and New Window at its head — the
-strip has no + of its own. The two locks freeze the *user*, never the
+strip has no + of its own.
+
+Every `+` is a `NewTabMenu`: the only decision a new terminal has is where
+its shell starts, so the control opens a menu of directories instead of a
+tab. Three inline groups, in this order — the home; the directories this
+window's own tabs are in, deduplicated and sorted by path, each naming a
+live session (`inheritDirectoryFrom`) so the daemon re-reads it as the tab
+opens; and the recent list, sorted by the order chosen in Settings ▸
+Advanced. Neither of the last two ever repeats the home (`isHome`) or a
+directory the other already offers — three rows opening the same shell in
+the same place is two too many. `NewTabDirectoryChoices` works all of that out once, because the
+same answer decides whether there is anything to choose at all: with
+nothing but the home to offer — a first launch, a window whose tabs have
+not reported yet — the control stays the plain button it replaced, and ⌘T
+is always `.activeTab` regardless. The ⋯ menu's New Tab is the same view
+with a `Label`, so it becomes a submenu; that matters because on a phone
+with tabs open the bar shows the title capsule and ⋯ is the only new-tab
+control on screen. The sidebar row, the compact bar's `+`, the switcher's
+dashed card and that entry are the four.
+
+The recent list is `RecentDirectoryStore`, and it is the one thing about
+sessions the app persists (`UserDefaults`): the daemon keeps no such record,
+and the visit counts and the two spellings exist nowhere else. Every entry
+came from event 102 — never from a shell's own OSC 7, which under roothide
+is not a path anything can `chdir` to. Forty are kept, the least recently
+visited evicted first whatever the sort order; eight reach the menu, minus
+any directory an open tab is already offering and minus the home, which is
+the first row anyway. Settings ▸ Advanced ▸ Recent Directories is the whole
+of its configuration: Remember Directories both hides the group *and* stops
+recording — a switch that says the app is not keeping this has to mean it —
+Sort By is Last Visited or Most Visited, and Clear is the only thing that
+throws the list away, so turning the switch back on restores it.
+
+The two locks freeze the *user*, never the
 program: output keeps flowing and the surface keeps rendering. They are
 one choice (`TerminalTab.lock`, at most one of `.interaction` /
 `.keyboard`): picking the other lock switches, picking the one that is on

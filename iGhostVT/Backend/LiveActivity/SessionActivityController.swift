@@ -76,7 +76,7 @@ final class SessionActivityController {
                     TerminalSessionAttributes.Session(
                         id: tab.id.uuidString,
                         title: tab.reportedTitle,
-                        directory: Self.displayPath(tab.terminal.workingDirectory),
+                        directory: Self.displayPath(of: tab),
                         shell: Self.configuredShellName,
                         number: number,
                         status: Self.status(for: tab.store.status),
@@ -117,17 +117,11 @@ final class SessionActivityController {
         }
     }
 
-    /// OSC 7 arrives as a `file://` URL from some shells and a bare path from
-    /// others; either way the shell's home is noise, so it collapses to `~`.
-    private static func displayPath(_ reported: String?) -> String {
-        guard var path = reported, !path.isEmpty else { return "" }
-        if path.hasPrefix("file://"), let url = URL(string: path) {
-            path = url.path
-        }
-        for home in ["/private/var/mobile", "/var/mobile"] where path.hasPrefix(home) {
-            return path == home ? "~" : "~" + path.dropFirst(home.count)
-        }
-        return path
+    /// Where the widget says the tab is. The daemon's reading first — it is
+    /// the kernel's, so it is right for a shell that reports no OSC 7 at
+    /// all — and the shell's own report while the session has not said yet.
+    private static func displayPath(of tab: TerminalTab) -> String {
+        tab.currentDirectory?.label ?? TerminalDirectory.abbreviate(tab.terminal.workingDirectory)
     }
 
     #if !targetEnvironment(macCatalyst) && canImport(ActivityKit)

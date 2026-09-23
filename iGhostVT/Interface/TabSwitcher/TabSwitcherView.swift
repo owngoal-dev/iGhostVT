@@ -65,10 +65,7 @@ struct TabSwitcherView: View {
     }
 
     private var newTabCard: some View {
-        Button(action: {
-            tabManager.newTab()
-            dismiss()
-        }) {
+        NewTabMenu(tabManager: tabManager, onOpen: { dismiss() }) {
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .strokeBorder(
                     theme.hairline(for: colorScheme),
@@ -83,7 +80,6 @@ struct TabSwitcherView: View {
                 .contentShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("New Tab")
     }
 
     private var bottomBar: some View {

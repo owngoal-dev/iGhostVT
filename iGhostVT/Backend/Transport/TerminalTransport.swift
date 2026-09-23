@@ -48,6 +48,10 @@ enum TerminalTransportEvent: Sendable {
     /// own shell — nothing running in front of it. A backend that cannot
     /// know simply never sends it.
     case processName(String, isShell: Bool)
+    /// The endpoint reports where the session's shell is — once when the
+    /// session is opened or reattached, and again whenever it moves. Only
+    /// changes are sent, so each one is a visit the recent list can count.
+    case currentDirectory(TerminalDirectory)
 }
 
 enum TerminalTransportState: Sendable, Equatable {

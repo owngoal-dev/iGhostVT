@@ -105,13 +105,29 @@ final class TerminalTab: ObservableObject, Identifiable {
         daemonSession.id
     }
 
+    /// Where this tab's shell is, as the daemon last reported it. `nil`
+    /// while the session has not said yet — a tab still connecting, or a
+    /// detached one. The new-tab menu lists these; a tab without one simply
+    /// offers no row.
+    var currentDirectory: TerminalDirectory? {
+        store.currentDirectory
+    }
+
     /// `inheritDirectoryFrom` is the daemon session of the tab this one was
     /// opened from; a resumed tab ignores it, since its shell already sits
     /// somewhere. The transport factory sends it on every open, so a shell
     /// that exits and is reopened starts where the *source* shell is by
     /// then — or in the home once that session is gone — never where this
     /// tab's dead shell was.
-    init(resumeDaemonSessionID: UInt64? = nil, inheritDirectoryFrom: UInt64? = nil) {
+    ///
+    /// `startDirectory` is the same idea for a directory no session can
+    /// name any more: a row of the recent list, which is a path the daemon
+    /// itself reported.
+    init(
+        resumeDaemonSessionID: UInt64? = nil,
+        inheritDirectoryFrom: UInt64? = nil,
+        startDirectory: String? = nil
+    ) {
         let daemonSession = DaemonSessionBox(id: resumeDaemonSessionID)
         self.daemonSession = daemonSession
         terminal = TerminalViewState(
@@ -126,7 +142,8 @@ final class TerminalTab: ObservableObject, Identifiable {
             let transport = XPCDaemonTransport(
                 shellPath: UserDefaults.standard.string(forKey: "Shell.path"),
                 resumeSessionID: daemonSession.id,
-                inheritDirectoryFrom: inheritDirectoryFrom
+                inheritDirectoryFrom: inheritDirectoryFrom,
+                startDirectory: startDirectory
             )
             // A real process exit (including one we asked for via
             // closeSession) means the ID must never be reused: forget it in
@@ -229,6 +246,7 @@ final class TerminalTab: ObservableObject, Identifiable {
             store.$status.removeDuplicates().map { _ in () }
         )
         .merge(with: store.$processName.removeDuplicates().map { _ in () })
+        .merge(with: store.$currentDirectory.removeDuplicates().map { _ in () })
         .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
         .sink { _ in
             Task { @MainActor in

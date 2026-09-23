@@ -56,13 +56,21 @@ final class PeerSession {
         attachedSessionIDs.remove(sessionID)
     }
 
-    func deliverProcessName(sessionID: UInt64, name: String, isShell: Bool) {
+    /// Event 102: what the session's terminal is doing now. Sent whenever
+    /// the session notices a change, and worded exactly as the open and
+    /// attach replies word it.
+    func deliverForeground(of session: PTYSession) {
         guard isValid else { return }
         let message = xpc_dictionary_create(nil, nil, 0)
         xpc_dictionary_set_uint64(message, iGhostVTWireKey.version, iGhostVTProtocol.version)
         xpc_dictionary_set_uint64(message, iGhostVTWireKey.event, iGhostVTEvent.processName.rawValue)
-        xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, sessionID)
-        Self.setForegroundProcess(name: name, isShell: isShell, in: message)
+        xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, session.id)
+        Self.setForegroundProcess(
+            name: session.foregroundProcessName,
+            isShell: session.isForegroundShell,
+            in: message
+        )
+        Self.setDirectory(session.reportedDirectory, in: message)
         host.send(.event, peer: peerID, tag: 0, message: message)
     }
 
@@ -71,6 +79,36 @@ final class PeerSession {
     private static func setForegroundProcess(name: String, isShell: Bool, in message: xpc_object_t) {
         xpc_dictionary_set_string(message, iGhostVTWireKey.processName, name)
         xpc_dictionary_set_bool(message, iGhostVTWireKey.foregroundIsShell, isShell)
+    }
+
+    /// A session's directory, in both spellings a client needs: the
+    /// kernel's, which is what `startDirectory` wants handed back, and —
+    /// where they differ — the one worth showing a person.
+    private static func setDirectory(_ path: String?, in message: xpc_object_t) {
+        guard let path else { return }
+        xpc_dictionary_set_string(message, iGhostVTWireKey.currentDirectory, path)
+        if let display = displaySpelling(of: path) {
+            xpc_dictionary_set_string(message, iGhostVTWireKey.displayDirectory, display)
+        }
+    }
+
+    /// How a directory should read to a person: the session user's home
+    /// against `~`, anything else inside the bootstrap against `@jb`, and
+    /// nothing at all for a path that is already its own best spelling —
+    /// so the wire carries a second spelling only where it says something.
+    ///
+    /// The home is tested first because under roothide it is *inside* the
+    /// bootstrap (`<jbroot>/var/mobile`), and `@jb/var/mobile` is a true
+    /// but useless answer for the one directory every user recognises.
+    /// Only the daemon can make this call at all: the app has no way to
+    /// know where the session user's home is, and guessing `/var/mobile`
+    /// names the wrong directory under roothide in both directions.
+    private static func displaySpelling(of path: String) -> String? {
+        if let home = ShellLaunch.sessionHomeDirectory,
+           let spelled = RuntimeEnvironment.spelling(of: path, under: home, as: "~") {
+            return spelled
+        }
+        return RuntimeEnvironment.displaySpelling(of: path)
     }
 
     // MARK: - Requests from the client
@@ -177,9 +215,7 @@ final class PeerSession {
                 isShell: summary.isForegroundShell,
                 in: entry
             )
-            if let directory = summary.currentDirectory {
-                xpc_dictionary_set_string(entry, iGhostVTWireKey.currentDirectory, directory)
-            }
+            Self.setDirectory(summary.currentDirectory, in: entry)
             xpc_array_append_value(array, entry)
         }
         xpc_dictionary_set_value(reply, iGhostVTWireKey.sessions, array)
@@ -206,6 +242,8 @@ final class PeerSession {
         let columns = UInt16(truncatingIfNeeded: xpc_dictionary_get_uint64(message, iGhostVTWireKey.columns))
         let rows = UInt16(truncatingIfNeeded: xpc_dictionary_get_uint64(message, iGhostVTWireKey.rows))
         let inheritDirectoryFrom = optionalUInt64(message, key: iGhostVTWireKey.inheritDirectoryFrom)
+        let startDirectory = xpc_dictionary_get_string(message, iGhostVTWireKey.startDirectory)
+            .map { String(cString: $0) }
 
         DaemonFileLog.log("peer \(peerID) openSession \(columns)x\(rows)")
         do {
@@ -215,7 +253,8 @@ final class PeerSession {
                 environment: environment,
                 columns: columns,
                 rows: rows,
-                inheritDirectoryFrom: inheritDirectoryFrom
+                inheritDirectoryFrom: inheritDirectoryFrom,
+                startDirectory: startDirectory
             )
             _ = try registry.attach(session.id, to: self)
             attachedSessionIDs.insert(session.id)
@@ -226,6 +265,7 @@ final class PeerSession {
                     isShell: session.isForegroundShell,
                     in: reply
                 )
+                Self.setDirectory(session.currentDirectory, in: reply)
             }
             return .success
         } catch let failure as iGhostVTFailure {
@@ -319,8 +359,8 @@ final class PeerSession {
         return .success
     }
 
-    /// The size, the foreground process, and the replay buffer — what an
-    /// attach and a snapshot both answer with.
+    /// The size, the foreground process, the directory, and the replay
+    /// buffer — what an attach and a snapshot both answer with.
     private static func describe(_ session: PTYSession, into reply: xpc_object_t) {
         xpc_dictionary_set_uint64(reply, iGhostVTWireKey.columns, UInt64(session.columns))
         xpc_dictionary_set_uint64(reply, iGhostVTWireKey.rows, UInt64(session.rows))
@@ -329,6 +369,9 @@ final class PeerSession {
             isShell: session.isForegroundShell,
             in: reply
         )
+        // Read live rather than from the last poll: an attach is rare, and
+        // the tab it answers wants the directory the shell is in now.
+        setDirectory(session.currentDirectory, in: reply)
         let replay = session.replayData()
         replay.withUnsafeBytes { buffer in
             if let base = buffer.baseAddress, !replay.isEmpty {
