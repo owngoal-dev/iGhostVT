@@ -144,7 +144,13 @@ struct NewTabDirectoryChoices {
         for tab in ordered {
             guard let directory = tab.currentDirectory,
                   let sessionID = tab.daemonSessionID,
-                  listed.insert(directory.path).inserted
+                  // Marked as listed either way: a tab sitting in a
+                  // directory is reason enough for the recent list not to
+                  // offer it as well.
+                  listed.insert(directory.path).inserted,
+                  // A tab at the home is the row above. Two rows that open
+                  // the same shell in the same place is one row too many.
+                  !directory.isHome
             else { continue }
             rows.append(OpenTab(directory: directory, sessionID: sessionID))
         }

@@ -47,7 +47,14 @@ enum RuntimeEnvironment {
         /// roothide's own API has outside its managed environment.
         case none
         /// A fixed-prefix bootstrap whose programs speak real paths.
-        case rootless(prefix: String)
+        ///
+        /// `prefix` is the literal its binaries were built against and is
+        /// what goes back into a path; `root` is what that resolves to,
+        /// which is not always the same directory — `/var/jb` may be a
+        /// symlink to a randomly named one, and the kernel answers with
+        /// the real path. Recognising a path *as* the bootstrap's takes
+        /// the second.
+        case rootless(prefix: String, root: String)
         /// A randomly named jbroot whose programs are vroot-linked.
         case roothide(jbroot: String)
 
@@ -58,7 +65,7 @@ enum RuntimeEnvironment {
         func bootstrapPath(_ path: String) -> String {
             switch self {
             case .none, .roothide: path
-            case let .rootless(prefix): prefix + path
+            case let .rootless(prefix, _): prefix + path
             }
         }
 
@@ -80,23 +87,47 @@ enum RuntimeEnvironment {
             }
         }
 
-        /// The other direction, for showing a kernel path to a person: how
-        /// the bootstrap's own programs would print it. Under roothide the
-        /// jbroot comes off — a vroot-linked shell never shows it, and
-        /// `/var/containers/Bundle/Application/<uuid>/usr/src` is nobody's
-        /// idea of `/usr/src`. `nil` when the answer is the path itself,
-        /// so a caller can leave the second spelling off the wire.
-        ///
-        /// Not the inverse of `resolve`: a directory outside the jbroot
-        /// (`/var/mobile`) is spelled the same by everyone and comes back
-        /// `nil`, while `resolve` would have prefixed it.
-        func displaySpelling(of kernelPath: String) -> String? {
-            guard case let .roothide(jbroot) = self,
-                  kernelPath.hasPrefix(jbroot)
-            else { return nil }
-            let stripped = String(kernelPath.dropFirst(jbroot.count))
-            return stripped.hasPrefix("/") ? stripped : "/" + stripped
+        /// Where this bootstrap sits, as the kernel spells it: what a path
+        /// has to start with to be one of its files. `nil` when there is
+        /// no bootstrap, where nothing is inside one.
+        var root: String? {
+            switch self {
+            case .none: nil
+            case let .rootless(_, root): root
+            case let .roothide(jbroot): jbroot
+            }
         }
+
+        /// The other direction, for showing a kernel path to a person: a
+        /// file inside the bootstrap written against `@jb` rather than the
+        /// root it really sits at. Neither root is worth showing — under
+        /// roothide it is a random jbroot the vroot-linked shell never
+        /// prints, and under rootless it is a prefix nobody types — and
+        /// one marker says the same thing in both, which is also what
+        /// tells the bootstrap's `/usr/bin` from iOS's.
+        ///
+        /// `nil` when the path is not the bootstrap's at all
+        /// (`/var/mobile` belongs to iOS under every layout), so a caller
+        /// can leave the second spelling off the wire where it would say
+        /// nothing.
+        ///
+        /// Not the inverse of `resolve`, and never a path to hand back:
+        /// `@jb` is for reading.
+        func displaySpelling(of kernelPath: String) -> String? {
+            guard let root, kernelPath.hasPrefix(root) else { return nil }
+            let rest = kernelPath.dropFirst(root.count)
+            if rest.isEmpty {
+                return Bootstrap.marker
+            }
+            // Only at a boundary: `/var/jbsomething` is not in `/var/jb`.
+            guard rest.hasPrefix("/") else { return nil }
+            return Bootstrap.marker + rest
+        }
+
+        /// What a bootstrap path is shown as instead of its root. `@`
+        /// cannot begin an absolute path, so a row reading `@jb/usr/src`
+        /// can never be mistaken for one.
+        static let marker = "@jb"
     }
 
     static let bootstrap: Bootstrap = detect()
@@ -139,7 +170,9 @@ enum RuntimeEnvironment {
         // is canonical — so compare canonical against canonical, and keep the
         // literal prefix, which is the one its binaries were built against.
         if canonicalPath(rootlessPrefix) == root {
-            return .rootless(prefix: rootlessPrefix)
+            // The canonical directory, not the literal: this is the one a
+            // path read from the kernel will carry.
+            return .rootless(prefix: rootlessPrefix, root: root)
         }
         return .roothide(jbroot: root)
     }

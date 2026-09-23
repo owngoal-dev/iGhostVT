@@ -479,7 +479,7 @@ check(
     "and iOS's own filesystem is reached through the jbroot's /rootfs bridge"
 )
 
-let rootless = RuntimeEnvironment.Bootstrap.rootless(prefix: "/var/jb")
+let rootless = RuntimeEnvironment.Bootstrap.rootless(prefix: "/var/jb", root: "/private/var/jb")
 check(
     rootless.bootstrapPath("/bin/zsh") == "/var/jb/bin/zsh",
     "rootless prefixes the bootstrap's own paths — its binaries have /var/jb compiled in"
@@ -491,6 +491,35 @@ check(
 check(
     rootless.systemPath("/usr/bin") == "/usr/bin",
     "and iOS's own filesystem is just itself"
+)
+
+// A directory shown to a person: the bootstrap's root is a random jbroot
+// under one layout and a prefix nobody types under the other, so both are
+// written against `@jb` instead. Display only — `chdir` still wants the
+// kernel path.
+check(
+    roothide.displaySpelling(of: "\(jbroot)/usr/src") == "@jb/usr/src",
+    "roothide shows a bootstrap directory against @jb, not its jbroot"
+)
+check(
+    rootless.displaySpelling(of: "/private/var/jb/usr/src") == "@jb/usr/src",
+    "and rootless the same, off the root /var/jb really resolves to"
+)
+check(
+    roothide.displaySpelling(of: jbroot) == "@jb",
+    "the root itself is the marker alone"
+)
+check(
+    roothide.displaySpelling(of: "/var/mobile") == nil,
+    "a path iOS owns is spelled the same by everyone and gets no second spelling"
+)
+check(
+    rootless.displaySpelling(of: "/private/var/jbsomething") == nil,
+    "and a path that merely starts with the root's letters is not inside it"
+)
+check(
+    RuntimeEnvironment.Bootstrap.none.displaySpelling(of: "/usr/src") == nil,
+    "with no bootstrap nothing is inside one"
 )
 check(RuntimeEnvironment.isExecutable("/bin/sh"), "an existing shell is seen as executable")
 check(!RuntimeEnvironment.isExecutable("/bin/nope-not-here"), "a missing shell is not")

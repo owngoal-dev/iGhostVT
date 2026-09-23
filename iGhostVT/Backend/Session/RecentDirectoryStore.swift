@@ -126,9 +126,8 @@ final class RecentDirectoryStore: ObservableObject {
         guard isEnabled else { return [] }
         let offered = sorted()
             .map(\.directory)
-            // The home has its own row at the top of the menu, and `~` is
-            // exactly what the abbreviation makes of it.
-            .filter { !excluded.contains($0.path) && $0.label != "~" }
+            // The home has its own row at the top of the menu.
+            .filter { !excluded.contains($0.path) && !$0.isHome }
         return Array(offered.prefix(Self.menuRowLimit))
     }
 

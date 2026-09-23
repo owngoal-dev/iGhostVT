@@ -68,9 +68,9 @@ struct SessionSummary {
     /// Present from daemons that report them; `nil` from an older one.
     var processName: String?
     var currentDirectory: String?
-    /// The directory as the bootstrap's own programs spell it, sent only
-    /// where that differs from `currentDirectory` — under roothide, whose
-    /// jbroot prefix no shell ever shows.
+    /// The directory written against `@jb`, sent only for one inside the
+    /// bootstrap — whose real root is a random jbroot under roothide and a
+    /// prefix nobody types under rootless.
     var displayDirectory: String?
 
     /// What `list` prints: the spelling the user's own shell would.

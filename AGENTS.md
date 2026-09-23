@@ -273,14 +273,21 @@ back); the app composes none, `inheritDirectoryFrom` wins when both are
 sent, and the registry checks it exactly as it checks an inherited one
 (`enterableDirectory`: absolute, a directory right now), so a path that went
 away means the home, never a failed open. That is also why the daemon
-reports *two* spellings. Under roothide the kernel calls a shell's directory
-`/var/containers/Bundle/Application/<uuid>/usr/src` and the vroot-linked
-shell calls it `/usr/src`: `currentDirectory` is the first — the only one
-`chdir` takes — and `displayDirectory` the second, sent only where they
-differ and used for nothing but showing (`RuntimeEnvironment.displaySpelling`,
-the inverse of `resolve` and not a general one: a directory outside the
-jbroot is spelled the same by everyone). `TerminalDirectory` is the app's
-pair of them.
+reports *two* spellings. The bootstrap sits somewhere nobody would
+recognise — a random jbroot under roothide,
+`/var/containers/Bundle/Application/<uuid>/usr/src`; `/var/jb` under
+rootless — so `currentDirectory` is the kernel's path, the only one `chdir`
+takes, and `displayDirectory` is the same directory written against `@jb`
+(`@jb/usr/src`), which is also what tells the bootstrap's `/usr/bin` from
+iOS's. `RuntimeEnvironment.displaySpelling` does it, off
+`Bootstrap.root` — for rootless the *canonical* directory `/var/jb`
+resolves to, since it may be a symlink to a randomly named one and the
+kernel answers with the real path. It is not the inverse of `resolve`: a
+path outside the bootstrap (`/var/mobile` is iOS's under every layout) gets
+no second spelling at all, and `@` begins no real path, so the two can
+never be confused. `TerminalDirectory` is the app's pair of them, and its
+`isHome` — the label abbreviating to `~` — is what keeps the home off the
+menu's other two groups, since the first row already opens there.
 
 Event 102 carries three things and fires when any of them moves: the
 foreground process's name, whether that process is the session's own shell,
@@ -331,7 +338,9 @@ tab. Three inline groups, in this order — the home; the directories this
 window's own tabs are in, deduplicated and sorted by path, each naming a
 live session (`inheritDirectoryFrom`) so the daemon re-reads it as the tab
 opens; and the recent list, sorted by the order chosen in Settings ▸
-Advanced. `NewTabDirectoryChoices` works all of that out once, because the
+Advanced. Neither of the last two ever repeats the home (`isHome`) or a
+directory the other already offers — three rows opening the same shell in
+the same place is two too many. `NewTabDirectoryChoices` works all of that out once, because the
 same answer decides whether there is anything to choose at all: with
 nothing but the home to offer — a first launch, a window whose tabs have
 not reported yet — the control stays the plain button it replaced, and ⌘T

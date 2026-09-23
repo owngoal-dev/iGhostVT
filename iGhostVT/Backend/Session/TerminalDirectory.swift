@@ -7,12 +7,13 @@ import Foundation
 
 /// A directory a session sits in, in the two spellings the product needs.
 ///
-/// They are the same string in every layout but roothide, where the
-/// bootstrap lives in a randomly named jbroot: the kernel calls a shell's
-/// directory `/var/containers/Bundle/Application/<uuid>/usr/src`, the shell
-/// itself calls it `/usr/src`, and only the first is a path the daemon can
-/// `chdir` to. So one is carried to be handed back and the other to be read.
-/// The daemon sends the second only when it differs
+/// They differ wherever the directory belongs to the bootstrap, which sits
+/// somewhere nobody would recognise: a randomly named jbroot under
+/// roothide, `/var/jb` under rootless. The kernel calls a shell's directory
+/// `/var/containers/Bundle/Application/<uuid>/usr/src` and only that is a
+/// path the daemon can `chdir` to, so one spelling is carried to be handed
+/// back and the other — `@jb/usr/src` — to be read. The daemon sends the
+/// second only when it says something
 /// (`iGhostVTWireKey.displayDirectory`).
 struct TerminalDirectory: Hashable, Codable, Sendable {
     /// Exactly as the daemon reported it, and the only spelling
@@ -28,9 +29,19 @@ struct TerminalDirectory: Hashable, Codable, Sendable {
     }
 
     /// What a row calls this directory: the display spelling with the
-    /// session user's home collapsed to `~`.
+    /// session user's home collapsed to `~`. A directory inside the
+    /// bootstrap arrives already written against `@jb` — the daemon's
+    /// doing, since only it knows where the bootstrap is.
     var label: String {
         Self.abbreviate(display)
+    }
+
+    /// Whether this is the session user's home. The new-tab menu's first
+    /// row already opens there, so no other row should offer it again —
+    /// and `abbreviate` collapsing the whole path to `~` is exactly that
+    /// test.
+    var isHome: Bool {
+        label == "~"
     }
 
     /// A path as a person should read it. OSC 7 arrives as a `file://` URL
