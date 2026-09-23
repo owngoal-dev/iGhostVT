@@ -629,6 +629,42 @@ func runProxyLinkTests() {
     }
     _ = waitUntil { listedRow(supervisor, from: second, sessionID: startedID) == nil }
 
+    // A session with no directory of its own starts in the session user's
+    // home, and the daemon is the only side that knows which directory
+    // that is — under roothide it is inside the jbroot, not `/var/mobile`.
+    // It says so by spelling it `~`, which is what keeps the menu from
+    // offering the home twice.
+    let homed = request(supervisor, from: second, .openSession) { message in
+        let command = xpc_array_create(nil, 0)
+        xpc_array_append_value(command, xpc_string_create("/bin/sh"))
+        xpc_array_append_value(command, xpc_string_create("-c"))
+        xpc_array_append_value(command, xpc_string_create("exec /bin/sleep 30"))
+        xpc_dictionary_set_value(message, iGhostVTWireKey.command, command)
+    }
+    let homedID = homed.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.sessionID) } ?? 0
+    check(replyCode(homed) == .success && homedID > 0, "a session opens with no directory named")
+    let homedDisplay = listedString(
+        supervisor,
+        from: second,
+        sessionID: homedID,
+        iGhostVTWireKey.displayDirectory
+    )
+    check(homedDisplay == "~", "and its home is reported as ~ (got \(String(describing: homedDisplay)))")
+    let homedPath = listedString(
+        supervisor,
+        from: second,
+        sessionID: homedID,
+        iGhostVTWireKey.currentDirectory
+    )
+    check(
+        homedPath.map { $0.hasPrefix("/") } == true,
+        "while the spelling chdir wants stays a real path (got \(String(describing: homedPath)))"
+    )
+    _ = request(supervisor, from: second, .closeSession) {
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, homedID)
+    }
+    _ = waitUntil { listedRow(supervisor, from: second, sessionID: homedID) == nil }
+
     // The app's Settings choice travels under `shell` and is a login shell.
     let chosen = request(supervisor, from: second, .openSession) { message in
         xpc_dictionary_set_string(message, iGhostVTWireKey.shell, "/bin/sh")

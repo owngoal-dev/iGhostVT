@@ -28,54 +28,34 @@ struct TerminalDirectory: Hashable, Codable, Sendable {
         self.display = display.flatMap { $0.isEmpty ? nil : $0 } ?? path
     }
 
-    /// What a row calls this directory: the display spelling with the
-    /// session user's home collapsed to `~`. A directory inside the
-    /// bootstrap arrives already written against `@jb` — the daemon's
-    /// doing, since only it knows where the bootstrap is.
+    /// What a row calls this directory. Nothing is abbreviated here: the
+    /// daemon already wrote the home against `~` and the rest of the
+    /// bootstrap against `@jb`, and it is the only side that can. Under
+    /// roothide the session's home is `<jbroot>/var/mobile`, so an app
+    /// collapsing `/var/mobile` would miss the real home *and* rename
+    /// iOS's own directory of that name — which is what it did.
     var label: String {
-        Self.abbreviate(display)
+        display
     }
 
     /// Whether this is the session user's home. The new-tab menu's first
-    /// row already opens there, so no other row should offer it again —
-    /// and `abbreviate` collapsing the whole path to `~` is exactly that
-    /// test.
+    /// row already opens there, so no other row should offer it again, and
+    /// the daemon spelling it `~` is the whole test.
     var isHome: Bool {
-        label == "~"
+        display == "~"
     }
 
-    /// A path as a person should read it. OSC 7 arrives as a `file://` URL
-    /// from some shells and a bare path from others; either way the shell's
-    /// home is noise, so it collapses to `~`.
+    /// A path as a person should read it, for the one reading the daemon
+    /// never makes: the shell's own OSC 7, which the Live Activity falls
+    /// back to before the session has reported. Some shells send a
+    /// `file://` URL and others a bare path.
     ///
-    /// Shared with the Live Activity, which has only the shell's own OSC 7
-    /// report to go on.
+    /// Deliberately *not* used on a reported directory — see `label`.
     static func abbreviate(_ reported: String?) -> String {
         guard var path = reported, !path.isEmpty else { return "" }
         if path.hasPrefix("file://"), let url = URL(string: path) {
             path = url.path
         }
-        for home in homeDirectories where path.hasPrefix(home) {
-            let rest = path.dropFirst(home.count)
-            if rest.isEmpty {
-                return "~"
-            }
-            // Only at a boundary: `/var/mobilesomething` is not in the home.
-            if rest.hasPrefix("/") {
-                return "~" + rest
-            }
-        }
         return path
     }
-
-    /// The homes worth collapsing. The device's session user is `mobile`,
-    /// under either spelling of its path; the Mac's is whoever is logged
-    /// in, and the Catalyst app is unsandboxed, so it can simply ask.
-    private static let homeDirectories: [String] = {
-        #if targetEnvironment(macCatalyst)
-            [NSHomeDirectory()]
-        #else
-            ["/private/var/mobile", "/var/mobile"]
-        #endif
-    }()
 }

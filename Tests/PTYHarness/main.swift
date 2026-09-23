@@ -493,33 +493,49 @@ check(
     "and iOS's own filesystem is just itself"
 )
 
+check(roothide.root == jbroot, "roothide's root is its jbroot")
+check(
+    rootless.root == "/private/var/jb",
+    "rootless recognises paths by what /var/jb resolves to, not the literal"
+)
+check(RuntimeEnvironment.Bootstrap.none.root == nil, "and with no bootstrap there is no root")
+
 // A directory shown to a person: the bootstrap's root is a random jbroot
 // under one layout and a prefix nobody types under the other, so both are
-// written against `@jb` instead. Display only — `chdir` still wants the
-// kernel path.
+// written against `@jb` instead; the session user's home is `~`. Display
+// only — `chdir` still wants the kernel path.
 check(
-    roothide.displaySpelling(of: "\(jbroot)/usr/src") == "@jb/usr/src",
-    "roothide shows a bootstrap directory against @jb, not its jbroot"
+    RuntimeEnvironment.spelling(of: "/usr/src", under: "/", as: "@jb") == "@jb/usr/src",
+    "a directory inside the root is written against the marker"
 )
 check(
-    rootless.displaySpelling(of: "/private/var/jb/usr/src") == "@jb/usr/src",
-    "and rootless the same, off the root /var/jb really resolves to"
-)
-check(
-    roothide.displaySpelling(of: jbroot) == "@jb",
+    RuntimeEnvironment.spelling(of: "/private/tmp", under: "/private/tmp", as: "~") == "~",
     "the root itself is the marker alone"
 )
 check(
-    roothide.displaySpelling(of: "/var/mobile") == nil,
-    "a path iOS owns is spelled the same by everyone and gets no second spelling"
+    RuntimeEnvironment.spelling(of: "/private/tmp/x", under: "/private/tmp", as: "~") == "~/x",
+    "and a file inside it hangs off the marker"
 )
 check(
-    rootless.displaySpelling(of: "/private/var/jbsomething") == nil,
-    "and a path that merely starts with the root's letters is not inside it"
+    RuntimeEnvironment.spelling(of: "/var/mobile", under: "/private/tmp", as: "~") == nil,
+    "a path outside the root gets no second spelling"
 )
 check(
-    RuntimeEnvironment.Bootstrap.none.displaySpelling(of: "/usr/src") == nil,
-    "with no bootstrap nothing is inside one"
+    RuntimeEnvironment.spelling(of: "/private/tmpsomething", under: "/private/tmp", as: "~") == nil,
+    "and one that merely starts with the root's letters is not inside it"
+)
+// The bug this whole function exists for: `proc_pidinfo` answers
+// `/var/…` where the daemon's own executable path resolves to
+// `/private/var/…`, so a plain prefix test compares two spellings of the
+// same directory and finds nothing. On the device that meant the marker
+// never once appeared.
+check(
+    RuntimeEnvironment.spelling(of: "/var/tmp", under: "/private/var/tmp", as: "~") == "~",
+    "the two spellings of one directory are recognised as one"
+)
+check(
+    RuntimeEnvironment.spelling(of: "/private/var/tmp/x", under: "/var/tmp", as: "~") == "~/x",
+    "in either direction"
 )
 check(RuntimeEnvironment.isExecutable("/bin/sh"), "an existing shell is seen as executable")
 check(!RuntimeEnvironment.isExecutable("/bin/nope-not-here"), "a missing shell is not")

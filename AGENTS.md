@@ -273,21 +273,32 @@ back); the app composes none, `inheritDirectoryFrom` wins when both are
 sent, and the registry checks it exactly as it checks an inherited one
 (`enterableDirectory`: absolute, a directory right now), so a path that went
 away means the home, never a failed open. That is also why the daemon
-reports *two* spellings. The bootstrap sits somewhere nobody would
-recognise — a random jbroot under roothide,
-`/var/containers/Bundle/Application/<uuid>/usr/src`; `/var/jb` under
-rootless — so `currentDirectory` is the kernel's path, the only one `chdir`
-takes, and `displayDirectory` is the same directory written against `@jb`
-(`@jb/usr/src`), which is also what tells the bootstrap's `/usr/bin` from
-iOS's. `RuntimeEnvironment.displaySpelling` does it, off
-`Bootstrap.root` — for rootless the *canonical* directory `/var/jb`
-resolves to, since it may be a symlink to a randomly named one and the
-kernel answers with the real path. It is not the inverse of `resolve`: a
-path outside the bootstrap (`/var/mobile` is iOS's under every layout) gets
-no second spelling at all, and `@` begins no real path, so the two can
-never be confused. `TerminalDirectory` is the app's pair of them, and its
-`isHome` — the label abbreviating to `~` — is what keeps the home off the
-menu's other two groups, since the first row already opens there.
+reports *two* spellings. `currentDirectory` is the kernel's path, the only
+one `chdir` takes. `displayDirectory` is the same directory as a person
+should read it: the session user's home as `~`, anything else inside the
+bootstrap against `@jb` — nobody recognises
+`/var/containers/Bundle/Application/<uuid>/usr/src`, and `@jb/usr/src` also
+says which `/usr/src` it is — and absent for a path that is already its own
+best spelling. Neither reading is the app's to make. **The home is not
+`/var/mobile` under roothide**: the passwd entry says that, `resolve` finds
+`<jbroot>/var/mobile`, and the shell starts there — so an app matching
+`/var/mobile` renames iOS's own directory *and* misses the real home, which
+is exactly what it did before `ShellLaunch.sessionHomeDirectory` existed.
+`TerminalDirectory.label` therefore abbreviates nothing, and its `isHome`
+is just `display == "~"`, which is what keeps the home off the menu's other
+two groups.
+
+Both spellings go through `RuntimeEnvironment.spelling(of:under:as:)`, and
+it **canonicalises both sides**. `proc_pidinfo` answers `/var/mobile/…`
+where `realpath` of the daemon's own executable — which is where
+`Bootstrap.root` came from — gives `/private/var/mobile/…`; a plain prefix
+test compares those two spellings of one directory and finds nothing, so
+the marker never once appeared on a device. `Bootstrap.root` is the jbroot
+under roothide and, under rootless, the *canonical* directory `/var/jb`
+resolves to rather than the literal its binaries were built against, since
+that may be a symlink to a randomly named one. None of this is the inverse
+of `resolve`, and `~` and `@` begin no real path, so a display spelling can
+never be mistaken for one.
 
 Event 102 carries three things and fires when any of them moves: the
 foreground process's name, whether that process is the session's own shell,

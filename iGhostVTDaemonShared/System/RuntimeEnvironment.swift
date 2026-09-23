@@ -98,32 +98,6 @@ enum RuntimeEnvironment {
             }
         }
 
-        /// The other direction, for showing a kernel path to a person: a
-        /// file inside the bootstrap written against `@jb` rather than the
-        /// root it really sits at. Neither root is worth showing — under
-        /// roothide it is a random jbroot the vroot-linked shell never
-        /// prints, and under rootless it is a prefix nobody types — and
-        /// one marker says the same thing in both, which is also what
-        /// tells the bootstrap's `/usr/bin` from iOS's.
-        ///
-        /// `nil` when the path is not the bootstrap's at all
-        /// (`/var/mobile` belongs to iOS under every layout), so a caller
-        /// can leave the second spelling off the wire where it would say
-        /// nothing.
-        ///
-        /// Not the inverse of `resolve`, and never a path to hand back:
-        /// `@jb` is for reading.
-        func displaySpelling(of kernelPath: String) -> String? {
-            guard let root, kernelPath.hasPrefix(root) else { return nil }
-            let rest = kernelPath.dropFirst(root.count)
-            if rest.isEmpty {
-                return Bootstrap.marker
-            }
-            // Only at a boundary: `/var/jbsomething` is not in `/var/jb`.
-            guard rest.hasPrefix("/") else { return nil }
-            return Bootstrap.marker + rest
-        }
-
         /// What a bootstrap path is shown as instead of its root. `@`
         /// cannot begin an absolute path, so a row reading `@jb/usr/src`
         /// can never be mistaken for one.
@@ -144,8 +118,50 @@ enum RuntimeEnvironment {
         bootstrap.resolve(path)
     }
 
+    /// For showing a kernel path to a person: a file inside the bootstrap
+    /// written against `@jb` rather than the root it really sits at.
+    /// Neither root is worth showing — under roothide it is a random
+    /// jbroot the vroot-linked shell never prints, and under rootless a
+    /// prefix nobody types — and one marker says the same thing in both,
+    /// which is also what tells the bootstrap's `/usr/bin` from iOS's.
+    ///
+    /// `nil` when the path is not the bootstrap's at all, so a caller can
+    /// leave the second spelling off the wire where it would say nothing.
+    ///
+    /// Not the inverse of `resolve`, and never a path to hand back: `@jb`
+    /// is for reading.
     static func displaySpelling(of kernelPath: String) -> String? {
-        bootstrap.displaySpelling(of: kernelPath)
+        guard let root = bootstrap.root else { return nil }
+        return spelling(of: kernelPath, under: root, as: Bootstrap.marker)
+    }
+
+    /// `path` written against `marker` when it is `root` or a file inside
+    /// it, `nil` otherwise — and the boundary is a real one:
+    /// `/var/jbsomething` is not inside `/var/jb`.
+    ///
+    /// Both sides are canonicalised first, because they do not arrive in
+    /// the same spelling. `proc_pidinfo` answers `/var/mobile/…` where
+    /// `realpath` of the daemon's own executable — which is where the
+    /// jbroot was worked out from — gives `/private/var/mobile/…`. A plain
+    /// prefix test compares those two and silently finds nothing, which is
+    /// exactly what it did: the marker never appeared on a device.
+    static func spelling(of path: String, under root: String, as marker: String) -> String? {
+        let path = canonicalPath(path) ?? path
+        // Trailing slashes off, so `/` — under which everything sits —
+        // leaves the whole path as the remainder rather than eating its
+        // leading slash and failing the boundary test below.
+        var root = canonicalPath(root) ?? root
+        while root.hasSuffix("/") {
+            root.removeLast()
+        }
+        guard path.hasPrefix(root) else { return nil }
+        let rest = path.dropFirst(root.count)
+        if rest.isEmpty {
+            return marker
+        }
+        // Only at a boundary: `/var/jbsomething` is not inside `/var/jb`.
+        guard rest.hasPrefix("/") else { return nil }
+        return marker + rest
     }
 
     /// True when a path in the bootstrap's vocabulary exists and is executable.

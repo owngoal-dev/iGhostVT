@@ -216,14 +216,18 @@ enum iGhostVTWireKey {
     /// Absent once the child is gone or when the kernel refuses to say. This
     /// is the spelling `startDirectory` wants back.
     static let currentDirectory = "cwd"
-    /// Beside `currentDirectory`: the same directory written against `@jb`
-    /// instead of wherever the bootstrap really sits — a random jbroot under
-    /// roothide, a prefix nobody types under rootless. Nobody would
-    /// recognise `/var/containers/Bundle/Application/<uuid>/usr/src`, and
+    /// Beside `currentDirectory`: the same directory as a person should
+    /// read it. The session user's home is `~`, anything else inside the
+    /// bootstrap is written against `@jb` — nobody would recognise
+    /// `/var/containers/Bundle/Application/<uuid>/usr/src`, and
     /// `@jb/usr/src` also says which `/usr/src` it is. Absent for a path
-    /// outside the bootstrap (`/var/mobile` belongs to iOS under every
-    /// layout) and when there is no bootstrap at all. For display alone —
-    /// `@` begins no real path, and `chdir` wants `currentDirectory`.
+    /// that is already its own best spelling.
+    ///
+    /// Only the daemon can work either of these out. The home is *not*
+    /// `/var/mobile` under roothide — the passwd entry says that and it
+    /// resolves inside the jbroot — so a client matching that path names
+    /// the wrong directory in both directions. For display alone: `~` and
+    /// `@` begin no real path, and `chdir` wants `currentDirectory`.
     static let displayDirectory = "cwddisp"
     /// Why a request failed, in words, when the reply code alone would lose
     /// the detail — the failing step and its `errno`, mainly.

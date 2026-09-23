@@ -83,14 +83,32 @@ final class PeerSession {
 
     /// A session's directory, in both spellings a client needs: the
     /// kernel's, which is what `startDirectory` wants handed back, and —
-    /// only under roothide, where the two differ — the one the bootstrap's
-    /// own programs print, which is the one worth showing a person.
+    /// where they differ — the one worth showing a person.
     private static func setDirectory(_ path: String?, in message: xpc_object_t) {
         guard let path else { return }
         xpc_dictionary_set_string(message, iGhostVTWireKey.currentDirectory, path)
-        if let display = RuntimeEnvironment.displaySpelling(of: path) {
+        if let display = displaySpelling(of: path) {
             xpc_dictionary_set_string(message, iGhostVTWireKey.displayDirectory, display)
         }
+    }
+
+    /// How a directory should read to a person: the session user's home
+    /// against `~`, anything else inside the bootstrap against `@jb`, and
+    /// nothing at all for a path that is already its own best spelling —
+    /// so the wire carries a second spelling only where it says something.
+    ///
+    /// The home is tested first because under roothide it is *inside* the
+    /// bootstrap (`<jbroot>/var/mobile`), and `@jb/var/mobile` is a true
+    /// but useless answer for the one directory every user recognises.
+    /// Only the daemon can make this call at all: the app has no way to
+    /// know where the session user's home is, and guessing `/var/mobile`
+    /// names the wrong directory under roothide in both directions.
+    private static func displaySpelling(of path: String) -> String? {
+        if let home = ShellLaunch.sessionHomeDirectory,
+           let spelled = RuntimeEnvironment.spelling(of: path, under: home, as: "~") {
+            return spelled
+        }
+        return RuntimeEnvironment.displaySpelling(of: path)
     }
 
     // MARK: - Requests from the client
