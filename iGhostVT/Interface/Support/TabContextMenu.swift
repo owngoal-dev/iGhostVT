@@ -154,12 +154,17 @@ struct TabContextMenu: View {
 
 /// New Tab / New Window, then the active tab's own menu. The iPad strip
 /// and the compact bar both open this from their trailing ⋯.
+///
+/// New Tab is the same control the `+` is, so it opens as a submenu of
+/// directories once there are any. On a phone with tabs open this is the
+/// only new-tab control on screen — the bar shows the title capsule
+/// instead — so the choice has to be reachable from here.
 struct TabOverflowMenuContent: View {
     @ObservedObject var tabManager: TabManager
     let window: UIWindow?
 
     var body: some View {
-        Button(action: { tabManager.newTab() }) {
+        NewTabMenu(tabManager: tabManager) {
             Label("New Tab", systemImage: "plus")
         }
         Button(action: { TerminalWindow.requestNewWindow() }) {

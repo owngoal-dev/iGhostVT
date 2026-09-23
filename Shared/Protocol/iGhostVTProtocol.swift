@@ -144,11 +144,13 @@ enum iGhostVTOperation: UInt64, Sendable {
 enum iGhostVTEvent: UInt64, Sendable {
     case output = 100
     case sessionExit = 101
-    /// The foreground process on the session's terminal changed; carries
-    /// its name (`processName`) and whether that process is the shell the
+    /// What the session's terminal is doing changed; carries the foreground
+    /// process's name (`processName`), whether that process is the shell the
     /// session spawned (`foregroundIsShell`) — true at the prompt, false
-    /// while a command runs. Also stated once in every open/attach reply,
-    /// so a client knows the current state without waiting for a change.
+    /// while a command runs — and the shell's current directory
+    /// (`currentDirectory`, with `displayDirectory` beside it where the two
+    /// spellings differ). Also stated once in every open/attach reply, so a
+    /// client knows the current state without waiting for a change.
     case processName = 102
 }
 
@@ -191,8 +193,17 @@ enum iGhostVTWireKey {
     static let environment = "env"
     /// On `openSession`: a live session whose shell's current directory the
     /// new one should start in. The daemon reads that directory from the
-    /// kernel itself — the app never names a path.
+    /// kernel itself — the client never names a path.
     static let inheritDirectoryFrom = "cwdsid"
+    /// On `openSession`: the directory the new session starts in, named
+    /// outright. Only a path the daemon itself reported (`currentDirectory`)
+    /// belongs here — it is the kernel's spelling, not a shell's — which is
+    /// what lets a client offer directories whose session is long gone.
+    /// `inheritDirectoryFrom` wins when both are sent, since a live session
+    /// knows better than a remembered path. A path that is not a directory
+    /// the session user can enter is not an error: the shell starts in the
+    /// home instead, exactly as an inherited directory that went away does.
+    static let startDirectory = "cwdpath"
     static let title = "title"
     static let isAttached = "attached"
     static let processName = "proc"
@@ -200,10 +211,19 @@ enum iGhostVTWireKey {
     /// i.e. nothing is running in front of it.
     static let foregroundIsShell = "fgshell"
     static let exitCode = "exit"
-    /// On a `listSessions` row: the session shell's current directory as the
-    /// kernel spells it. Absent once the child is gone or when the kernel
-    /// refuses to say.
+    /// On a `listSessions` row, on event 102, and in every open/attach
+    /// reply: the session shell's current directory as the kernel spells it.
+    /// Absent once the child is gone or when the kernel refuses to say. This
+    /// is the spelling `startDirectory` wants back.
     static let currentDirectory = "cwd"
+    /// Beside `currentDirectory`: the same directory as the bootstrap's own
+    /// programs print it — under roothide the jbroot prefix comes off, since
+    /// a vroot-linked shell never shows it and nobody would recognise
+    /// `/var/containers/Bundle/Application/<uuid>/usr/src` as `/usr/src`.
+    /// Absent when it would only repeat `currentDirectory`, which is every
+    /// layout but roothide. For display alone — it is not a path any
+    /// unlinked program can `chdir` to.
+    static let displayDirectory = "cwddisp"
     /// Why a request failed, in words, when the reply code alone would lose
     /// the detail — the failing step and its `errno`, mainly.
     static let errorMessage = "err"

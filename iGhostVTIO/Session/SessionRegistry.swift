@@ -87,13 +87,20 @@ final class SessionRegistry {
     /// carried over the wire, so nothing the app says picks a path; a
     /// session that is gone, or a directory that is not one any more,
     /// simply means the plan's own start (the home).
+    ///
+    /// `startDirectory` is the other half of that, for a directory no live
+    /// session can name any more — the client's recent list. It is a path
+    /// the daemon itself reported, handed back, and it is checked here the
+    /// same way an inherited one is: a path that is not a directory right
+    /// now means the home, never a failed open.
     func open(
         command requestedCommand: [String],
         shell requestedShell: String? = nil,
         environment requestedEnvironment: [String: String],
         columns: UInt16,
         rows: UInt16,
-        inheritDirectoryFrom sourceSessionID: UInt64? = nil
+        inheritDirectoryFrom sourceSessionID: UInt64? = nil,
+        startDirectory: String? = nil
     ) throws -> PTYSession {
         guard sessions.count < iGhostVTProtocol.maximumSessions else {
             throw iGhostVTFailure(
@@ -102,7 +109,11 @@ final class SessionRegistry {
             )
         }
         let plan = try resolvePlan(command: requestedCommand, shell: requestedShell)
-        let inheritedDirectory = sourceSessionID.flatMap(inheritableDirectory)
+        // A live session outranks a remembered path: it is the same
+        // directory read a moment ago instead of whenever the client last
+        // saw it.
+        let requestedDirectory = sourceSessionID.flatMap(inheritableDirectory)
+            ?? startDirectory.flatMap(enterableDirectory)
         let id = nextID
         nextID &+= 1
 
@@ -113,8 +124,8 @@ final class SessionRegistry {
             columns: clamp(columns, fallback: iGhostVTProtocol.defaultColumns, limit: iGhostVTProtocol.maximumColumns),
             rows: clamp(rows, fallback: iGhostVTProtocol.defaultRows, limit: iGhostVTProtocol.maximumRows),
             credentials: plan.credentials,
-            workingDirectory: inheritedDirectory ?? plan.workingDirectory,
-            fallbackWorkingDirectory: inheritedDirectory == nil ? nil : plan.workingDirectory,
+            workingDirectory: requestedDirectory ?? plan.workingDirectory,
+            fallbackWorkingDirectory: requestedDirectory == nil ? nil : plan.workingDirectory,
             queue: queue
         )
         sessions[id] = session
@@ -123,7 +134,8 @@ final class SessionRegistry {
         )
         DaemonFileLog.log(
             "session \(id) spawned \(plan.command.first ?? "?")"
-                + (inheritedDirectory.map { " in \($0) (from session \(sourceSessionID.map(String.init) ?? "?"))" } ?? "")
+                + (requestedDirectory.map { " in \($0)" } ?? "")
+                + (sourceSessionID.map { " (from session \($0))" } ?? "")
                 + ", \(sessions.count)/\(iGhostVTProtocol.maximumSessions) held"
         )
         session.start(
@@ -133,12 +145,8 @@ final class SessionRegistry {
             onExit: { [weak self] sessionID, exitCode in
                 self?.handleExit(sessionID: sessionID, exitCode: exitCode)
             },
-            onProcessName: { [weak self] sessionID, name, isShell in
-                self?.attachments[sessionID]?.deliverProcessName(
-                    sessionID: sessionID,
-                    name: name,
-                    isShell: isShell
-                )
+            onForegroundChange: { [weak self] session in
+                self?.attachments[session.id]?.deliverForeground(of: session)
             }
         )
         if isOutputPaused {
@@ -231,10 +239,17 @@ final class SessionRegistry {
 
     /// The directory a new session may inherit from `sourceSessionID`:
     /// its shell's current one, if the session is still alive and the path
-    /// is a directory right now. Checked as the daemon; the child re-checks
-    /// as the session user when it `chdir`s, and falls back if refused.
+    /// is a directory right now.
     func inheritableDirectory(from sourceSessionID: UInt64) -> String? {
-        guard let path = sessions[sourceSessionID]?.currentDirectory else { return nil }
+        sessions[sourceSessionID]?.currentDirectory.flatMap(enterableDirectory)
+    }
+
+    /// A path a session may start in: absolute, and a directory right now.
+    /// Checked as the daemon; the child re-checks as the session user when
+    /// it `chdir`s, and falls back if refused — so this is a sanity test,
+    /// not the permission one.
+    func enterableDirectory(_ path: String) -> String? {
+        guard path.hasPrefix("/"), path.utf8.count < Int(MAXPATHLEN) else { return nil }
         var info = stat()
         guard stat(path, &info) == 0, info.st_mode & S_IFMT == S_IFDIR else { return nil }
         return path

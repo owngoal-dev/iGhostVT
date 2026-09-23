@@ -79,6 +79,24 @@ enum RuntimeEnvironment {
             case let .roothide(jbroot): path.hasPrefix("/") ? jbroot + path : path
             }
         }
+
+        /// The other direction, for showing a kernel path to a person: how
+        /// the bootstrap's own programs would print it. Under roothide the
+        /// jbroot comes off — a vroot-linked shell never shows it, and
+        /// `/var/containers/Bundle/Application/<uuid>/usr/src` is nobody's
+        /// idea of `/usr/src`. `nil` when the answer is the path itself,
+        /// so a caller can leave the second spelling off the wire.
+        ///
+        /// Not the inverse of `resolve`: a directory outside the jbroot
+        /// (`/var/mobile`) is spelled the same by everyone and comes back
+        /// `nil`, while `resolve` would have prefixed it.
+        func displaySpelling(of kernelPath: String) -> String? {
+            guard case let .roothide(jbroot) = self,
+                  kernelPath.hasPrefix(jbroot)
+            else { return nil }
+            let stripped = String(kernelPath.dropFirst(jbroot.count))
+            return stripped.hasPrefix("/") ? stripped : "/" + stripped
+        }
     }
 
     static let bootstrap: Bootstrap = detect()
@@ -93,6 +111,10 @@ enum RuntimeEnvironment {
 
     static func resolve(_ path: String) -> String {
         bootstrap.resolve(path)
+    }
+
+    static func displaySpelling(of kernelPath: String) -> String? {
+        bootstrap.displaySpelling(of: kernelPath)
     }
 
     /// True when a path in the bootstrap's vocabulary exists and is executable.

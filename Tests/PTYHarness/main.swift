@@ -730,6 +730,88 @@ do {
         "naming a session that never existed opens in the home (got \(String(describing: freshDirectory)))"
     )
 
+    // A directory named outright — the client's recent list, whose session
+    // is long gone. Same rules as an inherited one: taken when it is a
+    // directory, the home when it is not, and never a failed open.
+    let named = try harnessQueue.sync {
+        try registry.open(
+            command: ["/bin/sh", "-c", "exec /bin/sleep 30"],
+            environment: [:],
+            columns: 80,
+            rows: 24,
+            startDirectory: "/private/tmp"
+        )
+    }
+    var namedDirectory: String?
+    let namedDeadline = Date().addingTimeInterval(5)
+    while Date() < namedDeadline {
+        namedDirectory = named.currentDirectory
+        if namedDirectory == "/private/tmp" {
+            break
+        }
+        usleep(50000)
+    }
+    check(
+        namedDirectory == "/private/tmp",
+        "a session opened on a named directory starts there (got \(String(describing: namedDirectory)))"
+    )
+
+    let refused = try harnessQueue.sync {
+        try registry.open(
+            command: ["/bin/sh", "-c", "exec /bin/sleep 30"],
+            environment: [:],
+            columns: 80,
+            rows: 24,
+            startDirectory: "/nonexistent/ighostvt-harness"
+        )
+    }
+    var refusedDirectory: String?
+    let refusedDeadline = Date().addingTimeInterval(5)
+    while Date() < refusedDeadline {
+        refusedDirectory = refused.currentDirectory
+        if refusedDirectory == NSHomeDirectory() {
+            break
+        }
+        usleep(50000)
+    }
+    check(
+        refusedDirectory == NSHomeDirectory(),
+        "a named directory that is gone opens in the home (got \(String(describing: refusedDirectory)))"
+    )
+    check(
+        harnessQueue.sync { registry.enterableDirectory("private/tmp") } == nil,
+        "a relative directory is refused outright"
+    )
+
+    // A live session outranks a remembered path, since it is the same read
+    // taken a moment ago rather than whenever the client last looked.
+    let both = try harnessQueue.sync {
+        try registry.open(
+            command: ["/bin/sh", "-c", "exec /bin/sleep 30"],
+            environment: [:],
+            columns: 80,
+            rows: 24,
+            inheritDirectoryFrom: source.id,
+            startDirectory: NSHomeDirectory()
+        )
+    }
+    var bothDirectory: String?
+    let bothDeadline = Date().addingTimeInterval(5)
+    while Date() < bothDeadline {
+        bothDirectory = both.currentDirectory
+        if bothDirectory == "/private/tmp" {
+            break
+        }
+        usleep(50000)
+    }
+    check(
+        bothDirectory == "/private/tmp",
+        "an inherited session wins over a named directory (got \(String(describing: bothDirectory)))"
+    )
+    for session in [named, refused, both] {
+        harnessQueue.sync { _ = try? registry.close(session.id) }
+    }
+
     // `proc_pidinfo` keeps answering with the old path after the directory
     // is removed, so the registry's own stat check is what refuses it.
     var template = Array("/private/tmp/ighostvt-harness-cwd.XXXXXX".utf8CString)
@@ -805,12 +887,16 @@ do {
     check(session.isForegroundShell, "a fresh session has its shell in the foreground")
     let namesLock = NSLock()
     var reports: [(name: String, isShell: Bool)] = []
+    var directories: [String] = []
     session.start(
         onOutput: { _, _ in },
         onExit: { _, _ in },
-        onProcessName: { _, name, isShell in
+        onForegroundChange: { session in
             namesLock.lock()
-            reports.append((name, isShell))
+            reports.append((session.foregroundProcessName, session.isForegroundShell))
+            if let directory = session.reportedDirectory, directories.last != directory {
+                directories.append(directory)
+            }
             namesLock.unlock()
         }
     )
@@ -827,6 +913,28 @@ do {
         }
         return false
     }
+    func waitForDirectory(_ predicate: ([String]) -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            namesLock.lock()
+            let hit = predicate(directories)
+            namesLock.unlock()
+            if hit {
+                return true
+            }
+            usleep(100_000)
+        }
+        return false
+    }
+    // The first report of all is the directory the shell started in: the
+    // session reads it once the poll comes round, before anything has run.
+    // Waited out and cleared here, so the foreground checks below see only
+    // reports their own command caused.
+    check(waitForDirectory { !$0.isEmpty }, "the session reports the directory it started in")
+    namesLock.lock()
+    reports.removeAll()
+    namesLock.unlock()
+
     // An interactive sh has job control, so the sleep runs in its own
     // foreground process group; the poll must notice within a second or so.
     session.write(Data("sleep 1\n".utf8))
@@ -868,6 +976,20 @@ do {
         "with the last resolved name retained rather than dropped"
     )
     check(waitForReport(\.isShell), "the shell is reported back once the pipeline ends")
+
+    // `cd` is a builtin: it starts no process, so the foreground never
+    // changes and only the directory poll can notice it. The report is what
+    // the app's recent-directory list is built from.
+    session.write(Data("cd /private/tmp\n".utf8))
+    let moved = waitForDirectory { $0.contains("/private/tmp") }
+    namesLock.lock()
+    let seen = directories
+    namesLock.unlock()
+    check(
+        moved,
+        "a `cd` at the prompt is reported although no process changed (saw: \(seen))"
+    )
+    check(session.reportedDirectory == "/private/tmp", "and the session records where it now is")
     session.invalidate()
 } catch {
     check(false, "a process-name session spawns")

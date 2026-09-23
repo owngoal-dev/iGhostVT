@@ -68,6 +68,15 @@ struct SessionSummary {
     /// Present from daemons that report them; `nil` from an older one.
     var processName: String?
     var currentDirectory: String?
+    /// The directory as the bootstrap's own programs spell it, sent only
+    /// where that differs from `currentDirectory` — under roothide, whose
+    /// jbroot prefix no shell ever shows.
+    var displayDirectory: String?
+
+    /// What `list` prints: the spelling the user's own shell would.
+    var listedDirectory: String {
+        displayDirectory ?? currentDirectory ?? "-"
+    }
 }
 
 /// One connection to `ighostvtd`, used for a single command and closed.
@@ -190,7 +199,8 @@ final class DaemonClient {
                     rows: UInt16(truncatingIfNeeded: xpc_dictionary_get_uint64(row, iGhostVTWireKey.rows)),
                     isAttached: xpc_dictionary_get_bool(row, iGhostVTWireKey.isAttached),
                     processName: string(row, iGhostVTWireKey.processName),
-                    currentDirectory: string(row, iGhostVTWireKey.currentDirectory)
+                    currentDirectory: string(row, iGhostVTWireKey.currentDirectory),
+                    displayDirectory: string(row, iGhostVTWireKey.displayDirectory)
                 )
             )
         }

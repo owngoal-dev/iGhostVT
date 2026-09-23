@@ -49,7 +49,7 @@ struct SidebarView: View {
                         .tabReorderable(tab, in: tabManager, dragged: draggedTab, preview: .row, width: rowWidth)
                     }
 
-                    Button(action: { tabManager.newTab() }) {
+                    NewTabMenu(tabManager: tabManager) {
                         HStack(spacing: DS.Padding.s) {
                             Image(systemName: "plus")
                                 .font(DS.Font.labelEmphasis)
@@ -64,7 +64,6 @@ struct SidebarView: View {
                         .contentShape(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("New Tab")
                 }
                 .padding(DS.Padding.m)
                 .frame(maxWidth: .infinity)

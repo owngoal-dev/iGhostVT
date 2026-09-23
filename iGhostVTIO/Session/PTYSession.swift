@@ -10,8 +10,12 @@ import Foundation
 final class PTYSession {
     typealias OutputHandler = (UInt64, Data) -> Void
     typealias ExitHandler = (UInt64, Int32) -> Void
-    /// The foreground process's name, and whether it is the shell itself.
-    typealias ProcessNameHandler = (UInt64, String, Bool) -> Void
+    /// Something about what the terminal is doing changed — the foreground
+    /// process, whether it is the shell itself, or the shell's directory.
+    /// The session hands itself over rather than the values: one reporter
+    /// fills event 102 and every open/attach reply, and it reads them from
+    /// here, so the two cannot drift apart on a field.
+    typealias ForegroundHandler = (PTYSession) -> Void
 
     let id: UInt64
     let command: [String]
@@ -59,7 +63,7 @@ final class PTYSession {
 
     private var onOutput: OutputHandler?
     private var onExit: ExitHandler?
-    private var onProcessName: ProcessNameHandler?
+    private var onForegroundChange: ForegroundHandler?
 
     /// Name of the process group leader currently in the foreground on this
     /// terminal — "sh" at the prompt, "vim" inside vim. Starts as the
@@ -76,6 +80,24 @@ final class PTYSession {
     private(set) var isForegroundShell = true
     private var processNamePoll: DispatchSourceTimer?
     private var lastProcessNameCheck = DispatchTime(uptimeNanoseconds: 0)
+
+    /// The shell's directory as of the last check — what a client is told,
+    /// and what a change is measured against. `nil` until the first read
+    /// answers, and again once the child is gone.
+    ///
+    /// Only the shell's own directory is tracked: `cd` is a shell builtin,
+    /// so nothing else can move it, and a `:cd` inside vim is vim's
+    /// business. That is also why the read is skipped whenever something is
+    /// running in front of the shell — the answer cannot have changed.
+    private(set) var reportedDirectory: String?
+    private var lastDirectoryCheck = DispatchTime(uptimeNanoseconds: 0)
+
+    /// Floor between directory reads. `cd` changes no process, so the poll
+    /// is the only thing that notices one — but it is also the only cost a
+    /// session at its prompt pays for the whole feature, and a second's lag
+    /// on a directory nobody is looking at yet is worth more than a third
+    /// syscall every 500 ms per session.
+    private static let directoryPollInterval: UInt64 = NSEC_PER_SEC
 
     /// Slow on purpose: the poll only exists for foreground changes that
     /// produce no output at all (`sleep`, a silent build). Anything that
@@ -338,11 +360,11 @@ final class PTYSession {
     func start(
         onOutput: @escaping OutputHandler,
         onExit: @escaping ExitHandler,
-        onProcessName: ProcessNameHandler? = nil
+        onForegroundChange: ForegroundHandler? = nil
     ) {
         self.onOutput = onOutput
         self.onExit = onExit
-        self.onProcessName = onProcessName
+        self.onForegroundChange = onForegroundChange
 
         let readSource = DispatchSource.makeReadSource(fileDescriptor: master, queue: queue)
         readSource.setEventHandler { [weak self] in
@@ -595,7 +617,7 @@ final class PTYSession {
         processNamePoll = nil
         onOutput = nil
         onExit = nil
-        onProcessName = nil
+        onForegroundChange = nil
         // Released here rather than left to deinit: this is what the daemon
         // is holding per session, and a caller may keep the object alive a
         // little longer than the session it stands for.
@@ -696,15 +718,15 @@ final class PTYSession {
     }
 
     /// Re-reads which process group is in the foreground on this terminal
-    /// and reports its leader's name, and whether it is the shell, when
-    /// either changed. `tcgetpgrp` on the master asks the kernel, so the
-    /// shell's job control is the source of truth. A leader already gone
-    /// (`proc_name` returns 0) keeps the last name until the next change
-    /// lands — but the shell flag is still updated from it: a pipeline's
-    /// group is led by its first command (`cat file | vim -`), which the
-    /// shell reaps at once while the rest runs, and the flag is what says
-    /// something is running. A nested shell (`zsh` typed into zsh) keeps
-    /// the name the same way.
+    /// and reports its leader's name, whether it is the shell, and the
+    /// shell's directory, when any of the three changed. `tcgetpgrp` on the
+    /// master asks the kernel, so the shell's job control is the source of
+    /// truth. A leader already gone (`proc_name` returns 0) keeps the last
+    /// name until the next change lands — but the shell flag is still
+    /// updated from it: a pipeline's group is led by its first command
+    /// (`cat file | vim -`), which the shell reaps at once while the rest
+    /// runs, and the flag is what says something is running. A nested shell
+    /// (`zsh` typed into zsh) keeps the name the same way.
     private func refreshForegroundProcessName() {
         guard isAlive else { return }
         let processGroup = tcgetpgrp(master)
@@ -725,10 +747,34 @@ final class PTYSession {
                 name = resolved
             }
         }
-        guard name != foregroundProcessName || isShell != isForegroundShell else { return }
+        // The shell taking the terminal back is when a `cd` is likeliest to
+        // have just happened, so that transition always re-reads; a `cd`
+        // typed at the prompt changes no process at all and is caught by
+        // the interval instead.
+        let returnedToPrompt = isShell && !isForegroundShell
+        let movedDirectory = refreshDirectory(isShellInForeground: isShell, force: returnedToPrompt)
+        guard name != foregroundProcessName || isShell != isForegroundShell || movedDirectory else {
+            return
+        }
         foregroundProcessName = name
         isForegroundShell = isShell
-        onProcessName?(id, name, isShell)
+        onForegroundChange?(self)
+    }
+
+    /// Re-reads the shell's directory when it is due (or when the caller
+    /// knows it is worth it), and answers whether it moved. Skipped
+    /// entirely while a program is in front of the shell: the shell is not
+    /// running, so its directory cannot change.
+    private func refreshDirectory(isShellInForeground: Bool, force: Bool) -> Bool {
+        guard isShellInForeground else { return false }
+        let now = DispatchTime.now()
+        let elapsed = now.uptimeNanoseconds &- lastDirectoryCheck.uptimeNanoseconds
+        guard force || elapsed >= Self.directoryPollInterval else { return false }
+        lastDirectoryCheck = now
+        let directory = currentDirectory
+        guard let directory, directory != reportedDirectory else { return false }
+        reportedDirectory = directory
+        return true
     }
 
     /// The spawned program's current directory, as the kernel spells it —

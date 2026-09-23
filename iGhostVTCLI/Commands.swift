@@ -20,7 +20,7 @@ enum Commands {
                 session.processName ?? session.title,
                 "\(session.columns)x\(session.rows)",
                 session.isAttached ? "yes" : "no",
-                session.currentDirectory ?? "-",
+                session.listedDirectory,
             ])
         }
         let widths = (0 ..< table[0].count).map { column in table.map { $0[column].count }.max() ?? 0 }

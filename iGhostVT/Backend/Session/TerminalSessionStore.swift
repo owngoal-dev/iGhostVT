@@ -62,6 +62,13 @@ final class TerminalSessionStore: ObservableObject {
     /// reattach restates it, and the value from before a detach is stale.
     @Published private(set) var isShellInForeground = false
 
+    /// Where the session's shell is, as the daemon last reported it — the
+    /// kernel's reading, not the shell's own OSC 7, so it is a path a new
+    /// session can be opened in. `nil` until the first report, and again on
+    /// every connect: a reattach restates it, and the value from before a
+    /// detach names wherever the shell was left, which may have moved.
+    @Published private(set) var currentDirectory: TerminalDirectory?
+
     /// Whether a connected session has been silent since it was opened
     /// for longer than a shell takes to print its prompt. A connected
     /// terminal with nothing on it is indistinguishable from a broken one
@@ -265,6 +272,10 @@ final class TerminalSessionStore: ObservableObject {
         case let .processName(name, isShell):
             processName = name
             isShellInForeground = isShell
+        case let .currentDirectory(directory):
+            currentDirectory = directory
+            // The transport only reports changes, so this is one visit.
+            RecentDirectoryStore.shared.record(directory)
         case let .state(state):
             apply(state)
         }
@@ -274,6 +285,7 @@ final class TerminalSessionStore: ObservableObject {
         switch state {
         case .connecting:
             isShellInForeground = false
+            currentDirectory = nil
             clearFirstOutputWait()
             // No status line: the pill overlay already says connecting, and
             // a clean launch should open on the shell's own first line.

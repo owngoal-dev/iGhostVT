@@ -169,11 +169,13 @@ final class TabManager: ObservableObject {
     /// window's presenters before the tab joins `tabs`.
     private func makeTab(
         resume daemonSessionID: UInt64? = nil,
-        inheritDirectoryFrom sourceSessionID: UInt64? = nil
+        inheritDirectoryFrom sourceSessionID: UInt64? = nil,
+        startDirectory: String? = nil
     ) -> TerminalTab {
         let tab = TerminalTab(
             resumeDaemonSessionID: daemonSessionID,
-            inheritDirectoryFrom: sourceSessionID
+            inheritDirectoryFrom: sourceSessionID,
+            startDirectory: startDirectory
         )
         tab.terminal.onClipboardConfirmationRequest = { [weak self] request in
             self?.clipboardRequests.append(request)
@@ -215,15 +217,41 @@ final class TabManager: ObservableObject {
         clipboardRequests.removeFirst()
     }
 
-    /// Opens where the current tab's shell is: the new session names the
-    /// active tab's daemon session and the daemon reads that shell's current
-    /// directory from the kernel — so it works for a shell that reports no
-    /// OSC 7 as well, and no directory is ever typed into a PTY. A window
-    /// with no active tab, or one whose tab has no session yet, opens in
-    /// the home as before.
+    /// Where a new tab's shell starts. The window's own vocabulary for it —
+    /// the new-tab menu offers one row per case, and ⌘T is the first.
+    enum Origin {
+        /// Where the current tab's shell is. A window with no active tab,
+        /// or one whose tab has no session yet, gets the home.
+        case activeTab
+        /// The session user's home: no directory named at all, which is
+        /// what the daemon's own plan starts in.
+        case home
+        /// Wherever this live daemon session's shell is right now — read
+        /// from the kernel at the moment the session opens, not whenever
+        /// the app last looked.
+        case session(UInt64)
+        /// A directory the daemon reported earlier, handed straight back.
+        /// The recent list is made of these, and they outlive the session
+        /// that visited them.
+        case directory(TerminalDirectory)
+    }
+
+    /// Opens where `origin` says. For a live session the new one names it
+    /// and the daemon reads that shell's current directory from the kernel
+    /// — so it works for a shell that reports no OSC 7 as well, and no
+    /// directory is ever typed into a PTY.
     @discardableResult
-    func newTab() -> TerminalTab {
-        adopt(makeTab(inheritDirectoryFrom: activeTab?.daemonSessionID))
+    func newTab(_ origin: Origin = .activeTab) -> TerminalTab {
+        switch origin {
+        case .activeTab:
+            adopt(makeTab(inheritDirectoryFrom: activeTab?.daemonSessionID))
+        case .home:
+            adopt(makeTab())
+        case let .session(sessionID):
+            adopt(makeTab(inheritDirectoryFrom: sessionID))
+        case let .directory(directory):
+            adopt(makeTab(startDirectory: directory.path))
+        }
     }
 
     /// Closing the last tab leaves the window empty on purpose: the empty
