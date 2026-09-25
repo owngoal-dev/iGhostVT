@@ -58,14 +58,81 @@ enum GhosttyAppConfiguration {
         }
     }
 
+    // MARK: - The user's own lines
+
+    /// What Settings ▸ Advanced ▸ Custom Configuration holds, verbatim.
+    static let customConfigurationKey = "Terminal.customConfiguration"
+
+    static var customConfiguration: String {
+        UserDefaults.standard.string(forKey: customConfigurationKey) ?? ""
+    }
+
+    /// Undoes the keyboard's smart punctuation. A text view turns `"` into
+    /// curly quotes and `--` into a dash as they are typed, and ghostty
+    /// reads neither as syntax — `font-family = “Menlo”` names a font
+    /// whose name has quotes in it, and fails without a word.
+    static func straighteningPunctuation(_ text: String) -> String {
+        let replacements: [(String, String)] = [
+            ("\u{201C}", "\""), ("\u{201D}", "\""), ("\u{201E}", "\""),
+            ("\u{2018}", "'"), ("\u{2019}", "'"),
+            ("\u{2014}", "--"), ("\u{2013}", "-"),
+        ]
+        return replacements.reduce(text) { text, pair in
+            text.replacingOccurrences(of: pair.0, with: pair.1)
+        }
+    }
+
+    /// The user's `key = value` lines, in order. A comment, a blank, or a
+    /// line with no key is left out; the value goes through as written, so
+    /// ghostty parses quotes and lists exactly as it would from its own
+    /// file, and reports a bad value in its log rather than failing the
+    /// surface.
+    static func customEntries(in text: String) -> [(key: String, value: String)] {
+        text.split(whereSeparator: \.isNewline).compactMap { line in
+            let line = line.trimmingCharacters(in: .whitespaces)
+            guard !line.hasPrefix("#"),
+                  let separator = line.firstIndex(of: "=")
+            else { return nil }
+            let key = line[..<separator].trimmingCharacters(in: .whitespaces)
+            let value = line[line.index(after: separator)...].trimmingCharacters(in: .whitespaces)
+            guard !key.isEmpty, !key.contains(where: \.isWhitespace) else { return nil }
+            return (key, value)
+        }
+    }
+
+    /// The theme with the user's lines appended to both appearances. The
+    /// library writes the theme *after* the overlay, and a later line wins
+    /// in ghostty, so this is the only place a custom `background` or
+    /// `palette` is not overridden by the theme it is meant to change.
+    ///
+    /// `custom` is the text a tab was opened with (`TerminalTab`), so a
+    /// theme change re-applies *those* lines to it rather than whatever
+    /// Settings holds now — open tabs keep the configuration they were
+    /// opened with, as Settings says.
+    @MainActor
+    static func theme(custom: String = customConfiguration) -> TerminalTheme {
+        let theme = AppTheme.shared.terminalTheme
+        let entries = customEntries(in: custom)
+        guard !entries.isEmpty else { return theme }
+        func withEntries(_ base: TerminalConfiguration) -> TerminalConfiguration {
+            TerminalConfiguration(startingFrom: base) { builder in
+                for entry in entries {
+                    builder.withCustom(entry.key, entry.value)
+                }
+            }
+        }
+        return TerminalTheme(light: withEntries(theme.light), dark: withEntries(theme.dark))
+    }
+
     /// The configuration file a terminal opened now would run, as ghostty
     /// reads it: the library's base, this overlay, then the theme for
-    /// `colorScheme` — the same order the library's renderer joins them in,
-    /// so what Settings shows is what a surface gets. Purely informational;
-    /// the library writes the real file itself when a tab is made.
+    /// `colorScheme` with the user's lines — the same order the library's
+    /// renderer joins them in, so what Settings shows is what a surface
+    /// gets. Purely informational; the library writes the real file itself
+    /// when a tab is made.
     @MainActor
     static func renderedConfig(for colorScheme: TerminalColorScheme) -> String {
-        let theme = AppTheme.shared.terminalTheme
+        let theme = theme()
         let themeConfiguration = colorScheme == .dark ? theme.dark : theme.light
         return [
             TerminalConfiguration.default.rendered,

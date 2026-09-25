@@ -10,6 +10,7 @@
 		AA0000000000000000000101 /* GhosttyTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000201 /* GhosttyTerminal */; };
 		AA0000000000000000000102 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000202 /* GhosttyTheme */; };
 		AA0000000000000000000103 /* Dog in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000203 /* Dog */; };
+		AA0000000000000000000105 /* SPIndicator in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000204 /* SPIndicator */; };
 		AA0000000000000000000104 /* iGhostVTWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000307 /* iGhostVTWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -143,6 +144,7 @@
 				AA0000000000000000000101 /* GhosttyTerminal in Frameworks */,
 				AA0000000000000000000102 /* GhosttyTheme in Frameworks */,
 				AA0000000000000000000103 /* Dog in Frameworks */,
+				AA0000000000000000000105 /* SPIndicator in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -207,6 +209,7 @@
 				AA0000000000000000000201 /* GhosttyTerminal */,
 				AA0000000000000000000202 /* GhosttyTheme */,
 				AA0000000000000000000203 /* Dog */,
+				AA0000000000000000000204 /* SPIndicator */,
 			);
 			productName = iGhostVT;
 			productReference = AA0000000000000000000301 /* iGhostVT.app */;
@@ -352,6 +355,7 @@
 			packageReferences = (
 				AA0000000000000000000A01 /* XCRemoteSwiftPackageReference "libghostty-spm" */,
 				AA0000000000000000000A02 /* XCRemoteSwiftPackageReference "Dog" */,
+				AA0000000000000000000A03 /* XCRemoteSwiftPackageReference "SPIndicator" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AA0000000000000000000802 /* Products */;
@@ -834,6 +838,14 @@
 				minimumVersion = 0.1.1;
 			};
 		};
+		AA0000000000000000000A03 /* XCRemoteSwiftPackageReference "SPIndicator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ivanvorobei/SPIndicator";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -849,6 +861,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000000000000000000A02 /* XCRemoteSwiftPackageReference "Dog" */;
 			productName = Dog;
+		};
+		AA0000000000000000000204 /* SPIndicator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000A03 /* XCRemoteSwiftPackageReference "SPIndicator" */;
+			productName = SPIndicator;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -28,6 +28,7 @@ struct AdvancedSettingsView: View {
     /// so the view watches both and re-renders on a change to either.
     @ObservedObject private var theme = AppTheme.shared
     @AppStorage(TerminalFontSize.key) private var terminalFontSize = TerminalFontSize.default
+    @AppStorage(GhosttyAppConfiguration.customConfigurationKey) private var customConfiguration = ""
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -37,6 +38,7 @@ struct AdvancedSettingsView: View {
             SessionsSettingsSection()
             terminalHelperSection
             debugSection
+            customConfigurationSection
             configurationSection
             SettingsFormSpacer()
         }
@@ -299,11 +301,57 @@ struct AdvancedSettingsView: View {
         }
     }
 
+    /// The user's own ghostty lines, appended after everything the app
+    /// generates (`GhosttyAppConfiguration.theme`), so they win. Saved as
+    /// typed; a new tab reads them when it is made.
+    private var customConfigurationSection: some View {
+        Section {
+            // `TextEditor` has no switch for smart quotes and dashes, so
+            // the binding straightens them as they arrive.
+            TextEditor(text: Binding(
+                get: { customConfiguration },
+                set: { customConfiguration = GhosttyAppConfiguration.straighteningPunctuation($0) },
+            ))
+            .font(.system(.footnote, design: .monospaced))
+            .textInputAutocapitalization(.never)
+            .disableAutocorrection(true)
+            .frame(minHeight: 120)
+            .overlay(alignment: .topLeading) {
+                if customConfiguration.isEmpty {
+                    // Config syntax, not copy: the same on every locale.
+                    Text(verbatim: "cursor-style = bar\nfont-thicken = false")
+                        .font(.system(.footnote, design: .monospaced))
+                        .foregroundColor(Color(.placeholderText))
+                        // UITextView's own text inset, so the example
+                        // sits where the first typed character will.
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .accessibilityLabel("Custom Configuration")
+        } header: {
+            Text("Custom Configuration")
+                .font(DS.Font.caption)
+        } footer: {
+            Text(
+                """
+                Ghostty settings, one key = value per line, applied after \
+                the settings above. New tabs use them; open tabs keep the \
+                configuration they were opened with.
+                """,
+            )
+            .font(DS.Font.detail)
+        }
+    }
+
     /// The last word: the configuration file every new terminal is opened
     /// with, as ghostty reads it — the library's base, the app's overlay
     /// (the font size preference lives there), then the theme in the
-    /// current appearance. Read-only; it is here so what the settings above
-    /// add up to can be checked in one place.
+    /// current appearance and the custom lines. Read-only, because it is
+    /// generated; it is here so what the settings above add up to can be
+    /// checked in one place. Editing happens in Custom Configuration.
     private var configurationSection: some View {
         Section {
             ConfigurationFileView(
@@ -338,8 +386,6 @@ struct AdvancedSettingsView: View {
 private struct ConfigurationFileView: View {
     let contents: String
 
-    @State private var copied = false
-
     private var lines: [String] {
         var lines = contents.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         while lines.last?.isEmpty == true {
@@ -366,14 +412,16 @@ private struct ConfigurationFileView: View {
                 .font(DS.Font.caption)
                 .foregroundColor(Color.secondary.opacity(0.7))
                 Spacer()
+                // One label, never swapped: "Copied" with a checkmark is a
+                // different height than "Copy", and the swap nudged the
+                // whole section. The confirmation is the indicator.
                 Button(action: copy) {
-                    Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
+                    Label("Copy", systemImage: "doc.on.doc")
                         .font(DS.Font.captionEmphasis)
                         .labelStyle(.titleAndIcon)
                 }
                 .buttonStyle(.borderless)
-                .foregroundColor(copied ? .green : .accentColor)
-                .animation(DS.Motion.smooth, value: copied)
+                .foregroundColor(.accentColor)
             }
             .padding(.horizontal, DS.Padding.m)
             .padding(.vertical, DS.Padding.s)
@@ -407,10 +455,7 @@ private struct ConfigurationFileView: View {
 
     private func copy() {
         UIPasteboard.general.string = contents
-        copied = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            copied = false
-        }
+        CopiedIndicator.present(in: nil)
     }
 }
 

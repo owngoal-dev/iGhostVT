@@ -1,5 +1,5 @@
 {
-  "originHash" : "15c62fa80e1f9c1a3d14f2e96a1e9bf50f9b89c4a4dcd0ca93e56b98c0562b2b",
+  "originHash" : "35094d066467ddce910f1aca4ec060cbf48dd2133e5292614d1e6ac0b5d41321",
   "pins" : [
     {
       "identity" : "dog",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "87eb0af130744c8cbe2e31b6e1a5bcd659f1c220",
         "version" : "2.2.0"
+      }
+    },
+    {
+      "identity" : "spindicator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ivanvorobei/SPIndicator",
+      "state" : {
+        "revision" : "e8a045f91757b32bb29c6feff1644ef79c8daedf",
+        "version" : "1.6.5"
       }
     }
   ],

@@ -97,6 +97,7 @@ struct TabContextMenu: View {
 
     private func copyText() {
         UIPasteboard.general.string = pageText
+        CopiedIndicator.present(in: window)
     }
 
     // MARK: - The page as an image
@@ -104,6 +105,7 @@ struct TabContextMenu: View {
     private func copyImage() {
         guard let image = surfaceImage() ?? renderedTextImage() else { return }
         UIPasteboard.general.image = image
+        CopiedIndicator.present(in: window)
     }
 
     /// The surface's real pixels — only while it is rendering. A background
@@ -152,8 +154,9 @@ struct TabContextMenu: View {
     }
 }
 
-/// New Tab / New Window, then the active tab's own menu. The iPad strip
-/// and the compact bar both open this from their trailing ⋯.
+/// New Tab / New Window (where there can be another window), then the
+/// active tab's own menu. The iPad strip and the compact bar both open
+/// this from their trailing ⋯.
 ///
 /// New Tab is the same control the `+` is, so it opens as a submenu of
 /// directories once there are any. On a phone with tabs open this is the
@@ -167,8 +170,11 @@ struct TabOverflowMenuContent: View {
         NewTabMenu(tabManager: tabManager) {
             Label("New Tab", systemImage: "plus")
         }
-        Button(action: { TerminalWindow.requestNewWindow() }) {
-            Label("New Window", systemImage: "macwindow.badge.plus")
+        // A phone runs one scene; the request would do nothing there.
+        if UIApplication.shared.supportsMultipleScenes {
+            Button(action: { TerminalWindow.requestNewWindow() }) {
+                Label("New Window", systemImage: "macwindow.badge.plus")
+            }
         }
         if let tab = tabManager.activeTab {
             Divider()

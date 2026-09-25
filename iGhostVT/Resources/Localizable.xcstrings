@@ -5788,6 +5788,89 @@
         }
       }
     },
+    "Custom Configuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعداد مخصص"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigene Konfiguration"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Configuration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración personalizada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration personnalisée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione personalizzata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カスタム設定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 구성"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuração personalizada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Своя конфигурация"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cấu hình tùy chỉnh"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义配置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂設定"
+          }
+        }
+      }
+    },
     "Custom Key" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8437,6 +8520,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "取得 ${session} 的畫面文字"
+          }
+        }
+      }
+    },
+    "Ghostty settings, one key = value per line, applied after the settings above. New tabs use them; open tabs keep the configuration they were opened with." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعدادات Ghostty، سطر لكل key = value، تُطبَّق بعد الإعدادات أعلاه. تستخدمها علامات التبويب الجديدة، وتحتفظ علامات التبويب المفتوحة بالإعداد الذي فُتحت به."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghostty-Einstellungen, eine key = value pro Zeile, angewendet nach den Einstellungen oben. Neue Tabs verwenden sie; offene Tabs behalten die Konfiguration, mit der sie geöffnet wurden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghostty settings, one key = value per line, applied after the settings above. New tabs use them; open tabs keep the configuration they were opened with."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de Ghostty, un key = value por línea, aplicados después de los ajustes anteriores. Las pestañas nuevas los usan; las abiertas conservan la configuración con la que se abrieron."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réglages Ghostty, un key = value par ligne, appliqués après les réglages ci-dessus. Les nouveaux onglets les utilisent ; les onglets ouverts conservent la configuration avec laquelle ils ont été ouverts."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impostazioni di Ghostty, una key = value per riga, applicate dopo le impostazioni sopra. Le nuove schede le usano; quelle aperte mantengono la configurazione con cui sono state aperte."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghostty の設定を 1 行に 1 つ、key = value の形で書きます。上の設定のあとに適用されます。新しいタブで使われ、開いているタブは開いたときの設定を保ちます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "한 줄에 하나씩 key = value 형식으로 쓰는 Ghostty 설정으로, 위의 설정 다음에 적용됩니다. 새 탭에 사용되며, 열려 있는 탭은 열 때의 구성을 유지합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes do Ghostty, um key = value por linha, aplicados depois dos ajustes acima. As novas abas os usam; as abas abertas mantêm a configuração com que foram abertas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки Ghostty, по одной key = value в строке, применяются после настроек выше. Новые вкладки используют их; открытые вкладки сохраняют конфигурацию, с которой были открыты."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt Ghostty, mỗi dòng một key = value, được áp dụng sau các cài đặt ở trên. Tab mới sẽ dùng chúng; tab đang mở vẫn giữ cấu hình lúc nó được mở."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghostty 设置，每行一条 key = value，在上方的设置之后应用。新标签页会使用；已打开的标签页保留打开时的配置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghostty 設定，每行一條 key = value，在上方的設定之後套用。新分頁會使用；已開啟的分頁保留開啟時的設定。"
           }
         }
       }

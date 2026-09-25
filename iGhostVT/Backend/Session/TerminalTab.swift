@@ -39,6 +39,9 @@ enum TabLock: Equatable {
 final class TerminalTab: ObservableObject, Identifiable {
     let id = UUID()
     let terminal: TerminalViewState
+    /// Settings ▸ Advanced ▸ Custom Configuration as it read when this tab
+    /// was made; a theme change re-applies these lines, not newer ones.
+    let customConfiguration: String
     let store: TerminalSessionStore
 
     /// The tab's lock, if any — one of the two, never both. Either freezes
@@ -130,8 +133,10 @@ final class TerminalTab: ObservableObject, Identifiable {
     ) {
         let daemonSession = DaemonSessionBox(id: resumeDaemonSessionID)
         self.daemonSession = daemonSession
+        let customConfiguration = GhosttyAppConfiguration.customConfiguration
+        self.customConfiguration = customConfiguration
         terminal = TerminalViewState(
-            theme: AppTheme.shared.terminalTheme,
+            theme: GhosttyAppConfiguration.theme(custom: customConfiguration),
             terminalConfiguration: GhosttyAppConfiguration.terminal,
         )
         // Built before the store exists (the factory closure cannot capture

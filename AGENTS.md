@@ -93,6 +93,16 @@ that receive no termination callback. Controllers still remove their own
 files on replacement and destruction; old loose configs in shared tmp are
 left alone.
 
+Settings ▸ Advanced ▸ Custom Configuration is the user's own ghostty lines
+(`GhosttyAppConfiguration.customConfigurationKey`). They ride on the
+*theme* (`GhosttyAppConfiguration.theme(custom:)`), not the overlay: the
+library writes the theme after the overlay and a later line wins, so a
+custom colour on the overlay would lose to the theme it was meant to
+change. Each `TerminalTab` snapshots the text when it is made and a theme
+change re-applies that snapshot, which is what keeps "open tabs keep the
+configuration they were opened with" true. The field straightens smart
+quotes and dashes as they are typed — ghostty reads neither as syntax.
+
 ## Layout
 
 FlowDown-style: `iGhostVT/main.swift` (manual `UIApplicationMain`, which on
@@ -478,7 +488,7 @@ job beside the two iOS ones). `PLATFORM` picks the SDK, the destination, the
 and the control file's `Depends` (`firmware (>= 1.0)` there — the iOS
 `firmware (>= 15.0)` would refuse to install on a visionOS 1.x/2.x
 bootstrap); `PACKAGE_FLAVOR` stays the layout axis and is independent of it.
-The daemon needed no source change at all; the app needed six guards, all
+The daemon needed no source change at all; the app needed seven guards, all
 `#if os(visionOS)` nested inside code that is already UIKit-only, each around
 one API the xros SDK lacks: `inputAssistantItem` and the `inputAccessoryView`
 override (`LockableTerminalView`), `ActivityKit` (`SessionActivityController`,
@@ -488,7 +498,9 @@ keeps the appex out of the xros bundle), `glassEffect` /
 `GlassEffectContainer` (`GlassStyle`, `AlertCardView` — visionOS windows are
 glass already, the material fallback is the whole treatment), and the
 keyboard-frame test in `KeyboardState` (the visionOS keyboard is its own
-window; the frame says nothing). `XROS_DEPLOYMENT_TARGET` is 1.0 in
+window; the frame says nothing), and `SPIndicator` (`CopiedIndicator` — the
+package compiles its views for `os(iOS)` only, so the module is empty on
+xros and a copy there goes unconfirmed). `XROS_DEPLOYMENT_TARGET` is 1.0 in
 `Configuration/Base.xcconfig` — the lowest the SDK offers and what
 libghostty-spm declares. The one thing that would raise it: two or more
 children inside a single `#available` branch of a `@ViewBuilder` form a

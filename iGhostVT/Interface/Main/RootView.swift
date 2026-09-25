@@ -95,7 +95,9 @@ struct RootView: View {
         .onChange(of: tabManager.clipboardRequests.isEmpty) { _ in refocus() }
         .onChange(of: theme.selection) { _ in
             for tab in tabManager.tabs {
-                tab.terminal.controller.setTheme(theme.terminalTheme)
+                tab.terminal.controller.setTheme(
+                    GhosttyAppConfiguration.theme(custom: tab.customConfiguration),
+                )
             }
         }
         .onReceive(KeyboardBarStore.shared.$entries) { _ in

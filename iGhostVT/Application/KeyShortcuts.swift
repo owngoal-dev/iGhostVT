@@ -325,9 +325,16 @@ enum KeyShortcuts {
     }
 
     /// What Settings lists under a section: the listed shortcuts, in
-    /// menu order.
+    /// menu order. A phone runs one scene, so the window commands — always
+    /// disabled there — are not offered as switches either.
     static func listed(in group: ShortcutGroup) -> [KeyShortcut] {
-        all.filter { $0.group == group && !$0.isHidden }
+        let windowActions = [#selector(R.newWindow(_:)), #selector(R.closeWindow(_:))]
+        let hasWindows = UIApplication.shared.supportsMultipleScenes
+        return all.filter { shortcut in
+            shortcut.group == group
+                && !shortcut.isHidden
+                && (hasWindows || !windowActions.contains(shortcut.action))
+        }
     }
 
     /// Flips one switch and rebuilds the menu, so the menu bar and the
