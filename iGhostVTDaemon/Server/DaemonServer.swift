@@ -109,7 +109,7 @@ final class DaemonServer {
         }
         peers[peerID] = peer
         peer.activate()
-        DaemonLog.server.info("peer \(clientPID) connected as \(peerID), \(peers.count) peer(s)")
+        DaemonLog.server.info("peer \(clientPID) connected as \(peerID), \(self.peers.count) peer(s)")
         DaemonFileLog.log("peer \(clientPID) connected as peer \(peerID), \(peers.count) peer(s)")
     }
 
@@ -117,7 +117,7 @@ final class DaemonServer {
     /// the next launch reattaches to them.
     private func peerInvalidated(_ peer: PeerRelay) {
         peers.removeValue(forKey: peer.peerID)
-        DaemonLog.server.info("peer gone, \(peers.count) peer(s) remain")
+        DaemonLog.server.info("peer gone, \(self.peers.count) peer(s) remain")
         DaemonFileLog.log("peer \(peer.peerID) gone, \(peers.count) peer(s) remain")
     }
 }

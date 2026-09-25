@@ -298,7 +298,7 @@ final class PeerSession {
             if let reply {
                 Self.describe(session, into: reply)
             }
-            DaemonLog.sessions.info("peer \(peerID) attached session \(id)")
+            DaemonLog.sessions.info("peer \(self.peerID) attached session \(id)")
             DaemonFileLog.log("peer \(peerID) attached session \(id)")
             return .success
         } catch let code as iGhostVTReplyCode {
@@ -316,7 +316,7 @@ final class PeerSession {
         let id = xpc_dictionary_get_uint64(message, iGhostVTWireKey.sessionID)
         registry.detach(id, from: self)
         attachedSessionIDs.remove(id)
-        DaemonLog.sessions.info("peer \(peerID) detached session \(id)")
+        DaemonLog.sessions.info("peer \(self.peerID) detached session \(id)")
         return .success
     }
 
