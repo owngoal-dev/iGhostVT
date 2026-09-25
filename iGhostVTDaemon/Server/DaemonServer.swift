@@ -36,12 +36,12 @@ final class DaemonServer {
     private let controlQueue = DispatchQueue(
         label: "wiki.qaq.ighostvt.daemon.control",
         qos: .userInitiated,
-        autoreleaseFrequency: .workItem
+        autoreleaseFrequency: .workItem,
     )
     private let authenticator = PeerAuthenticator()
     private lazy var supervisor = IOSupervisor(
         queue: controlQueue,
-        executablePath: Self.ioExecutablePath()
+        executablePath: Self.ioExecutablePath(),
     )
 
     private var listener: xpc_connection_t?
@@ -67,7 +67,7 @@ final class DaemonServer {
             ighostvtCreateMachServiceListener(
                 $0,
                 controlQueue,
-                PrivateSystemConstant.machServiceListener
+                PrivateSystemConstant.machServiceListener,
             )
         }) else {
             throw iGhostVTDaemonError.transportFailure
@@ -81,10 +81,10 @@ final class DaemonServer {
         }
         xpc_connection_activate(listener)
         DaemonLog.server.info(
-            "listening on \(iGhostVTProtocol.serviceName, privacy: .public), pid \(getpid())"
+            "listening on \(iGhostVTProtocol.serviceName, privacy: .public), pid \(getpid())",
         )
         DaemonFileLog.log(
-            "listening on \(iGhostVTProtocol.serviceName), uid \(getuid()) euid \(geteuid())"
+            "listening on \(iGhostVTProtocol.serviceName), uid \(getuid()) euid \(geteuid())",
         )
     }
 
@@ -103,13 +103,13 @@ final class DaemonServer {
             connection: event,
             clientPID: clientPID,
             queue: controlQueue,
-            supervisor: supervisor
+            supervisor: supervisor,
         ) { [weak self] peer in
             self?.peerInvalidated(peer)
         }
         peers[peerID] = peer
         peer.activate()
-        DaemonLog.server.info("peer \(clientPID) connected as \(peerID), \(self.peers.count) peer(s)")
+        DaemonLog.server.info("peer \(clientPID) connected as \(peerID), \(peers.count) peer(s)")
         DaemonFileLog.log("peer \(clientPID) connected as peer \(peerID), \(peers.count) peer(s)")
     }
 
@@ -117,7 +117,7 @@ final class DaemonServer {
     /// the next launch reattaches to them.
     private func peerInvalidated(_ peer: PeerRelay) {
         peers.removeValue(forKey: peer.peerID)
-        DaemonLog.server.info("peer gone, \(self.peers.count) peer(s) remain")
+        DaemonLog.server.info("peer gone, \(peers.count) peer(s) remain")
         DaemonFileLog.log("peer \(peer.peerID) gone, \(peers.count) peer(s) remain")
     }
 }

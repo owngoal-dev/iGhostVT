@@ -178,7 +178,7 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
             if let fileType, provider.hasItemConformingToTypeIdentifier(fileType.identifier) {
                 let inPlace: URL? = await withCheckedContinuation { continuation in
                     _ = provider.loadInPlaceFileRepresentation(
-                        forTypeIdentifier: fileType.identifier
+                        forTypeIdentifier: fileType.identifier,
                     ) { url, isInPlace, error in
                         if let error {
                             AppLog.warning(.drop, "in-place load failed for \(fileType.identifier): \(error)")
@@ -265,7 +265,7 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
                         guard let data, !data.isEmpty else {
                             AppLog.warning(
                                 .drop,
-                                "image load failed for \(type.identifier): \(String(describing: error))"
+                                "image load failed for \(type.identifier): \(String(describing: error))",
                             )
                             continuation.resume(returning: nil)
                             return
@@ -281,7 +281,7 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
                         guard let image = UIImage(data: data), let png = Self.upright(image).pngData() else {
                             AppLog.warning(
                                 .drop,
-                                "image decode failed for \(actual.identifier); storing the bytes as they are"
+                                "image decode failed for \(actual.identifier); storing the bytes as they are",
                             )
                             continuation.resume(returning: nil)
                             return
@@ -356,7 +356,7 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
             let fallback = type.conforms(to: .image) ? "image" : type.conforms(to: .directory) ? "folder" : "file"
             let raw = (suggested?.isEmpty == false ? suggested : nil) ?? fallback
             let safe = String(
-                raw.map { $0 == "/" || $0.isNewline || $0.asciiValue.map { $0 < 0x20 } == true ? "_" : $0 }
+                raw.map { $0 == "/" || $0.isNewline || $0.asciiValue.map { $0 < 0x20 } == true ? "_" : $0 },
             )
             guard !type.conforms(to: .directory),
                   !extensionMatches((safe as NSString).pathExtension, type),
@@ -391,7 +391,7 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
                 try FileManager.default.createDirectory(
                     at: directory,
                     withIntermediateDirectories: true,
-                    attributes: [.posixPermissions: 0o755]
+                    attributes: [.posixPermissions: 0o755],
                 )
                 let destination = uniqueURL(name: name, in: directory)
                 try write(destination)
@@ -399,7 +399,7 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
                 _ = FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory)
                 try FileManager.default.setAttributes(
                     [.posixPermissions: isDirectory.boolValue ? 0o755 : 0o644],
-                    ofItemAtPath: destination.path
+                    ofItemAtPath: destination.path,
                 )
                 return destination.path
             } catch {

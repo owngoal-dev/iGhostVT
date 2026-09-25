@@ -165,7 +165,9 @@ struct TabDragPreview: View {
             .overlay(shape.strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
     }
 
-    private var shape: TabSlotShape { TabSlotShape(style: style) }
+    private var shape: TabSlotShape {
+        TabSlotShape(style: style)
+    }
 
     /// The preview, rasterized up front. Handing SwiftUI the view itself
     /// through `onDrag(_:preview:)` produced an empty card — the detached
@@ -232,7 +234,7 @@ extension View {
         in tabManager: TabManager,
         dragged: DraggedTab,
         preview: TabDragPreview.Style,
-        width: CGFloat
+        width: CGFloat,
     ) -> some View {
         if TabReorder.isSupported {
             contentShape([.dragPreview, .contextMenuPreview], TabSlotShape(style: preview))
@@ -244,7 +246,7 @@ extension View {
                 }
                 .onDrop(
                     of: [TabReorder.itemType],
-                    delegate: TabReorderSlotDelegate(tab: tab, tabManager: tabManager, dragged: dragged)
+                    delegate: TabReorderSlotDelegate(tab: tab, tabManager: tabManager, dragged: dragged),
                 )
         } else {
             self

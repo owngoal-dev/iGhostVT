@@ -15,13 +15,39 @@ import XPC
 /// No Swift file in this project may spell those macros directly; `make check`
 /// fails on one that does.
 enum iGhostVTXPC {
-    static var typeArray: xpc_type_t { ighostvt_xpc_type_array() }
-    static var typeBool: xpc_type_t { ighostvt_xpc_type_bool() }
-    static var typeConnection: xpc_type_t { ighostvt_xpc_type_connection() }
-    static var typeData: xpc_type_t { ighostvt_xpc_type_data() }
-    static var typeDictionary: xpc_type_t { ighostvt_xpc_type_dictionary() }
-    static var typeError: xpc_type_t { ighostvt_xpc_type_error() }
-    static var typeInt64: xpc_type_t { ighostvt_xpc_type_int64() }
-    static var typeString: xpc_type_t { ighostvt_xpc_type_string() }
-    static var typeUInt64: xpc_type_t { ighostvt_xpc_type_uint64() }
+    static var typeArray: xpc_type_t {
+        ighostvt_xpc_type_array()
+    }
+
+    static var typeBool: xpc_type_t {
+        ighostvt_xpc_type_bool()
+    }
+
+    static var typeConnection: xpc_type_t {
+        ighostvt_xpc_type_connection()
+    }
+
+    static var typeData: xpc_type_t {
+        ighostvt_xpc_type_data()
+    }
+
+    static var typeDictionary: xpc_type_t {
+        ighostvt_xpc_type_dictionary()
+    }
+
+    static var typeError: xpc_type_t {
+        ighostvt_xpc_type_error()
+    }
+
+    static var typeInt64: xpc_type_t {
+        ighostvt_xpc_type_int64()
+    }
+
+    static var typeString: xpc_type_t {
+        ighostvt_xpc_type_string()
+    }
+
+    static var typeUInt64: xpc_type_t {
+        ighostvt_xpc_type_uint64()
+    }
 }

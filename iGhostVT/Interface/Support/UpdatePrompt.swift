@@ -25,9 +25,9 @@ extension View {
                             finish()
                             AppTermination.terminate()
                         },
-                    ]
+                    ],
                 )
-            }
+            },
         ))
     }
 }

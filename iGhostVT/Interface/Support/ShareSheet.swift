@@ -26,7 +26,7 @@ enum ShareSheet {
         }
         let controller = UIActivityViewController(
             activityItems: [url],
-            applicationActivities: nil
+            applicationActivities: nil,
         )
         // iPad and the Mac require an anchor or the presentation crashes;
         // the menu that triggered this is gone, so anchor to the window.
@@ -36,7 +36,7 @@ enum ShareSheet {
                 x: window.bounds.midX,
                 y: window.bounds.midY,
                 width: 1,
-                height: 1
+                height: 1,
             )
             popover.permittedArrowDirections = []
         }

@@ -16,7 +16,7 @@ extension View {
     /// Done, Escape, or a click outside.
     func settingsPresentation(
         isPresented: Binding<Bool>,
-        onDismiss: @escaping () -> Void = {}
+        onDismiss: @escaping () -> Void = {},
     ) -> some View {
         #if targetEnvironment(macCatalyst)
             modifier(SettingsPanelPresenter(isPresented: isPresented, onDismiss: onDismiss))
@@ -138,13 +138,15 @@ extension View {
         private final class KeyView: UIView {
             var onEscape: () -> Void = {}
 
-            override var canBecomeFirstResponder: Bool { true }
+            override var canBecomeFirstResponder: Bool {
+                true
+            }
 
             override var keyCommands: [UIKeyCommand]? {
                 [UIKeyCommand(
                     input: UIKeyCommand.inputEscape,
                     modifierFlags: [],
-                    action: #selector(escape)
+                    action: #selector(escape),
                 )]
             }
 

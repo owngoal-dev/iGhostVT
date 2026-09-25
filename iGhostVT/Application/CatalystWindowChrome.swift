@@ -78,7 +78,7 @@ import UIKit
                     NotificationCenter.default.addObserver(
                         forName: Notification.Name("NSWindowDidResizeNotification"),
                         object: nsWindow,
-                        queue: .main
+                        queue: .main,
                     ) { notification in
                         // Delivered on the main queue, so the window can be
                         // handed to the main actor without a hop.

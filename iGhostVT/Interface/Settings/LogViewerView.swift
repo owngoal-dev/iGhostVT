@@ -73,7 +73,7 @@ struct LogViewerView: View {
             Text(verbatim: model.fileName)
             Text(String.localizedStringWithFormat(
                 NSLocalizedString("%lld entries", comment: "A log entry count"),
-                count
+                count,
             ))
             .foregroundColor(Color.secondary.opacity(0.7))
             Spacer()
@@ -295,12 +295,20 @@ extension LogEntry.Level {
 @MainActor
 final class LogViewerModel: ObservableObject {
     @Published var source: LogSource = .app {
-        didSet { if source != oldValue { reload() } }
+        didSet {
+            if source != oldValue {
+                reload()
+            }
+        }
     }
 
     /// The journal file to read; nil is this launch's.
     @Published var launch: URL? {
-        didSet { if launch != oldValue { reload() } }
+        didSet {
+            if launch != oldValue {
+                reload()
+            }
+        }
     }
 
     @Published var levels: Set<LogEntry.Level> = Set(LogEntry.Level.allCases)
@@ -348,7 +356,7 @@ final class LogViewerModel: ObservableObject {
                 guard let self, self.source == source, self.launch == launch else { return }
                 self.launches = launches
                 self.document = document
-                self.isLoading = false
+                isLoading = false
             }
         }
     }
@@ -383,7 +391,7 @@ final class LogViewerModel: ObservableObject {
                 } else {
                     self.levels.remove(level)
                 }
-            }
+            },
         )
     }
 
@@ -396,7 +404,7 @@ final class LogViewerModel: ObservableObject {
                 } else {
                     self.categories.remove(category)
                 }
-            }
+            },
         )
     }
 
@@ -407,7 +415,7 @@ final class LogViewerModel: ObservableObject {
                 if on {
                     self.categories = []
                 }
-            }
+            },
         )
     }
 }

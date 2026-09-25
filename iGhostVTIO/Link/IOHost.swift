@@ -17,7 +17,7 @@ final class IOHost {
     private let queue = DispatchQueue(
         label: "wiki.qaq.ighostvt.io.control",
         qos: .userInitiated,
-        autoreleaseFrequency: .workItem
+        autoreleaseFrequency: .workItem,
     )
     private let channel: IOChannel
     private lazy var registry = SessionRegistry(queue: queue)

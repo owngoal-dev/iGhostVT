@@ -40,7 +40,7 @@ struct ShortcutsSettingsView: View {
             set: { enabled in
                 KeyShortcuts.setEnabled(enabled, for: shortcut)
                 revision += 1
-            }
+            },
         )) {
             HStack {
                 Text(shortcut.title)

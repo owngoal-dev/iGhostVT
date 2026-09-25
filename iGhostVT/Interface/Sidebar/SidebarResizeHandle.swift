@@ -39,7 +39,7 @@ struct SidebarResizeHandle: View {
                     }
                     .onEnded { _ in
                         dragBaseWidth = nil
-                    }
+                    },
             )
             .accessibilityLabel("Resize Sidebar")
             .accessibilityAdjustableAction { direction in

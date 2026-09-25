@@ -23,9 +23,9 @@ extension View {
                             tabManager.close(tab)
                             finish()
                         },
-                    ]
+                    ],
                 )
-            }
+            },
         ))
     }
 }

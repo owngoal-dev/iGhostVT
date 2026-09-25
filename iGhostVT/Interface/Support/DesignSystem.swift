@@ -113,7 +113,7 @@ enum DS {
             default:
                 UIFont.preferredFont(
                     forTextStyle: style,
-                    compatibleWith: UITraitCollection(preferredContentSizeCategory: category)
+                    compatibleWith: UITraitCollection(preferredContentSizeCategory: category),
                 ).pointSize
             }
             return .system(size: base * scale, weight: weight, design: design)

@@ -98,7 +98,7 @@ struct AdvancedSettingsView: View {
                     """
                     Choose Automatic to use your login shell. Enter a custom \
                     executable path when it is not listed above.
-                    """
+                    """,
                 )
                 .font(DS.Font.detail)
             #else
@@ -107,7 +107,7 @@ struct AdvancedSettingsView: View {
                     Choose Automatic to use the default login shell. Custom paths \
                     must not include the bootstrap root, which can change when the \
                     environment is recreated.
-                    """
+                    """,
                 )
                 .font(DS.Font.detail)
             #endif
@@ -115,7 +115,6 @@ struct AdvancedSettingsView: View {
     }
 
     /// One row of the shell menu, checked when it is the current choice.
-    @ViewBuilder
     private func shellChoice(_ title: String, path: String) -> some View {
         Button {
             shellPath = path
@@ -131,7 +130,9 @@ struct AdvancedSettingsView: View {
     }
 
     private var showsCustomShellPath: Bool {
-        if isEditingCustomShell { return true }
+        if isEditingCustomShell {
+            return true
+        }
         guard let availableShellPaths, !shellPath.isEmpty else { return false }
         return !availableShellPaths.contains(shellPath)
     }
@@ -194,14 +195,13 @@ struct AdvancedSettingsView: View {
                 the ones they have been in before. Turn this off and that \
                 second list is neither offered nor added to; what is already \
                 remembered stays until you clear it.
-                """
+                """,
             )
             .font(DS.Font.detail)
         }
     }
 
     /// One row of the sort menu, checked when it is the current order.
-    @ViewBuilder
     private func sortChoice(_ order: RecentDirectoryStore.SortOrder) -> some View {
         Button {
             recents.sortOrder = order
@@ -242,7 +242,7 @@ struct AdvancedSettingsView: View {
                         the background, so sessions keep going while the app is \
                         closed. It is set up automatically. To remove it, turn \
                         iGhostVT off under Login Items in System Settings.
-                        """
+                        """,
                     )
                     .font(DS.Font.detail)
                 }
@@ -293,7 +293,7 @@ struct AdvancedSettingsView: View {
                 """
                 Writes detailed terminal activity to the log, \
                 including every keystroke, while this is on.
-                """
+                """,
             )
             .font(DS.Font.detail)
         }
@@ -308,8 +308,8 @@ struct AdvancedSettingsView: View {
         Section {
             ConfigurationFileView(
                 contents: GhosttyAppConfiguration.renderedConfig(
-                    for: colorScheme == .dark ? .dark : .light
-                )
+                    for: colorScheme == .dark ? .dark : .light,
+                ),
             )
             .listRowInsets(EdgeInsets())
             // `terminalFontSize` and `theme` are what the file is made of; a
@@ -324,7 +324,7 @@ struct AdvancedSettingsView: View {
                 The Ghostty configuration every new terminal opens with, \
                 generated from the settings above. Open tabs keep the \
                 configuration they were opened with.
-                """
+                """,
             )
             .font(DS.Font.detail)
         }
@@ -361,7 +361,7 @@ private struct ConfigurationFileView: View {
                     .foregroundColor(.secondary)
                 Text(String.localizedStringWithFormat(
                     NSLocalizedString("%lld lines", comment: "A line count"),
-                    lines.count
+                    lines.count,
                 ))
                 .font(DS.Font.caption)
                 .foregroundColor(Color.secondary.opacity(0.7))

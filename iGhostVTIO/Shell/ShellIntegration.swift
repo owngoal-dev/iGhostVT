@@ -123,7 +123,7 @@ enum ShellIntegration {
         var isDirectory: ObjCBool = false
         let exists = FileManager.default.fileExists(
             atPath: RuntimeEnvironment.resolve(bootstrapPath),
-            isDirectory: &isDirectory
+            isDirectory: &isDirectory,
         )
         return exists && isDirectory.boolValue
     }

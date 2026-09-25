@@ -140,7 +140,7 @@ func request(
     from peer: HarnessPeer,
     _ operation: iGhostVTOperation,
     timeout: TimeInterval = 5,
-    _ fill: (xpc_object_t) -> Void = { _ in }
+    _ fill: (xpc_object_t) -> Void = { _ in },
 ) -> xpc_object_t? {
     let message = makeRequest(operation, fill)
     let done = DispatchSemaphore(value: 0)
@@ -181,7 +181,7 @@ func listedString(
     _ supervisor: IOSupervisor,
     from peer: HarnessPeer,
     sessionID: UInt64,
-    _ key: String
+    _ key: String,
 ) -> String? {
     guard let row = listedRow(supervisor, from: peer, sessionID: sessionID) else { return nil }
     return withExtendedLifetime(row) {
@@ -240,13 +240,13 @@ func runCodecTests() {
         check(xpc_dictionary_get_bool(decoded, "b"), "bool survives")
         check(
             xpc_dictionary_get_string(decoded, "s").map { String(cString: $0) } == "héllo wörld",
-            "a non-ASCII string survives"
+            "a non-ASCII string survives",
         )
         var length = 0
         let data = xpc_dictionary_get_data(decoded, "d", &length)
         check(
             length == 5 && data.map { Array(UnsafeRawBufferPointer(start: $0, count: 5)) } == bytes,
-            "data with embedded NULs survives"
+            "data with embedded NULs survives",
         )
         let decodedArray = xpc_dictionary_get_value(decoded, "a")
         check(
@@ -254,12 +254,12 @@ func runCodecTests() {
                 && decodedArray.flatMap { xpc_array_get_string($0, 0) }.map { String(cString: $0) } == "one"
                 && decodedArray
                 .map { xpc_uint64_get_value(xpc_dictionary_get_value(xpc_array_get_value($0, 1), "n")!) } == 7,
-            "an array of mixed values survives"
+            "an array of mixed values survives",
         )
         check(
             xpc_dictionary_get_value(decoded, "env").flatMap { xpc_dictionary_get_string($0, "TERM") }
                 .map { String(cString: $0) } == "xterm-ghostty",
-            "a nested dictionary survives"
+            "a nested dictionary survives",
         )
         check(xpc_dictionary_get_count(decoded) == 7, "no keys are invented or lost")
     }
@@ -281,7 +281,7 @@ func runCodecTests() {
     check(
         header?.kind == .reply && header?.peer == 9 && header?.tag == 12345
             && header?.payloadByteCount == encoded.count,
-        "a frame header round-trips"
+        "a frame header round-trips",
     )
     framed[4] = 200
     check(framed.withUnsafeBytes { IOWire.decodeHeader($0) } == nil, "an unknown frame kind is refused")
@@ -320,7 +320,7 @@ func runProxyLinkTests() {
 
     check(
         replyCode(request(supervisor, from: peer, .openSession)) == .handshakeRequired,
-        "a request before hello is refused by io, through the proxy"
+        "a request before hello is refused by io, through the proxy",
     )
     check(replyCode(request(supervisor, from: peer, .hello)) == .success, "hello is forwarded and answered")
 
@@ -348,11 +348,11 @@ func runProxyLinkTests() {
     check(
         opened.flatMap { xpc_dictionary_get_string($0, iGhostVTWireKey.processName) }
             .map { String(cString: $0) } == "sh",
-        "the reply states the foreground process"
+        "the reply states the foreground process",
     )
     check(
         waitUntil { peer.output(of: sessionID).contains("hello-from-io") },
-        "output reaches the peer that opened the session"
+        "output reaches the peer that opened the session",
     )
 
     // A write the app sends without expecting a reply: no tag, no reply.
@@ -368,7 +368,7 @@ func runProxyLinkTests() {
     }
     check(
         waitUntil { peer.output(of: sessionID).contains("ping-through-proxy") },
-        "input written through the proxy comes back out"
+        "input written through the proxy comes back out",
     )
 
     // A paste: more than one chunk, sent back to back without waiting for
@@ -410,17 +410,17 @@ func runProxyLinkTests() {
     }
     check(
         waitUntil(20) { peer.output(of: pasteID).contains("paste-end") },
-        "a multi-chunk paste reaches the end of the session's input"
+        "a multi-chunk paste reaches the end of the session's input",
     )
     let pasted = peer.output(of: pasteID)
     let arrived = pasted.components(separatedBy: pasteChunk).count - 1
     check(
         arrived == pasteChunkCount,
-        "every chunk of it arrived whole (\(arrived) of \(pasteChunkCount))"
+        "every chunk of it arrived whole (\(arrived) of \(pasteChunkCount))",
     )
     check(
         pasted.count == pasteChunkCount * (pasteChunk.count + 3) + "paste-end".count,
-        "with nothing added or lost around them (\(pasted.count) characters)"
+        "with nothing added or lost around them (\(pasted.count) characters)",
     )
     check(
         (0 ..< pasteChunkCount).allSatisfy { index in
@@ -430,13 +430,13 @@ func runProxyLinkTests() {
             guard let previous = pasted.range(of: "<\(index - 1)>") else { return false }
             return previous.lowerBound < marker.lowerBound && marker.lowerBound < end.lowerBound
         },
-        "and in the order it was sent"
+        "and in the order it was sent",
     )
     check(
         replyCode(request(supervisor, from: peer, .closeSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, pasteID)
         }) == .success,
-        "the paste session closes"
+        "the paste session closes",
     )
     _ = waitUntil { listedRow(supervisor, from: peer, sessionID: pasteID) == nil }
 
@@ -445,7 +445,7 @@ func runProxyLinkTests() {
     check(sessions.map { xpc_array_get_count($0) } == 1, "listSessions sees the one session")
     check(
         sessions.map { xpc_dictionary_get_bool(xpc_array_get_value($0, 0), iGhostVTWireKey.isAttached) } == true,
-        "and reports it attached"
+        "and reports it attached",
     )
 
     let second = HarnessPeer(peerID: 2)
@@ -456,7 +456,7 @@ func runProxyLinkTests() {
         replyCode(request(supervisor, from: second, .attachSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
         }) == .sessionBusy,
-        "a session attached elsewhere is busy"
+        "a session attached elsewhere is busy",
     )
 
     // The CLI's requests hold nothing: a snapshot reads the replay and
@@ -476,29 +476,29 @@ func runProxyLinkTests() {
     let snapshotText = dataText(snapshot)
     check(
         snapshotText.contains("hello-from-io") && snapshotText.contains("ping-through-proxy"),
-        "the snapshot carries the replay"
+        "the snapshot carries the replay",
     )
     check(
         snapshot.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.columns) } == 80
             && snapshot.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.rows) } == 24,
-        "the snapshot states the size"
+        "the snapshot states the size",
     )
     check(
         snapshot.flatMap { xpc_dictionary_get_string($0, iGhostVTWireKey.processName) }
             .map { String(cString: $0) } == "cat",
-        "the snapshot states the foreground process"
+        "the snapshot states the foreground process",
     )
     check(
         listedRow(supervisor, from: second, sessionID: sessionID)
             .map { xpc_dictionary_get_bool($0, iGhostVTWireKey.isAttached) } == true,
-        "the snapshot left the session attached to its peer"
+        "the snapshot left the session attached to its peer",
     )
     check(
         replyCode(request(supervisor, from: second, .injectInput) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
             setInput($0, "from-second\n")
         }) == .success,
-        "injected input needs no attachment"
+        "injected input needs no attachment",
     )
     check(waitUntil { peer.output(of: sessionID).contains("from-second") }, "injected input reaches the attached peer")
     check(!second.output(of: sessionID).contains("from-second"), "and nothing comes back to the peer that injected it")
@@ -506,20 +506,20 @@ func runProxyLinkTests() {
         replyCode(request(supervisor, from: second, .injectInput) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
         }) == .invalidRequest,
-        "injected input without data is refused"
+        "injected input without data is refused",
     )
     check(
         replyCode(request(supervisor, from: second, .snapshotSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, 999)
         }) == .unknownSession,
-        "a snapshot of an unknown session is refused"
+        "a snapshot of an unknown session is refused",
     )
     check(
         replyCode(request(supervisor, from: second, .injectInput) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, 999)
             setInput($0, "x")
         }) == .unknownSession,
-        "input into an unknown session is refused"
+        "input into an unknown session is refused",
     )
     check(
         waitUntil {
@@ -528,17 +528,17 @@ func runProxyLinkTests() {
                     && xpc_dictionary_get_bool($0, iGhostVTWireKey.foregroundIsShell)
             } == true
         },
-        "a listed row names the foreground process"
+        "a listed row names the foreground process",
     )
     let listedDirectory = listedString(
         supervisor,
         from: second,
         sessionID: sessionID,
-        iGhostVTWireKey.currentDirectory
+        iGhostVTWireKey.currentDirectory,
     )
     check(
         listedDirectory?.hasPrefix("/") == true,
-        "a listed row states the shell's directory (got \(listedDirectory ?? "nil"))"
+        "a listed row states the shell's directory (got \(listedDirectory ?? "nil"))",
     )
     let placed = request(supervisor, from: second, .openSession) { message in
         let command = xpc_array_create(nil, 0)
@@ -554,17 +554,17 @@ func runProxyLinkTests() {
             listedString(supervisor, from: second, sessionID: placedID, iGhostVTWireKey.currentDirectory)
                 == "/private/tmp"
         },
-        "and its row states that directory as the kernel spells it"
+        "and its row states that directory as the kernel spells it",
     )
     check(
         replyCode(request(supervisor, from: second, .closeSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, placedID)
         }) == .success,
-        "the placed session closes"
+        "the placed session closes",
     )
     check(
         waitUntil { listedRow(supervisor, from: second, sessionID: placedID) == nil },
-        "and leaves the list"
+        "and leaves the list",
     )
 
     // A one-word `cmd` is the CLI's `new -- /usr/bin/python3`: the program
@@ -581,7 +581,7 @@ func runProxyLinkTests() {
     check(waitUntil { second.exitCode(of: oneWordID) != nil }, "and runs to its end")
     check(
         second.exitCode(of: oneWordID) == 0,
-        "as itself, not as `env -il` (exit \(String(describing: second.exitCode(of: oneWordID))))"
+        "as itself, not as `env -il` (exit \(String(describing: second.exitCode(of: oneWordID))))",
     )
     let printed = second.output(of: oneWordID)
     check(printed.contains("TERM=xterm-256color"), "a verbatim command sees TERM")
@@ -612,17 +612,17 @@ func runProxyLinkTests() {
     }
     check(
         reportedDirectory == "/private/tmp",
-        "and the reply says where it landed (got \(String(describing: reportedDirectory)))"
+        "and the reply says where it landed (got \(String(describing: reportedDirectory)))",
     )
     let startedRowDirectory = listedString(
         supervisor,
         from: second,
         sessionID: startedID,
-        iGhostVTWireKey.currentDirectory
+        iGhostVTWireKey.currentDirectory,
     )
     check(
         startedRowDirectory == "/private/tmp",
-        "and so does its row in the list (got \(String(describing: startedRowDirectory)))"
+        "and so does its row in the list (got \(String(describing: startedRowDirectory)))",
     )
     _ = request(supervisor, from: second, .closeSession) {
         xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, startedID)
@@ -647,18 +647,18 @@ func runProxyLinkTests() {
         supervisor,
         from: second,
         sessionID: homedID,
-        iGhostVTWireKey.displayDirectory
+        iGhostVTWireKey.displayDirectory,
     )
     check(homedDisplay == "~", "and its home is reported as ~ (got \(String(describing: homedDisplay)))")
     let homedPath = listedString(
         supervisor,
         from: second,
         sessionID: homedID,
-        iGhostVTWireKey.currentDirectory
+        iGhostVTWireKey.currentDirectory,
     )
     check(
         homedPath.map { $0.hasPrefix("/") } == true,
-        "while the spelling chdir wants stays a real path (got \(String(describing: homedPath)))"
+        "while the spelling chdir wants stays a real path (got \(String(describing: homedPath)))",
     )
     _ = request(supervisor, from: second, .closeSession) {
         xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, homedID)
@@ -680,7 +680,7 @@ func runProxyLinkTests() {
     }
     check(
         waitUntil { second.output(of: chosenID).contains("shell:/bin/sh flags:") },
-        "the chosen shell answers as itself"
+        "the chosen shell answers as itself",
     )
     let flags = second.output(of: chosenID)
         .components(separatedBy: "shell:/bin/sh flags:")
@@ -706,7 +706,7 @@ func runProxyLinkTests() {
     } ?? ""
     check(
         replayText.contains("hello-from-io") && replayText.contains("ping-through-proxy"),
-        "the attach reply replays the buffer"
+        "the attach reply replays the buffer",
     )
     harnessQueue.async {
         let message = makeRequest(.write) { message in
@@ -718,7 +718,7 @@ func runProxyLinkTests() {
     }
     check(
         waitUntil { second.output(of: sessionID).contains("second-peer") },
-        "output now goes to the attached peer"
+        "output now goes to the attached peer",
     )
     check(!peer.output(of: sessionID).contains("second-peer"), "and not to the departed one")
 
@@ -726,7 +726,7 @@ func runProxyLinkTests() {
         replyCode(request(supervisor, from: second, .closeSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
         }) == .success,
-        "closeSession is forwarded"
+        "closeSession is forwarded",
     )
     check(waitUntil { second.exitCode(of: sessionID) != nil }, "the exit event reaches the attached peer")
     check(
@@ -735,7 +735,7 @@ func runProxyLinkTests() {
             return listed.flatMap { xpc_dictionary_get_value($0, iGhostVTWireKey.sessions) }
                 .map { xpc_array_get_count($0) } == 0
         },
-        "the closed session leaves the list"
+        "the closed session leaves the list",
     )
 
     // Flow control. A client that never reads: the proxy must stop taking
@@ -764,13 +764,13 @@ func runProxyLinkTests() {
     let delivered = stuck.outputByteCount()
     check(
         delivered >= IOSupervisor.pauseAboveByteCount,
-        "output flows until the in-flight cap (\(delivered) bytes)"
+        "output flows until the in-flight cap (\(delivered) bytes)",
     )
     usleep(500_000)
     let afterPause = stuck.outputByteCount()
     check(
         afterPause - delivered < IOSupervisor.pauseAboveByteCount,
-        "past the cap the proxy stops taking output (\(afterPause - delivered) more bytes)"
+        "past the cap the proxy stops taking output (\(afterPause - delivered) more bytes)",
     )
     check(waitUntil(6) { stuck.wasCut }, "a peer that does not drain is cut (\(stuck.cutReason ?? "not cut"))")
     // The cut peer's session lives on, detached, and its shell keeps
@@ -797,13 +797,13 @@ func runProxyLinkTests() {
         waitUntil(15) {
             reattachReplay.contains("flood-done") || observer.output(of: floodID).contains("flood-done")
         },
-        "the shell ran to completion while nobody was reading"
+        "the shell ran to completion while nobody was reading",
     )
     check(
         replyCode(request(supervisor, from: observer, .closeSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, floodID)
         }) == .success,
-        "the flooding session closes"
+        "the flooding session closes",
     )
     _ = waitUntil {
         let listed = request(supervisor, from: observer, .listSessions)
@@ -819,7 +819,7 @@ func runProxyLinkTests() {
     let share = 400_000
     check(
         share < IOSupervisor.peerCongestionByteCount && 3 * share > IOSupervisor.pauseAboveByteCount,
-        "three shares cross the pause without any one crossing the peer threshold"
+        "three shares cross the pause without any one crossing the peer threshold",
     )
     var crowd: [HarnessPeer] = []
     for peerID: UInt64 in 10 ... 12 {
@@ -842,22 +842,22 @@ func runProxyLinkTests() {
     }
     check(
         waitUntil(5) { crowd.reduce(0) { $0 + $1.outputByteCount() } > IOSupervisor.pauseAboveByteCount },
-        "together the peers pass the pause (\(crowd.map { $0.outputByteCount() }))"
+        "together the peers pass the pause (\(crowd.map { $0.outputByteCount() }))",
     )
     check(
         crowd.allSatisfy { $0.outputByteCount() < IOSupervisor.peerCongestionByteCount },
-        "while none holds enough for a timer of its own (\(crowd.map { $0.outputByteCount() }))"
+        "while none holds enough for a timer of its own (\(crowd.map { $0.outputByteCount() }))",
     )
     check(
         waitUntil(6) { crowd.allSatisfy(\.wasCut) },
-        "every peer holding the socket shut is cut (\(crowd.map { $0.cutReason ?? "not cut" }))"
+        "every peer holding the socket shut is cut (\(crowd.map { $0.cutReason ?? "not cut" }))",
     )
     let afterCrowd = HarnessPeer(peerID: 13)
     afterCrowd.supervisor = supervisor
     harnessQueue.sync { supervisor.register(afterCrowd) }
     check(
         replyCode(request(supervisor, from: afterCrowd, .hello)) == .success,
-        "and the socket is read again — a new peer is answered"
+        "and the socket is read again — a new peer is answered",
     )
     if let listed = request(supervisor, from: afterCrowd, .listSessions),
        let rows = xpc_dictionary_get_value(listed, iGhostVTWireKey.sessions)
@@ -899,7 +899,7 @@ func runProxyLinkTests() {
     check(
         burstChunkCount * burstChunk.count > IOSupervisor.inputPauseAboveByteCount
             && burstChunkCount * burstChunk.count < iGhostVTProtocol.sessionPendingInputByteCount,
-        "the burst passes the input pause and stays under the session's own cap"
+        "the burst passes the input pause and stays under the session's own cap",
     )
     // One block on the control queue, as libxpc delivers a queued paste: the
     // socket's write source cannot run between the messages.
@@ -922,7 +922,7 @@ func runProxyLinkTests() {
         replyCode(request(supervisor, from: paster, .closeSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sinkID)
         }) == .success,
-        "the sink session closes"
+        "the sink session closes",
     )
     _ = waitUntil { listedRow(supervisor, from: paster, sessionID: sinkID) == nil }
 
@@ -937,20 +937,20 @@ func runProxyLinkTests() {
     check(waitUntil { bystander.wasCut }, "a peer is cut when io dies (\(bystander.cutReason ?? "not cut"))")
     check(
         waitUntil(5) { supervisor.childProcessID > 0 && supervisor.childProcessID != firstChild },
-        "a replacement io is spawned"
+        "a replacement io is spawned",
     )
     let replacement = HarnessPeer(peerID: 6)
     replacement.supervisor = supervisor
     harnessQueue.sync { supervisor.register(replacement) }
     check(
         waitUntil(5) { replyCode(request(supervisor, from: replacement, .hello, timeout: 1)) == .success },
-        "the replacement answers"
+        "the replacement answers",
     )
     let afterCrash = request(supervisor, from: replacement, .listSessions)
     check(
         afterCrash.flatMap { xpc_dictionary_get_value($0, iGhostVTWireKey.sessions) }
             .map { xpc_array_get_count($0) } == 0,
-        "the replacement starts empty"
+        "the replacement starts empty",
     )
 
     // Shutdown: refused while something is held, followed when nothing is.
@@ -966,13 +966,13 @@ func runProxyLinkTests() {
     check(replyCode(held) == .success, "a session opens on the replacement")
     check(
         replyCode(request(supervisor, from: replacement, .shutdown)) == .sessionBusy,
-        "shutdown with a session held is busy"
+        "shutdown with a session held is busy",
     )
     check(
         replyCode(request(supervisor, from: replacement, .closeSession) {
             xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, heldID)
         }) == .success,
-        "the held session closes"
+        "the held session closes",
     )
     _ = waitUntil {
         let listed = request(supervisor, from: replacement, .listSessions)
@@ -982,7 +982,7 @@ func runProxyLinkTests() {
     let lastChild = supervisor.childProcessID
     check(
         replyCode(request(supervisor, from: replacement, .shutdown)) == .success,
-        "shutdown with nothing held succeeds"
+        "shutdown with nothing held succeeds",
     )
     check(waitUntil { shutdownFollowed }, "the proxy follows io's exit after shutdown")
     check(waitUntil { kill(lastChild, 0) != 0 || supervisor.childProcessID == 0 }, "io is gone after shutdown")
@@ -1034,7 +1034,7 @@ func runSpawnPacingTest() {
     check(cameUp, "a respawn that failed is tried again")
     check(
         waited > 0.5,
-        "a full delay after the failed attempt, not at once (came up \(String(format: "%.2f", waited))s after the path returned)"
+        "a full delay after the failed attempt, not at once (came up \(String(format: "%.2f", waited))s after the path returned)",
     )
     guard cameUp else { return }
     let standIn = supervisor.childProcessID

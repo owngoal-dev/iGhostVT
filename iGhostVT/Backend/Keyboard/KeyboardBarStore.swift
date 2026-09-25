@@ -106,7 +106,7 @@ enum KeyboardBarKey: Hashable {
         case let .symbol(symbol):
             String(
                 format: NSLocalizedString("Key “%@”", comment: "A symbol key of the accessory bar"),
-                symbol
+                symbol,
             )
         }
     }

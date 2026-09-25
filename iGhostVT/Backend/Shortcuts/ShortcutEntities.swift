@@ -18,7 +18,9 @@ struct SessionEntity: AppEntity, Identifiable {
     let id: String
 
     /// The id the daemon speaks.
-    var daemonID: UInt64 { UInt64(id) ?? 0 }
+    var daemonID: UInt64 {
+        UInt64(id) ?? 0
+    }
 
     @Property(title: "Session ID")
     var sessionID: Int
@@ -62,14 +64,16 @@ struct SessionEntity: AppEntity, Identifiable {
         return DisplayRepresentation(
             title: "\(name)",
             subtitle: "\(subtitle)",
-            image: .init(systemName: "terminal")
+            image: .init(systemName: "terminal"),
         )
     }
 
     func matches(_ term: String) -> Bool {
         let needle = term.trimmingCharacters(in: .whitespaces)
         guard !needle.isEmpty else { return true }
-        if String(sessionID) == needle { return true }
+        if String(sessionID) == needle {
+            return true
+        }
         return [program, title, currentDirectory].contains {
             $0.localizedCaseInsensitiveContains(needle)
         }

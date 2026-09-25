@@ -30,13 +30,13 @@ extension View {
                             finish()
                             agent.moveToApplications()
                         },
-                    ]
+                    ],
                 )
                 // Taken down with its window, this alert's plain answer would
                 // quit the app; only the slot has to clear.
                 alert.onDismissUnanswered = finish
                 return alert
-            }
+            },
         ))
     }
 }

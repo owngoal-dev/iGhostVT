@@ -222,7 +222,7 @@ final class IOChannel {
                 let frameCount = IOWire.headerByteCount + header.payloadByteCount
                 guard rest.count >= frameCount else { return }
                 let payload = UnsafeRawBufferPointer(
-                    rebasing: rest[IOWire.headerByteCount ..< frameCount]
+                    rebasing: rest[IOWire.headerByteCount ..< frameCount],
                 )
                 onFrame?(header, payload)
                 consumed += frameCount

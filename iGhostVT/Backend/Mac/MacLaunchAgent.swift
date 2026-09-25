@@ -223,14 +223,14 @@ final class MacLaunchAgent: ObservableObject {
                     if remaining > 0 {
                         AppLog.info(
                             .app,
-                            "launch agent: waiting \(Int(remaining.rounded(.up))) s for launchd's repair of the item"
+                            "launch agent: waiting \(Int(remaining.rounded(.up))) s for launchd's repair of the item",
                         )
                         try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
                     }
                 }
                 AppLog.info(
                     .app,
-                    "launch agent: rebinding the helper, round \(round), status \(service.status.rawValue)"
+                    "launch agent: rebinding the helper, round \(round), status \(service.status.rawValue)",
                 )
                 do {
                     try await service.unregister()
@@ -260,7 +260,7 @@ final class MacLaunchAgent: ObservableObject {
                 }
                 AppLog.warning(
                     .app,
-                    "launch agent: helper did not answer after rebind, status \(service.status.rawValue)"
+                    "launch agent: helper did not answer after rebind, status \(service.status.rawValue)",
                 )
             }
             status = .failed(Self.registrationFailure)
@@ -270,7 +270,9 @@ final class MacLaunchAgent: ObservableObject {
         @available(macCatalyst 16.0, *)
         private static func awaitUnregistered(_ service: SMAppService) async {
             for _ in 0 ..< 20 {
-                if service.status == .notRegistered || service.status == .notFound { return }
+                if service.status == .notRegistered || service.status == .notFound {
+                    return
+                }
                 try? await Task.sleep(nanoseconds: 250_000_000)
             }
         }
@@ -285,7 +287,9 @@ final class MacLaunchAgent: ObservableObject {
                     try service.register()
                     return true
                 } catch {
-                    if service.status == .enabled || service.status == .requiresApproval { return true }
+                    if service.status == .enabled || service.status == .requiresApproval {
+                        return true
+                    }
                     AppLog.info(.app, "launch agent: register: \(error.localizedDescription)")
                 }
                 try? await Task.sleep(nanoseconds: 500_000_000)
@@ -308,7 +312,7 @@ final class MacLaunchAgent: ObservableObject {
         private static var registrationFailure: String {
             String(
                 localized: "Unable to turn on Terminal Helper. Try again.",
-                comment: "Mac agent error when registering the LaunchAgent fails"
+                comment: "Mac agent error when registering the LaunchAgent fails",
             )
         }
 
@@ -365,8 +369,8 @@ final class MacLaunchAgent: ObservableObject {
                 status = .failed(
                     String(
                         localized: "Unable to move iGhostVT to Applications. Move it there in Finder, then open it again.",
-                        comment: "Mac agent error when moving the app bundle fails"
-                    )
+                        comment: "Mac agent error when moving the app bundle fails",
+                    ),
                 )
                 return
             }
@@ -417,12 +421,12 @@ final class MacLaunchAgent: ObservableObject {
         private static func relaunch(from url: URL) {
             guard let workspaceClass = NSClassFromString("NSWorkspace") as? NSObject.Type,
                   let workspace = workspaceClass
-                      .perform(NSSelectorFromString("sharedWorkspace"))?
-                      .takeUnretainedValue() as? NSObject,
+                  .perform(NSSelectorFromString("sharedWorkspace"))?
+                  .takeUnretainedValue() as? NSObject,
                   let configurationClass = NSClassFromString("NSWorkspaceOpenConfiguration") as? NSObject.Type,
                   let configuration = configurationClass
-                      .perform(NSSelectorFromString("configuration"))?
-                      .takeUnretainedValue() as? NSObject
+                  .perform(NSSelectorFromString("configuration"))?
+                  .takeUnretainedValue() as? NSObject
             else { return }
             configuration.setValue(true, forKey: "createsNewApplicationInstance")
             let selector = NSSelectorFromString("openApplicationAtURL:configuration:completionHandler:")

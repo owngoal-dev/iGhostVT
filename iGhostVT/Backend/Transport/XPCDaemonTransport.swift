@@ -7,7 +7,7 @@ import Foundation
 private func ighostvtCreateMachServiceConnection(
     _ name: UnsafePointer<CChar>,
     _ queue: DispatchQueue?,
-    _ flags: UInt64
+    _ flags: UInt64,
 ) -> xpc_connection_t?
 
 /// Terminal I/O carried by `ighostvtd`.
@@ -21,7 +21,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     private let queue = DispatchQueue(
         label: "wiki.qaq.ighostvt.client.xpc",
         qos: .userInitiated,
-        autoreleaseFrequency: .workItem
+        autoreleaseFrequency: .workItem,
     )
     private let lock = NSLock()
     private var connection: xpc_connection_t?
@@ -111,7 +111,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             }
             return String.localizedStringWithFormat(
                 NSLocalizedString("Session %lld", comment: "Tab title for a shell that has not set one"),
-                Int(clamping: sessionID)
+                Int(clamping: sessionID),
             )
         }
     }
@@ -125,7 +125,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         shellPath: String? = nil,
         resumeSessionID: UInt64? = nil,
         inheritDirectoryFrom: UInt64? = nil,
-        startDirectory: String? = nil
+        startDirectory: String? = nil,
     ) {
         let trimmed = shellPath?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.shellPath = (trimmed?.isEmpty ?? true) ? nil : trimmed
@@ -179,7 +179,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                 let end = data.index(
                     offset,
                     offsetBy: iGhostVTProtocol.inputChunkByteCount,
-                    limitedBy: data.endIndex
+                    limitedBy: data.endIndex,
                 ) ?? data.endIndex
                 let message = Self.makeMessage(.write, sessionID: link.sessionID)
                 data[offset ..< end].withUnsafeBytes { buffer in
@@ -212,7 +212,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     private func sendResize(
         columns: Int,
         rows: Int,
-        over link: (connection: xpc_connection_t, sessionID: UInt64)
+        over link: (connection: xpc_connection_t, sessionID: UInt64),
     ) {
         if let applied = appliedViewport, applied.columns == columns, applied.rows == rows {
             return
@@ -227,7 +227,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// Detach without killing: the shell keeps running in the daemon.
     func disconnect() {
         queue.async {
-            if self.deferEnd(.detach) { return }
+            if self.deferEnd(.detach) {
+                return
+            }
             if let link = self.attachedLink() {
                 let message = Self.makeMessage(.detachSession, sessionID: link.sessionID)
                 xpc_connection_send_message(link.connection, message)
@@ -245,7 +247,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// two apart from outside.
     func closeSession() {
         queue.async {
-            if self.deferEnd(.close) { return }
+            if self.deferEnd(.close) {
+                return
+            }
             let sessionID = self.lock.locked { () -> UInt64? in
                 defer { self.resumeSessionID = nil }
                 return self.resumeSessionID
@@ -303,7 +307,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// the timeout (a hung daemon must not hang cold launch with it).
     static func listSessions(
         timeout: TimeInterval = 6,
-        completion: @escaping @Sendable ([SessionSummary]?) -> Void
+        completion: @escaping @Sendable ([SessionSummary]?) -> Void,
     ) {
         oneShotRequest(.listSessions, timeout: timeout, decode: sessions(in:), completion: completion)
     }
@@ -311,7 +315,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// Shell paths the daemon proved executable inside the active bootstrap.
     static func listShells(
         timeout: TimeInterval = 6,
-        completion: @escaping @Sendable ([String]?) -> Void
+        completion: @escaping @Sendable ([String]?) -> Void,
     ) {
         oneShotRequest(.listShells, timeout: timeout, decode: shells(in:), completion: completion)
     }
@@ -320,7 +324,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         _ operation: iGhostVTOperation,
         timeout: TimeInterval,
         decode: @escaping @Sendable (xpc_object_t) -> Value?,
-        completion: @escaping @Sendable (Value?) -> Void
+        completion: @escaping @Sendable (Value?) -> Void,
     ) {
         let queue = DispatchQueue(label: "wiki.qaq.ighostvt.client.list", qos: .userInitiated)
         let finished = FinishOnce<Value?>(completion)
@@ -350,7 +354,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             xpc_connection_send_message_with_reply(
                 link.connection,
                 makeMessage(operation),
-                queue
+                queue,
             ) { reply in
                 xpc_connection_cancel(link.connection)
                 finished.finish(decode(reply))
@@ -370,7 +374,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             guard xpc_get_type(entry) == iGhostVTXPC.typeDictionary else { continue }
             rows.append(SessionSummary(
                 id: xpc_dictionary_get_uint64(entry, iGhostVTWireKey.sessionID),
-                isAttached: xpc_dictionary_get_bool(entry, iGhostVTWireKey.isAttached)
+                isAttached: xpc_dictionary_get_bool(entry, iGhostVTWireKey.isAttached),
             ))
         }
         return rows
@@ -438,7 +442,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     static func closeSessionsForQuit(
         _ ids: [UInt64]?,
         stopDaemonWhenEmpty: Bool,
-        timeout: TimeInterval = 3
+        timeout: TimeInterval = 3,
     ) {
         let deadline = DispatchTime.now() + timeout
         let queue = DispatchQueue(label: "wiki.qaq.ighostvt.client.quit", qos: .userInitiated)
@@ -491,7 +495,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                         xpc_connection_send_message_with_reply(
                             connection,
                             makeMessage(.shutdown),
-                            queue
+                            queue,
                         ) { _ in
                             finish()
                         }
@@ -509,7 +513,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             ighostvtCreateMachServiceConnection($0, queue, 0)
         }) else {
             emit(.state(.disconnected(
-                reason: String(localized: "The terminal helper is not running. Restart iGhostVT and try again.")
+                reason: String(localized: "The terminal helper is not running. Restart iGhostVT and try again."),
             )))
             return
         }
@@ -530,8 +534,8 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             guard Self.replyCode(of: reply) == .success else {
                 teardown(
                     reason: String(
-                        localized: "Unable to connect to the terminal helper. Restart iGhostVT and try again."
-                    )
+                        localized: "Unable to connect to the terminal helper. Restart iGhostVT and try again.",
+                    ),
                 )
                 return
             }
@@ -548,8 +552,8 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             AppLog.error(.transport, "no hello reply after \(Int(Self.helloTimeout)) s")
             teardown(
                 reason: String(
-                    localized: "Unable to connect to the terminal helper. Restart iGhostVT and try again."
-                )
+                    localized: "Unable to connect to the terminal helper. Restart iGhostVT and try again.",
+                ),
             )
         }
     }
@@ -570,7 +574,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             xpc_connection_send_message_with_reply(connection, message, queue) { [weak self] reply in
                 guard let self else { return }
                 if Self.replyCode(of: reply) == .success {
-                    if settleDeferredEnd(sessionID: resumeSessionID) { return }
+                    if settleDeferredEnd(sessionID: resumeSessionID) {
+                        return
+                    }
                     lock.locked { self.sessionID = resumeSessionID }
                     // The attach carried no size; the reply says which one
                     // the session kept, so the host's re-send on
@@ -599,7 +605,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     // which would discard the shell about to be opened; it
                     // learns the new id from `.connected` instead.
                     lock.locked { self.resumeSessionID = nil }
-                    if settleDeferredEnd(sessionID: nil) { return }
+                    if settleDeferredEnd(sessionID: nil) {
+                        return
+                    }
                     openSession()
                 }
             }
@@ -638,7 +646,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                 return
             }
             let sessionID = xpc_dictionary_get_uint64(reply, iGhostVTWireKey.sessionID)
-            if settleDeferredEnd(sessionID: sessionID) { return }
+            if settleDeferredEnd(sessionID: sessionID) {
+                return
+            }
             lock.locked {
                 self.sessionID = sessionID
                 self.resumeSessionID = sessionID
@@ -667,14 +677,14 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                 return
             }
             emit(.state(.interrupted(
-                reason: String(localized: "The terminal connection was interrupted. Try again.")
+                reason: String(localized: "The terminal connection was interrupted. Try again."),
             )))
             return
         }
         guard type == iGhostVTXPC.typeDictionary,
               xpc_dictionary_get_uint64(event, iGhostVTWireKey.version) == iGhostVTProtocol.version,
               let pushed = iGhostVTEvent(
-                  rawValue: xpc_dictionary_get_uint64(event, iGhostVTWireKey.event)
+                  rawValue: xpc_dictionary_get_uint64(event, iGhostVTWireKey.event),
               )
         else { return }
 
@@ -694,7 +704,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             emitSessionState(in: event)
         case .sessionExit:
             let exitCode = Int32(
-                truncatingIfNeeded: xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode)
+                truncatingIfNeeded: xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode),
             )
             // The id is dead: clear it before anyone can try to resume it.
             lock.locked { resumeSessionID = nil }
@@ -705,10 +715,10 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     : String.localizedStringWithFormat(
                         NSLocalizedString(
                             "The shell exited with status %lld.",
-                            comment: "Why a terminal stopped; %lld is the process exit status"
+                            comment: "Why a terminal stopped; %lld is the process exit status",
                         ),
-                        Int(exitCode)
-                    )
+                        Int(exitCode),
+                    ),
             )
         }
     }
@@ -768,7 +778,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         guard xpc_get_type(reply) == iGhostVTXPC.typeDictionary,
               xpc_dictionary_get_uint64(reply, iGhostVTWireKey.version) == iGhostVTProtocol.version,
               let code = iGhostVTReplyCode(
-                  rawValue: xpc_dictionary_get_int64(reply, iGhostVTWireKey.code)
+                  rawValue: xpc_dictionary_get_int64(reply, iGhostVTWireKey.code),
               )
         else { return .operationFailed }
         return code
@@ -791,7 +801,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         if let path = Self.string(iGhostVTWireKey.currentDirectory, in: dictionary) {
             emit(.currentDirectory(TerminalDirectory(
                 path: path,
-                display: Self.string(iGhostVTWireKey.displayDirectory, in: dictionary)
+                display: Self.string(iGhostVTWireKey.displayDirectory, in: dictionary),
             )))
         }
     }
@@ -833,7 +843,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             String(localized: "Unable to complete this action. Try again.")
         case .unsupportedVersion:
             String(
-                localized: "iGhostVT and its terminal helper are different versions. Reinstall iGhostVT to update both."
+                localized: "iGhostVT and its terminal helper are different versions. Reinstall iGhostVT to update both.",
             )
         case .handshakeRequired: String(localized: "The terminal connection is not ready. Try again.")
         case .sessionLimitReached: String(localized: "Too many terminals are open. Close one and try again.")

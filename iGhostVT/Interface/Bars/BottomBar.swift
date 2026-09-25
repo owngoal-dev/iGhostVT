@@ -88,7 +88,7 @@ struct BottomBar: View {
     private var tabCountValue: String {
         String.localizedStringWithFormat(
             NSLocalizedString("%lld Tabs", comment: "Count of open tabs, as a heading"),
-            tabManager.tabs.count
+            tabManager.tabs.count,
         )
     }
 
@@ -100,7 +100,7 @@ struct BottomBar: View {
                 }
                 withAnimation(DS.Motion.snappy) {
                     tabManager.activateAdjacentTab(
-                        offset: value.translation.width < 0 ? 1 : -1
+                        offset: value.translation.width < 0 ? 1 : -1,
                     )
                 }
             }

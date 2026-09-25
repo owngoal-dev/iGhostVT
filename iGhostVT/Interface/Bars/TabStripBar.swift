@@ -134,7 +134,7 @@ struct TabStripBar: View {
                             tab: tab,
                             isActive: tab.id == tabManager.activeTabID,
                             onSelect: { tabManager.activeTabID = tab.id },
-                            onClose: { tabManager.requestClose(tab) }
+                            onClose: { tabManager.requestClose(tab) },
                         )
                         .frame(width: width)
                         .contextMenu {
@@ -234,8 +234,8 @@ private struct TabChip: View {
             .frame(height: 32)
             .background(
                 Capsule().fill(
-                    isActive ? Color.primary.opacity(0.12) : Color.clear
-                )
+                    isActive ? Color.primary.opacity(0.12) : Color.clear,
+                ),
             )
             .contentShape(Capsule())
             // A retitle changes the chip's width; the chips after it slide

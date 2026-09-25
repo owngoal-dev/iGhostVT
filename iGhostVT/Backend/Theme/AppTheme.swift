@@ -46,7 +46,7 @@ final class AppTheme: ObservableObject {
     private init() {
         selection = Selection(
             lightName: UserDefaults.standard.string(forKey: Self.lightKey),
-            darkName: UserDefaults.standard.string(forKey: Self.darkKey)
+            darkName: UserDefaults.standard.string(forKey: Self.darkKey),
         )
     }
 
@@ -61,7 +61,7 @@ final class AppTheme: ObservableObject {
     var terminalTheme: TerminalTheme {
         TerminalTheme(
             light: lightDefinition?.toTerminalConfiguration() ?? .alabaster,
-            dark: darkDefinition?.toTerminalConfiguration() ?? .afterglow
+            dark: darkDefinition?.toTerminalConfiguration() ?? .afterglow,
         )
     }
 
@@ -94,7 +94,7 @@ extension Color {
         self.init(
             red: Double((value >> 16) & 0xFF) / 255,
             green: Double((value >> 8) & 0xFF) / 255,
-            blue: Double(value & 0xFF) / 255
+            blue: Double(value & 0xFF) / 255,
         )
     }
 }

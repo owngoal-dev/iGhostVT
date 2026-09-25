@@ -127,7 +127,7 @@ final class PTYSession {
     /// successful `execve` looks like from here.
     private static func readReport(
         from descriptor: Int32,
-        into buffer: UnsafeMutablePointer<Int32>
+        into buffer: UnsafeMutablePointer<Int32>,
     ) -> Bool {
         let wanted = MemoryLayout<Int32>.size * 2
         var total = 0
@@ -135,7 +135,7 @@ final class PTYSession {
             let count = read(
                 descriptor,
                 UnsafeMutableRawPointer(buffer).advanced(by: total),
-                wanted - total
+                wanted - total,
             )
             if count > 0 {
                 total += count
@@ -152,7 +152,7 @@ final class PTYSession {
     private static func describeChildFailure(
         step: Int32,
         code: Int32,
-        executable: String
+        executable: String,
     ) -> String {
         // The system's reason stays in the sentence (the harness holds this
         // contract): "No such file or directory" versus "Permission denied"
@@ -172,7 +172,7 @@ final class PTYSession {
     /// anything else between fork and exec is unsafe in a Swift process.
     private static func makeCStringArray(_ values: [String]) -> UnsafeMutablePointer<UnsafeMutablePointer<CChar>?> {
         let array = UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>.allocate(
-            capacity: values.count + 1
+            capacity: values.count + 1,
         )
         for (index, value) in values.enumerated() {
             array[index] = strdup(value)
@@ -183,7 +183,7 @@ final class PTYSession {
 
     private static func freeCStringArray(
         _ array: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>,
-        count: Int
+        count: Int,
     ) {
         for index in 0 ..< count {
             free(array[index])
@@ -200,12 +200,12 @@ final class PTYSession {
         credentials: ShellLaunch.Credentials? = nil,
         workingDirectory: String? = nil,
         fallbackWorkingDirectory: String? = nil,
-        queue: DispatchQueue
+        queue: DispatchQueue,
     ) throws {
         guard let executable = command.first, !executable.isEmpty else {
             throw iGhostVTFailure(
                 .spawnFailed,
-                "This terminal has no command to run. Check the default shell in Settings."
+                "This terminal has no command to run. Check the default shell in Settings.",
             )
         }
 
@@ -234,7 +234,7 @@ final class PTYSession {
             ws_row: rows,
             ws_col: columns,
             ws_xpixel: 0,
-            ws_ypixel: 0
+            ws_ypixel: 0,
         )
         // Prepared before the fork for the same reason the argv is: the child
         // may only make async-signal-safe calls, and building an array is not
@@ -251,7 +251,7 @@ final class PTYSession {
         guard pipe(&reportDescriptors) == 0 else {
             throw iGhostVTFailure(
                 .spawnFailed,
-                "Unable to start the terminal. Try again."
+                "Unable to start the terminal. Try again.",
             )
         }
         let reportRead = reportDescriptors[0]
@@ -343,8 +343,8 @@ final class PTYSession {
                 Self.describeChildFailure(
                     step: report[0],
                     code: report[1],
-                    executable: executable
-                )
+                    executable: executable,
+                ),
             )
         }
 
@@ -360,7 +360,7 @@ final class PTYSession {
     func start(
         onOutput: @escaping OutputHandler,
         onExit: @escaping ExitHandler,
-        onForegroundChange: ForegroundHandler? = nil
+        onForegroundChange: ForegroundHandler? = nil,
     ) {
         self.onOutput = onOutput
         self.onExit = onExit
@@ -376,7 +376,7 @@ final class PTYSession {
         let exitSource = DispatchSource.makeProcessSource(
             identifier: childPID,
             eventMask: .exit,
-            queue: queue
+            queue: queue,
         )
         // Polled, not reaped once: XNU's proc_exit posts NOTE_EXIT (what this
         // source is) *before* it marks the process SZOMB and signals SIGCHLD,
@@ -395,7 +395,7 @@ final class PTYSession {
         let namePoll = DispatchSource.makeTimerSource(queue: queue)
         namePoll.schedule(
             deadline: .now() + Self.processNamePollInterval,
-            repeating: Self.processNamePollInterval
+            repeating: Self.processNamePollInterval,
         )
         namePoll.setEventHandler { [weak self] in
             self?.refreshForegroundProcessName()
@@ -468,7 +468,7 @@ final class PTYSession {
     /// `wrote`, since XNU only reports `EWOULDBLOCK` when no byte went in.
     private static func writeAvailable(
         _ descriptor: Int32,
-        _ buffer: UnsafeRawBufferPointer
+        _ buffer: UnsafeRawBufferPointer,
     ) -> WriteOutcome {
         guard let base = buffer.baseAddress, !buffer.isEmpty else { return .wrote(0) }
         while true {
@@ -521,7 +521,7 @@ final class PTYSession {
 
     private func discardPendingInput() {
         pendingInput.removeAll(
-            keepingCapacity: pendingInput.capacity <= Self.retainedInputCapacity
+            keepingCapacity: pendingInput.capacity <= Self.retainedInputCapacity,
         )
         pendingInputOffset = 0
         disarmWriteSource()
@@ -645,7 +645,7 @@ final class PTYSession {
     private static func reapWithoutBlocking(
         _ pid: pid_t,
         on queue: DispatchQueue,
-        attempt: Int = 0
+        attempt: Int = 0,
     ) {
         var status: Int32 = 0
         guard waitNoHang(pid, status: &status) == 0 else { return }
@@ -788,7 +788,7 @@ final class PTYSession {
         guard isAlive else { return nil }
         let buffer = UnsafeMutableRawPointer.allocate(
             byteCount: ProcVnodePathInfo.size,
-            alignment: MemoryLayout<UInt64>.alignment
+            alignment: MemoryLayout<UInt64>.alignment,
         )
         defer { buffer.deallocate() }
         buffer.initializeMemory(as: UInt8.self, repeating: 0, count: ProcVnodePathInfo.size)
@@ -797,7 +797,7 @@ final class PTYSession {
             ProcVnodePathInfo.flavor,
             0,
             buffer,
-            Int32(ProcVnodePathInfo.size)
+            Int32(ProcVnodePathInfo.size),
         )
         guard filled == Int32(ProcVnodePathInfo.size) else { return nil }
         let pathStart = buffer.advanced(by: ProcVnodePathInfo.currentDirectoryPathOffset)
@@ -821,7 +821,7 @@ final class PTYSession {
             // teardown between its exit notice and SZOMB. The registry's
             // SIGCHLD sweep reaps it when the kernel is done.
             DaemonFileLog.log(
-                "session \(id) child \(childPID) not reapable 500ms after its exit notice; leaving it to SIGCHLD"
+                "session \(id) child \(childPID) not reapable 500ms after its exit notice; leaving it to SIGCHLD",
             )
             return
         }

@@ -58,7 +58,7 @@ import SwiftUI
                     .font(DS.Font.caption)
             } footer: {
                 Text(
-                    "The bar above the keyboard shows these keys in this order. Scroll sideways if they do not all fit."
+                    "The bar above the keyboard shows these keys in this order. Scroll sideways if they do not all fit.",
                 )
                 .font(DS.Font.detail)
             }
@@ -133,7 +133,7 @@ import SwiftUI
                     .font(DS.Font.caption)
             } footer: {
                 Text(
-                    "A custom key types the characters you enter, together with any modifier keys that are switched on."
+                    "A custom key types the characters you enter, together with any modifier keys that are switched on.",
                 )
                 .font(DS.Font.detail)
             }
@@ -189,7 +189,7 @@ import SwiftUI
                     glyph
                         .frame(width: size, height: size)
                         .background(
-                            Circle().fill(Color(uiColor: .systemGray5).opacity(0.92))
+                            Circle().fill(Color(uiColor: .systemGray5).opacity(0.92)),
                         )
                 }
             }

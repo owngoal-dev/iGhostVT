@@ -87,7 +87,7 @@ final class PeerAuthenticator {
             deny(
                 pid,
                 "\(clientPath) is not the installed client "
-                    + "(expected \(installedClientPaths.joined(separator: ", ")))"
+                    + "(expected \(installedClientPaths.joined(separator: ", ")))",
             )
             return nil
         #endif
@@ -216,7 +216,7 @@ final class PeerAuthenticator {
                 built.append(Admission(requirement: compiled, siblingPath: sibling))
                 DaemonFileLog.log(
                     "mac peer policy: requirement '\(text)'"
-                        + (team == nil ? ", sibling \(sibling ?? "unresolved")" : "")
+                        + (team == nil ? ", sibling \(sibling ?? "unresolved")" : ""),
                 )
             }
             admissions = built
@@ -295,7 +295,7 @@ final class PeerAuthenticator {
             guard SecCodeCopySigningInformation(
                 staticCode,
                 SecCSFlags(rawValue: kSecCSSigningInformation),
-                &information
+                &information,
             ) == errSecSuccess,
                 let entries = information as? [String: Any]
             else { return nil }

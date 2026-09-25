@@ -25,14 +25,14 @@ struct TextSizeSettingsSection: View {
                     icon: "terminal",
                     value: String.localizedStringWithFormat(
                         NSLocalizedString("%lld pt", comment: "A font size in points"),
-                        terminalFontSize
-                    )
+                        terminalFontSize,
+                    ),
                 )
             }
             .accessibilityLabel("Terminal")
             .accessibilityValue(String.localizedStringWithFormat(
                 NSLocalizedString("%lld pt", comment: "A font size in points"),
-                terminalFontSize
+                terminalFontSize,
             ))
             Stepper(value: $interfaceTextStep, in: InterfaceTextSize.steps) {
                 SettingsValueRow(title: "Interface", icon: "textformat.size", value: interfaceScaleDescription)
@@ -48,7 +48,7 @@ struct TextSizeSettingsSection: View {
                 New terminals open at the terminal size; a tab that is already \
                 open keeps the size it was zoomed to. The interface size scales \
                 every label and control.
-                """
+                """,
             )
             .font(DS.Font.detail)
         }

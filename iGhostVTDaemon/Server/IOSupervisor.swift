@@ -142,7 +142,7 @@ final class IOSupervisor {
         from peer: IOPeer,
         message: xpc_object_t,
         wantsReply: Bool,
-        completion: @escaping (xpc_object_t) -> Void
+        completion: @escaping (xpc_object_t) -> Void,
     ) {
         guard let channel else {
             if wantsReply {
@@ -228,7 +228,7 @@ final class IOSupervisor {
             cancelCongestionTimer(for: peerID)
             let held = inFlight[peerID] ?? 0
             peers[peerID]?.cutConnection(
-                reason: "\(held) bytes of output not taken in \(Self.peerCongestionGrace.seconds)s"
+                reason: "\(held) bytes of output not taken in \(Self.peerCongestionGrace.seconds)s",
             )
         }
         congestionTimers[peerID] = timer

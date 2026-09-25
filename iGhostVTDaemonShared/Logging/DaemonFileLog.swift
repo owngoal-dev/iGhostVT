@@ -23,14 +23,14 @@ enum DaemonFileLog {
     private static let rotateAtBytes = 512 * 1024
     private static let queue = DispatchQueue(
         label: "wiki.qaq.ighostvt.daemon.filelog",
-        qos: .utility
+        qos: .utility,
     )
     private static let processName = String(cString: getprogname())
 
     /// mobile's Library/Logs does not exist until someone makes it. `path` is
     /// always absolute, so everything before the last slash is its directory.
     private static let directoryReady: Void = makeDirectory(
-        String(path[..<(path.lastIndex(of: "/") ?? path.startIndex)])
+        String(path[..<(path.lastIndex(of: "/") ?? path.startIndex)]),
     )
 
     static func log(_ message: String) {

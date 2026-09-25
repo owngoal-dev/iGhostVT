@@ -83,7 +83,9 @@ final class ScreenRenderer {
     // MARK: - Input
 
     func feed(_ data: Data) {
-        for byte in data { consume(byte) }
+        for byte in data {
+            consume(byte)
+        }
     }
 
     func feed(_ text: String) {
@@ -105,7 +107,9 @@ final class ScreenRenderer {
                 state = .ground
                 applyControlSequence(sequence, final: final)
             } else if byte >= 0x20, byte <= 0x3F {
-                if controlSequence.count < 64 { controlSequence.append(byte) }
+                if controlSequence.count < 64 {
+                    controlSequence.append(byte)
+                }
             } else {
                 // A control byte inside a sequence: the sequence is
                 // abandoned and the byte acts, which is how a truncated
@@ -125,7 +129,9 @@ final class ScreenRenderer {
                 operatingSystemCommand.append(byte)
             }
         case .ignoredString:
-            if byte == 0x1B { state = .stringEscape }
+            if byte == 0x1B {
+                state = .stringEscape
+            }
         case .stringEscape:
             // ESC \ terminates; anything else was part of the string, and
             // an ESC that starts something new is taken as such.
@@ -176,7 +182,9 @@ final class ScreenRenderer {
         case 0x7F:
             return
         default:
-            if byte < 0x20 { return }
+            if byte < 0x20 {
+                return
+            }
             if byte < 0x80 {
                 place(Character(UnicodeScalar(byte)), width: 1)
                 return
@@ -277,8 +285,8 @@ final class ScreenRenderer {
 
         if isPrivate {
             switch final {
-            case 0x68: setPrivateMode(parameters, enabled: true)   // h
-            case 0x6C: setPrivateMode(parameters, enabled: false)  // l
+            case 0x68: setPrivateMode(parameters, enabled: true) // h
+            case 0x6C: setPrivateMode(parameters, enabled: false) // l
             default: return
             }
             return
@@ -425,8 +433,13 @@ final class ScreenRenderer {
 
     // MARK: - Grid operations
 
-    private func clampRow(_ row: Int) -> Int { min(max(0, row), rows - 1) }
-    private func clampColumn(_ column: Int) -> Int { min(max(0, column), columns - 1) }
+    private func clampRow(_ row: Int) -> Int {
+        min(max(0, row), rows - 1)
+    }
+
+    private func clampColumn(_ column: Int) -> Int {
+        min(max(0, column), columns - 1)
+    }
 
     private func blankRows(_ count: Int) -> [[Character]] {
         Array(repeating: blankRow(), count: count)
@@ -472,8 +485,12 @@ final class ScreenRenderer {
     /// cell of its own.
     private func attachCombining(_ mark: Character) {
         var column = cursorColumn
-        if !wrapPending { column -= 1 }
-        while column >= 0, screen[cursorRow][column] == Self.spacer { column -= 1 }
+        if !wrapPending {
+            column -= 1
+        }
+        while column >= 0, screen[cursorRow][column] == Self.spacer {
+            column -= 1
+        }
         guard column >= 0 else { return }
         // Not every pair joins: a format scalar such as U+200B breaks the
         // cluster, and so does a C1 control or U+00AD sitting in the cell.
@@ -537,12 +554,18 @@ final class ScreenRenderer {
         switch mode {
         case 0:
             eraseInLine(0)
-            for row in (cursorRow + 1) ..< rows { screen[row] = blankRow() }
+            for row in (cursorRow + 1) ..< rows {
+                screen[row] = blankRow()
+            }
         case 1:
             eraseInLine(1)
-            for row in 0 ..< cursorRow { screen[row] = blankRow() }
+            for row in 0 ..< cursorRow {
+                screen[row] = blankRow()
+            }
         case 2, 3:
-            for row in 0 ..< rows { screen[row] = blankRow() }
+            for row in 0 ..< rows {
+                screen[row] = blankRow()
+            }
             if mode == 3 {
                 scrolledOffRows += scrollback.count
                 scrollback.removeAll()
@@ -556,9 +579,13 @@ final class ScreenRenderer {
     private func eraseInLine(_ mode: Int) {
         switch mode {
         case 0:
-            for column in cursorColumn ..< columns { screen[cursorRow][column] = " " }
+            for column in cursorColumn ..< columns {
+                screen[cursorRow][column] = " "
+            }
         case 1:
-            for column in 0 ... min(cursorColumn, columns - 1) { screen[cursorRow][column] = " " }
+            for column in 0 ... min(cursorColumn, columns - 1) {
+                screen[cursorRow][column] = " "
+            }
         case 2:
             screen[cursorRow] = blankRow()
         default:
@@ -602,7 +629,9 @@ final class ScreenRenderer {
     private func eraseCharacters(_ count: Int) {
         let end = min(columns, cursorColumn + count)
         guard cursorColumn < end else { return }
-        for column in cursorColumn ..< end { screen[cursorRow][column] = " " }
+        for column in cursorColumn ..< end {
+            screen[cursorRow][column] = " "
+        }
         wrapPending = false
     }
 
@@ -631,7 +660,9 @@ final class ScreenRenderer {
         /// likewise.
         var promptStart: Int?
 
-        var text: String { lines.joined(separator: "\n") }
+        var text: String {
+            lines.joined(separator: "\n")
+        }
     }
 
     func transcript() -> Transcript {
@@ -644,7 +675,7 @@ final class ScreenRenderer {
         return Transcript(
             lines: lines,
             outputStart: index(outputStartRow),
-            promptStart: index(promptStartRow)
+            promptStart: index(promptStartRow),
         )
     }
 
@@ -680,7 +711,9 @@ final class ScreenRenderer {
     static func width(of scalar: Unicode.Scalar) -> Int {
         switch scalar.properties.generalCategory {
         case .nonspacingMark, .enclosingMark, .format:
-            if scalar.value == 0x00AD { return 1 }
+            if scalar.value == 0x00AD {
+                return 1
+            }
             return 0
         default:
             break

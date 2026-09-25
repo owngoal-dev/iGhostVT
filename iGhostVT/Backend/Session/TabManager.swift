@@ -45,7 +45,7 @@ final class TabManager: ObservableObject {
             self.map {
                 SessionActivityController.WindowSnapshot(
                     tabs: $0.tabs,
-                    activeTabID: $0.activeTabID
+                    activeTabID: $0.activeTabID,
                 )
             }
         }
@@ -59,7 +59,7 @@ final class TabManager: ObservableObject {
         // session as free.
         DaemonSessionDirectory.shared.claimResumable { [weak self] resumable in
             guard let self else { return }
-            let held = Set(tabs.compactMap { $0.daemonSessionID })
+            let held = Set(tabs.compactMap(\.daemonSessionID))
             let resumable = resumable.filter { !held.contains($0) }
             guard !resumable.isEmpty else {
                 if tabs.isEmpty {
@@ -170,12 +170,12 @@ final class TabManager: ObservableObject {
     private func makeTab(
         resume daemonSessionID: UInt64? = nil,
         inheritDirectoryFrom sourceSessionID: UInt64? = nil,
-        startDirectory: String? = nil
+        startDirectory: String? = nil,
     ) -> TerminalTab {
         let tab = TerminalTab(
             resumeDaemonSessionID: daemonSessionID,
             inheritDirectoryFrom: sourceSessionID,
-            startDirectory: startDirectory
+            startDirectory: startDirectory,
         )
         tab.terminal.onClipboardConfirmationRequest = { [weak self] request in
             self?.clipboardRequests.append(request)

@@ -65,10 +65,10 @@ struct NewTabMenuContent: View {
             row(
                 String(
                     localized: "Home (directory)",
-                    comment: "Menu item: opens a terminal in the home directory; the English text is “Home”"
+                    comment: "Menu item: opens a terminal in the home directory; the English text is “Home”",
                 ),
                 systemImage: "house",
-                origin: .home
+                origin: .home,
             )
         }
         if !choices.openTabs.isEmpty {
@@ -99,7 +99,7 @@ struct NewTabMenuContent: View {
     private func row(
         _ title: String,
         systemImage: String,
-        origin: TabManager.Origin
+        origin: TabManager.Origin,
     ) -> some View {
         Button {
             tabManager.newTab(origin)
@@ -121,7 +121,9 @@ struct NewTabDirectoryChoices {
         var directory: TerminalDirectory
         var sessionID: UInt64
 
-        var id: String { directory.path }
+        var id: String {
+            directory.path
+        }
     }
 
     var openTabs: [OpenTab]
@@ -140,7 +142,7 @@ struct NewTabDirectoryChoices {
         // The active tab first: when two tabs share a directory, the row
         // should name the session the user is actually looking at.
         let active = tabManager.activeTab
-        let ordered = [active].compactMap { $0 } + tabManager.tabs.filter { $0.id != active?.id }
+        let ordered = [active].compactMap(\.self) + tabManager.tabs.filter { $0.id != active?.id }
         for tab in ordered {
             guard let directory = tab.currentDirectory,
                   let sessionID = tab.daemonSessionID,

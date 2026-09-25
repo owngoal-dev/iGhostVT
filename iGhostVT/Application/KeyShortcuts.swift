@@ -48,7 +48,9 @@ struct KeyShortcut {
     let propertyList: Int?
     let isHidden: Bool
 
-    var defaultsKey: String { "Shortcut.\(id)" }
+    var defaultsKey: String {
+        "Shortcut.\(id)"
+    }
 
     var isEnabled: Bool {
         UserDefaults.standard.object(forKey: defaultsKey) as? Bool ?? true
@@ -57,10 +59,18 @@ struct KeyShortcut {
     /// The chord the way a menu prints it: ⌃⌥⇧⌘ then the key.
     var display: String {
         var text = ""
-        if modifiers.contains(.control) { text += "⌃" }
-        if modifiers.contains(.alternate) { text += "⌥" }
-        if modifiers.contains(.shift) { text += "⇧" }
-        if modifiers.contains(.command) { text += "⌘" }
+        if modifiers.contains(.control) {
+            text += "⌃"
+        }
+        if modifiers.contains(.alternate) {
+            text += "⌥"
+        }
+        if modifiers.contains(.shift) {
+            text += "⇧"
+        }
+        if modifiers.contains(.command) {
+            text += "⌘"
+        }
         switch input {
         case "\t": text += "⇥"
         default: text += input.uppercased()
@@ -98,7 +108,7 @@ enum KeyShortcuts {
         _ input: String,
         _ modifiers: UIKeyModifierFlags,
         _ group: ShortcutGroup,
-        propertyList: Int? = nil
+        propertyList: Int? = nil,
     ) -> KeyShortcut {
         KeyShortcut(
             id: id,
@@ -108,7 +118,7 @@ enum KeyShortcuts {
             modifiers: modifiers,
             group: group,
             propertyList: propertyList,
-            isHidden: false
+            isHidden: false,
         )
     }
 
@@ -117,7 +127,7 @@ enum KeyShortcuts {
         _ action: Selector,
         _ input: String,
         _ modifiers: UIKeyModifierFlags,
-        _ group: ShortcutGroup
+        _ group: ShortcutGroup,
     ) -> KeyShortcut {
         KeyShortcut(
             id: id,
@@ -127,7 +137,7 @@ enum KeyShortcuts {
             modifiers: modifiers,
             group: group,
             propertyList: nil,
-            isHidden: true
+            isHidden: true,
         )
     }
 
@@ -140,7 +150,7 @@ enum KeyShortcuts {
                 #selector(R.newTab(_:)),
                 "t",
                 .command,
-                .tabs
+                .tabs,
             ),
             alias(of: "newTab", #selector(R.newTab(_:)), "n", .command, .tabs),
             listed(
@@ -149,7 +159,7 @@ enum KeyShortcuts {
                 #selector(R.newWindow(_:)),
                 "n",
                 [.command, .shift],
-                .tabs
+                .tabs,
             ),
             listed(
                 "closeTab",
@@ -157,7 +167,7 @@ enum KeyShortcuts {
                 #selector(R.closeTab(_:)),
                 "w",
                 .command,
-                .tabs
+                .tabs,
             ),
             listed(
                 "closeWindow",
@@ -165,7 +175,7 @@ enum KeyShortcuts {
                 #selector(R.closeWindow(_:)),
                 "w",
                 [.command, .shift],
-                .tabs
+                .tabs,
             ),
             listed(
                 "previousTab",
@@ -173,7 +183,7 @@ enum KeyShortcuts {
                 #selector(R.showPreviousTab(_:)),
                 "\t",
                 [.control, .shift],
-                .tabs
+                .tabs,
             ),
             alias(of: "previousTab", #selector(R.showPreviousTab(_:)), "[", [.command, .shift], .tabs),
             listed(
@@ -182,7 +192,7 @@ enum KeyShortcuts {
                 #selector(R.showNextTab(_:)),
                 "\t",
                 .control,
-                .tabs
+                .tabs,
             ),
             alias(of: "nextTab", #selector(R.showNextTab(_:)), "]", [.command, .shift], .tabs),
         ]
@@ -191,13 +201,13 @@ enum KeyShortcuts {
                 "selectTab.\(number)",
                 String.localizedStringWithFormat(
                     L("Tab %d", "Menu item: switches to the tab at this position; %d is the position"),
-                    number
+                    number,
                 ),
                 #selector(R.selectTab(_:)),
                 String(number),
                 .command,
                 .tabs,
-                propertyList: number - 1
+                propertyList: number - 1,
             ))
         }
         list += [
@@ -208,7 +218,7 @@ enum KeyShortcuts {
                 "9",
                 .command,
                 .tabs,
-                propertyList: AppMenus.lastTabIndex
+                propertyList: AppMenus.lastTabIndex,
             ),
             // Interface.
             listed(
@@ -217,7 +227,7 @@ enum KeyShortcuts {
                 #selector(R.showSettings(_:)),
                 ",",
                 .command,
-                .interface
+                .interface,
             ),
             listed(
                 "sidebar",
@@ -225,7 +235,7 @@ enum KeyShortcuts {
                 #selector(R.toggleTabSidebar(_:)),
                 "s",
                 [.command, .control],
-                .interface
+                .interface,
             ),
             alias(of: "sidebar", #selector(R.toggleTabSidebar(_:)), "l", [.command, .shift], .interface),
             listed(
@@ -234,7 +244,7 @@ enum KeyShortcuts {
                 #selector(R.toggleTabSwitcher(_:)),
                 "\\",
                 [.command, .shift],
-                .interface
+                .interface,
             ),
             listed(
                 "exportText",
@@ -242,7 +252,7 @@ enum KeyShortcuts {
                 #selector(R.exportTabText(_:)),
                 "s",
                 [.command, .shift],
-                .interface
+                .interface,
             ),
             listed(
                 "lockTab",
@@ -250,7 +260,7 @@ enum KeyShortcuts {
                 #selector(R.toggleTabLock(_:)),
                 "l",
                 [.command, .alternate],
-                .interface
+                .interface,
             ),
         ]
         // The keyboard lock is not offered on the Mac (`TabContextMenu`
@@ -262,7 +272,7 @@ enum KeyShortcuts {
                 #selector(R.toggleKeyboardLock(_:)),
                 "k",
                 [.command, .alternate],
-                .interface
+                .interface,
             ))
         #endif
         list += [
@@ -273,7 +283,7 @@ enum KeyShortcuts {
                 #selector(R.increaseFontSize(_:)),
                 "+",
                 .command,
-                .terminal
+                .terminal,
             ),
             alias(of: "biggerText", #selector(R.increaseFontSize(_:)), "=", .command, .terminal),
             listed(
@@ -282,7 +292,7 @@ enum KeyShortcuts {
                 #selector(R.decreaseFontSize(_:)),
                 "-",
                 .command,
-                .terminal
+                .terminal,
             ),
             listed(
                 "actualSize",
@@ -290,7 +300,7 @@ enum KeyShortcuts {
                 #selector(R.resetFontSize(_:)),
                 "0",
                 .command,
-                .terminal
+                .terminal,
             ),
             listed(
                 "clearScreen",
@@ -298,7 +308,7 @@ enum KeyShortcuts {
                 #selector(R.clearScreen(_:)),
                 "k",
                 .command,
-                .terminal
+                .terminal,
             ),
         ]
         return list

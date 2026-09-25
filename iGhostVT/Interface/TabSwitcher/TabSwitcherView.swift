@@ -37,7 +37,7 @@ struct TabSwitcherView: View {
                             },
                             onClose: { tabManager.requestClose(tab) },
                             tabManager: tabManager,
-                            window: window
+                            window: window,
                         )
                     }
                     newTabCard
@@ -60,7 +60,7 @@ struct TabSwitcherView: View {
     private var tabCountLabel: String {
         String.localizedStringWithFormat(
             NSLocalizedString("%lld Tabs", comment: "Count of open tabs, as a heading"),
-            tabManager.tabs.count
+            tabManager.tabs.count,
         )
     }
 
@@ -69,7 +69,7 @@ struct TabSwitcherView: View {
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .strokeBorder(
                     theme.hairline(for: colorScheme),
-                    style: StrokeStyle(lineWidth: 1, dash: [6, 4])
+                    style: StrokeStyle(lineWidth: 1, dash: [6, 4]),
                 )
                 .frame(height: 190)
                 .overlay {
@@ -146,7 +146,7 @@ struct TabSwitcherView: View {
                 AlertAction("Close All", kind: .destructive) {
                     tabManager.closeAll()
                 },
-            ]
+            ],
         ).present(in: window)
     }
 }
@@ -175,7 +175,7 @@ private struct TabCard: View {
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .strokeBorder(
                     isActive ? Color.accentColor : theme.hairline(for: colorScheme),
-                    lineWidth: isActive ? 2 : 1
+                    lineWidth: isActive ? 2 : 1,
                 )
         }
         .shadow(color: .black.opacity(0.15), radius: 8, y: 4)

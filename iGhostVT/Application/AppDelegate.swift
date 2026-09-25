@@ -10,7 +10,7 @@ import UIKit
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(
         _: UIApplication,
-        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?
+        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?,
     ) -> Bool {
         // First, so everything after it lands in this launch's journal file
         // (Settings ▸ Advanced ▸ Logs) as well as the unified log.

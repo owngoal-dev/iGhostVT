@@ -31,7 +31,9 @@ final class RecentDirectoryStore: ObservableObject {
         /// detour.
         case frequent
 
-        var id: String { rawValue }
+        var id: String {
+            rawValue
+        }
 
         var title: String {
             switch self {
@@ -47,7 +49,9 @@ final class RecentDirectoryStore: ObservableObject {
         var lastVisited: Date
         var visitCount: Int
 
-        var id: String { directory.path }
+        var id: String {
+            directory.path
+        }
     }
 
     /// Everything remembered, unordered — `sorted()` is what a menu shows.

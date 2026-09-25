@@ -24,7 +24,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
-        options: UIScene.ConnectionOptions
+        options: UIScene.ConnectionOptions,
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
         tabManager.windowScene = windowScene
@@ -42,10 +42,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = TerminalWindow(
             windowScene: windowScene,
             tabManager: tabManager,
-            interface: interface
+            interface: interface,
         )
         let host = UIHostingController(
-            rootView: RootView(tabManager: tabManager, interface: interface).interfaceTextSize()
+            rootView: RootView(tabManager: tabManager, interface: interface).interfaceTextSize(),
         )
         window.rootViewController = host
         window.makeKeyAndVisible()

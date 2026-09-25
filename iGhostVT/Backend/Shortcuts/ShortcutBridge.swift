@@ -72,7 +72,7 @@ enum ShortcutBridge {
                     scene.session,
                     userActivity: nil,
                     options: nil,
-                    errorHandler: nil
+                    errorHandler: nil,
                 )
             }
             return tab

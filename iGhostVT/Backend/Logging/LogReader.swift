@@ -40,7 +40,9 @@ struct LogLaunch: Identifiable, Hashable {
     let url: URL
     let date: Date?
 
-    var id: URL { url }
+    var id: URL {
+        url
+    }
 }
 
 /// A log as read: the entries, every tag seen before filtering, and where
@@ -245,7 +247,9 @@ enum LogReader {
         var entries: [LogEntry] = []
         var tag = "?"
         for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
-            if line.isEmpty { continue }
+            if line.isEmpty {
+                continue
+            }
             if line.hasPrefix("["), line.hasSuffix("]"), line.count > 2 {
                 tag = String(line.dropFirst().dropLast())
                 continue
@@ -274,7 +278,7 @@ enum LogReader {
             level: level,
             category: tag,
             message: String(message),
-            text: String(line)
+            text: String(line),
         )
     }
 
@@ -285,7 +289,9 @@ enum LogReader {
     static func parseDaemon(_ text: String) -> [LogEntry] {
         var entries: [LogEntry] = []
         for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
-            if line.isEmpty { continue }
+            if line.isEmpty {
+                continue
+            }
             if let entry = parseDaemonLine(line, id: entries.count) {
                 entries.append(entry)
             } else {
@@ -314,7 +320,7 @@ enum LogReader {
             level: .info,
             category: process,
             message: String(message),
-            text: String(line)
+            text: String(line),
         )
     }
 
@@ -328,7 +334,7 @@ enum LogReader {
                 level: .info,
                 category: tag,
                 message: String(line),
-                text: String(line)
+                text: String(line),
             ))
         } else {
             entries[entries.count - 1].message += "\n" + line

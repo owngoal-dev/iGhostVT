@@ -18,7 +18,7 @@ struct ListSessionsIntent: AppIntent {
     static let title: LocalizedStringResource = "List Terminal Sessions"
     static let description = IntentDescription(
         "Returns every terminal session in iGhostVT, whether or not a tab is showing it.",
-        categoryName: "Sessions"
+        categoryName: "Sessions",
     )
 
     func perform() async throws -> some IntentResult & ReturnsValue<[SessionEntity]> {
@@ -34,12 +34,12 @@ struct NewSessionIntent: AppIntent {
     static let title: LocalizedStringResource = "New Terminal Session"
     static let description = IntentDescription(
         "Starts a shell in the background and returns the session. Show it in a tab or send text to it later.",
-        categoryName: "Sessions"
+        categoryName: "Sessions",
     )
 
     @Parameter(
         title: "Program",
-        description: "A program to run instead of the shell, with its arguments. Leave empty for the default shell."
+        description: "A program to run instead of the shell, with its arguments. Leave empty for the default shell.",
     )
     var program: String?
 
@@ -64,7 +64,7 @@ struct SendTextIntent: AppIntent {
     static let title: LocalizedStringResource = "Send Text to Terminal"
     static let description = IntentDescription(
         "Types text into a terminal session, as if entered on its keyboard.",
-        categoryName: "Input"
+        categoryName: "Input",
     )
     static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
@@ -97,7 +97,7 @@ struct SendKeyIntent: AppIntent {
     static let title: LocalizedStringResource = "Send Key to Terminal"
     static let description = IntentDescription(
         "Presses one key in a terminal session — Return, Escape, an arrow, or a control combination such as Control-C.",
-        categoryName: "Input"
+        categoryName: "Input",
     )
 
     @Parameter(title: "Session")
@@ -123,7 +123,7 @@ struct GetScreenTextIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Terminal Screen Text"
     static let description = IntentDescription(
         "Returns what a terminal session is showing, as plain text. Can also include the session's scrollback.",
-        categoryName: "Output"
+        categoryName: "Output",
     )
     static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
@@ -152,7 +152,7 @@ struct GetSessionDirectoryIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Terminal Directory"
     static let description = IntentDescription(
         "Returns the directory a terminal session's shell is in.",
-        categoryName: "Output"
+        categoryName: "Output",
     )
 
     @Parameter(title: "Session")
@@ -175,7 +175,7 @@ struct IsSessionBusyIntent: AppIntent {
     static let title: LocalizedStringResource = "Is Terminal Busy"
     static let description = IntentDescription(
         "Checks whether a program is running in a terminal session. A session waiting at its shell prompt is not busy.",
-        categoryName: "Output"
+        categoryName: "Output",
     )
 
     @Parameter(title: "Session")
@@ -200,7 +200,7 @@ struct WaitForPromptIntent: AppIntent {
     static let title: LocalizedStringResource = "Wait for Terminal Prompt"
     static let description = IntentDescription(
         "Waits until the session's shell is back at its prompt, or until the time limit passes.",
-        categoryName: "Output"
+        categoryName: "Output",
     )
 
     @Parameter(title: "Session")
@@ -228,7 +228,7 @@ struct KillSessionIntent: AppIntent {
     static let title: LocalizedStringResource = "End Terminal Session"
     static let description = IntentDescription(
         "Ends a terminal session and the program running in it. Any tab showing the session closes.",
-        categoryName: "Sessions"
+        categoryName: "Sessions",
     )
 
     @Parameter(title: "Session")
@@ -253,7 +253,7 @@ struct RunCommandIntent: AppIntent {
     static let title: LocalizedStringResource = "Run Terminal Command"
     static let description = IntentDescription(
         "Types a command into a terminal session, waits for the shell to return to its prompt, and returns the output. With no session, a new shell is started for the command and ended afterwards.",
-        categoryName: "Sessions"
+        categoryName: "Sessions",
     )
     static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
@@ -269,7 +269,7 @@ struct RunCommandIntent: AppIntent {
     @Parameter(
         title: "Keep New Session",
         description: "When the command ran in a new shell, leave that shell running instead of ending it.",
-        default: false
+        default: false,
     )
     var keepNewSession: Bool
 
@@ -298,8 +298,8 @@ struct RunCommandIntent: AppIntent {
                 sessionID = try await client.openSession(command: [], inheritDirectoryFrom: nil)
                 isNew = true
             }
-            // One spelling of "end the shell this intent opened", so the
-            // success and failure arms cannot drift apart and leak a session.
+            /// One spelling of "end the shell this intent opened", so the
+            /// success and failure arms cannot drift apart and leak a session.
             func endTemporarySession() async {
                 if isNew, !keepNewSession {
                     try? await client.closeSession(sessionID)
@@ -340,7 +340,7 @@ struct RunCommandIntent: AppIntent {
         _ command: String,
         in sessionID: UInt64,
         client: ShortcutDaemonClient,
-        deadline: Date
+        deadline: Date,
     ) async throws -> String {
         let before = try await client.snapshot(sessionID).text(fullTranscript: true)
         try await client.inject(Array(command.utf8) + [0x0D], into: sessionID)
@@ -363,7 +363,7 @@ struct RunCommandIntent: AppIntent {
                         before: before,
                         after: after,
                         command: command,
-                        columns: Int(snapshot.gridColumns)
+                        columns: Int(snapshot.gridColumns),
                     )
                 }
             }

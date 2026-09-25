@@ -47,8 +47,8 @@ final class LockableTerminalView: TerminalView {
             // over the terminal, stealing 40pt of grid. Empty its groups for
             // as long as the lock lasts.
             #if !os(visionOS)
-            inputAssistantItem.leadingBarButtonGroups = []
-            inputAssistantItem.trailingBarButtonGroups = []
+                inputAssistantItem.leadingBarButtonGroups = []
+                inputAssistantItem.trailingBarButtonGroups = []
             #endif
             guard isFirstResponder else { return }
             // Already first responder: swap the input views in place, so
@@ -72,14 +72,18 @@ final class LockableTerminalView: TerminalView {
     }
 
     #if !os(visionOS)
-    override var inputAccessoryView: UIView? {
-        // The bar belongs to the keyboard; leaving it floating over a
-        // keyboard that is not there reads as a half-open keyboard. With a
-        // hardware keyboard connected the user may not want it at all.
-        if isSoftwareKeyboardLocked { return nil }
-        if KeyboardBarStore.hidesWithHardwareKeyboard, GCKeyboard.coalesced != nil { return nil }
-        return super.inputAccessoryView
-    }
+        override var inputAccessoryView: UIView? {
+            // The bar belongs to the keyboard; leaving it floating over a
+            // keyboard that is not there reads as a half-open keyboard. With a
+            // hardware keyboard connected the user may not want it at all.
+            if isSoftwareKeyboardLocked {
+                return nil
+            }
+            if KeyboardBarStore.hidesWithHardwareKeyboard, GCKeyboard.coalesced != nil {
+                return nil
+            }
+            return super.inputAccessoryView
+        }
     #endif
 
     /// A keyboard connecting or going away, or the setting flipping,
@@ -98,7 +102,7 @@ final class LockableTerminalView: TerminalView {
     /// whatever thread wrote the default (PencilKit's `registerDefaults`
     /// from a background queue was the first), and a main-actor method
     /// called there traps before it can hop.
-    @objc nonisolated private func hardwareKeyboardChanged() {
+    @objc private nonisolated func hardwareKeyboardChanged() {
         Task { @MainActor [weak self] in
             guard let self, isFirstResponder else { return }
             reloadInputViews()

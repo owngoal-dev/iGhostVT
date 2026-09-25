@@ -58,7 +58,7 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
             nil,
             userActivity: nil,
             options: nil,
-            errorHandler: nil
+            errorHandler: nil,
         )
     }
 
@@ -147,7 +147,9 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
     /// The tab a Go to Tab command names, or nil when its index has none.
     private func tab(atCommandIndex index: Int) -> TerminalTab? {
         let tabs = tabManager.tabs
-        if index == AppMenus.lastTabIndex { return tabs.last }
+        if index == AppMenus.lastTabIndex {
+            return tabs.last
+        }
         return tabs.indices.contains(index) ? tabs[index] : nil
     }
 

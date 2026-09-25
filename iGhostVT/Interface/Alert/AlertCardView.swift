@@ -20,7 +20,7 @@ struct AlertAction: Identifiable {
     init(
         _ title: String.LocalizationValue,
         kind: AlertButtonStyle.Kind = .normal,
-        handler: @escaping () -> Void = {}
+        handler: @escaping () -> Void = {},
     ) {
         self.init(verbatim: String(localized: title), kind: kind, handler: handler)
     }
@@ -28,7 +28,7 @@ struct AlertAction: Identifiable {
     init(
         verbatim title: String,
         kind: AlertButtonStyle.Kind = .normal,
-        handler: @escaping () -> Void = {}
+        handler: @escaping () -> Void = {},
     ) {
         self.title = title
         self.kind = kind
@@ -36,12 +36,14 @@ struct AlertAction: Identifiable {
     }
 }
 
-extension Array where Element == AlertAction {
+extension [AlertAction] {
     /// Return's target: the only action when there is one, otherwise the
     /// filled button the card already emphasizes — destructive if any,
     /// otherwise accent.
     var defaultAction: AlertAction? {
-        if count == 1 { return first }
+        if count == 1 {
+            return first
+        }
         return last { $0.kind == .destructive }
             ?? last { $0.kind == .accent }
     }
@@ -150,13 +152,15 @@ private struct AlertFirstResponder: UIViewRepresentable {
         var wantsFirstResponder = true
         private var isHandlingReturn = false
 
-        override var canBecomeFirstResponder: Bool { wantsFirstResponder }
+        override var canBecomeFirstResponder: Bool {
+            wantsFirstResponder
+        }
 
         override var keyCommands: [UIKeyCommand]? {
             let command = UIKeyCommand(
                 input: "\r",
                 modifierFlags: [],
-                action: #selector(performDefaultAction)
+                action: #selector(performDefaultAction),
             )
             command.wantsPriorityOverSystemBehavior = true
             return [command]
@@ -172,8 +176,8 @@ private struct AlertFirstResponder: UIViewRepresentable {
         func claimIfNeeded() {
             guard wantsFirstResponder, !isFirstResponder, isInFrontmostPresentation else { return }
             DispatchQueue.main.async { [weak self] in
-                guard let self, self.wantsFirstResponder, self.isInFrontmostPresentation else { return }
-                _ = self.becomeFirstResponder()
+                guard let self, wantsFirstResponder, isInFrontmostPresentation else { return }
+                _ = becomeFirstResponder()
             }
         }
 
@@ -205,12 +209,16 @@ private struct AlertFirstResponder: UIViewRepresentable {
         }
 
         override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            if consumeReturn(presses) { return }
+            if consumeReturn(presses) {
+                return
+            }
             super.pressesBegan(presses, with: event)
         }
 
         override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            if isUnmodifiedReturn(presses) { return }
+            if isUnmodifiedReturn(presses) {
+                return
+            }
             super.pressesEnded(presses, with: event)
         }
 
@@ -275,7 +283,7 @@ struct AlertButtonStyle: ButtonStyle {
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                    .strokeBorder(tint, lineWidth: 1)
+                    .strokeBorder(tint, lineWidth: 1),
             )
             // The unfilled kind is text, a 1pt stroke, and clear in between,
             // and clear does not hit-test: without this the button answers

@@ -27,5 +27,5 @@ _ = UIApplicationMain(
     CommandLine.argc,
     CommandLine.unsafeArgv,
     nil,
-    NSStringFromClass(AppDelegate.self)
+    NSStringFromClass(AppDelegate.self),
 )

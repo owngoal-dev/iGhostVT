@@ -21,7 +21,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "Run a terminal command in \(.applicationName)",
             ],
             shortTitle: "Run Command",
-            systemImageName: "terminal"
+            systemImageName: "terminal",
         )
         AppShortcut(
             intent: NewSessionIntent(),
@@ -30,7 +30,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "Start a shell in \(.applicationName)",
             ],
             shortTitle: "New Session",
-            systemImageName: "plus.rectangle.on.rectangle"
+            systemImageName: "plus.rectangle.on.rectangle",
         )
         AppShortcut(
             intent: SendTextIntent(),
@@ -39,7 +39,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "Type into \(.applicationName)",
             ],
             shortTitle: "Send Text",
-            systemImageName: "keyboard"
+            systemImageName: "keyboard",
         )
         AppShortcut(
             intent: GetScreenTextIntent(),
@@ -48,7 +48,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "What is on the screen in \(.applicationName)",
             ],
             shortTitle: "Screen Text",
-            systemImageName: "text.alignleft"
+            systemImageName: "text.alignleft",
         )
         AppShortcut(
             intent: ListSessionsIntent(),
@@ -57,7 +57,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "What is running in \(.applicationName)",
             ],
             shortTitle: "List Sessions",
-            systemImageName: "list.bullet.rectangle"
+            systemImageName: "list.bullet.rectangle",
         )
         AppShortcut(
             intent: ShowSessionIntent(),
@@ -66,7 +66,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "Open a terminal session in \(.applicationName)",
             ],
             shortTitle: "Show Session",
-            systemImageName: "macwindow"
+            systemImageName: "macwindow",
         )
         AppShortcut(
             intent: OpenNewTabIntent(),
@@ -75,7 +75,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "New terminal tab in \(.applicationName)",
             ],
             shortTitle: "New Tab",
-            systemImageName: "plus.square.on.square"
+            systemImageName: "plus.square.on.square",
         )
         AppShortcut(
             intent: KillSessionIntent(),
@@ -84,7 +84,7 @@ struct iGhostVTShortcuts: AppShortcutsProvider {
                 "Kill a terminal session in \(.applicationName)",
             ],
             shortTitle: "End Session",
-            systemImageName: "xmark.rectangle"
+            systemImageName: "xmark.rectangle",
         )
     }
 }

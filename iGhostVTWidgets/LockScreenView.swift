@@ -171,7 +171,7 @@ extension TerminalSessionAttributes.ContentState {
         if detachedCount > 0 {
             parts.append(String(
                 localized: "\(detachedCount) detached",
-                comment: "Sessions running with no tab attached"
+                comment: "Sessions running with no tab attached",
             ))
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
@@ -197,7 +197,7 @@ extension TerminalSessionAttributes.ContentState {
                     shell: "zsh",
                     number: 1,
                     status: .live,
-                    isActive: true
+                    isActive: true,
                 ),
                 .init(
                     id: "b",
@@ -206,11 +206,11 @@ extension TerminalSessionAttributes.ContentState {
                     shell: "fish",
                     number: 2,
                     status: .live,
-                    isActive: false
+                    isActive: false,
                 ),
             ],
             overflowCount: 0,
-            detachedCount: 0
+            detachedCount: 0,
         )
 
         /// `typical`, a moment later — the same two sessions, a third one
@@ -226,7 +226,7 @@ extension TerminalSessionAttributes.ContentState {
                     shell: "zsh",
                     number: 1,
                     status: .live,
-                    isActive: false
+                    isActive: false,
                 ),
                 .init(
                     id: "b",
@@ -235,7 +235,7 @@ extension TerminalSessionAttributes.ContentState {
                     shell: "fish",
                     number: 2,
                     status: .failed,
-                    isActive: false
+                    isActive: false,
                 ),
                 .init(
                     id: "c",
@@ -244,11 +244,11 @@ extension TerminalSessionAttributes.ContentState {
                     shell: "zsh",
                     number: 3,
                     status: .starting,
-                    isActive: true
+                    isActive: true,
                 ),
             ],
             overflowCount: 2,
-            detachedCount: 1
+            detachedCount: 1,
         )
     }
 

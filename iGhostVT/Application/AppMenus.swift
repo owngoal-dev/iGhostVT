@@ -80,7 +80,7 @@ enum AppMenus {
                 command(#selector(AppCommandResponder.newTab(_:))),
                 hidden(#selector(AppCommandResponder.newTab(_:))),
                 command(#selector(AppCommandResponder.newWindow(_:))),
-            ].compactMap { $0 }
+            ].compactMap(\.self),
         )
         let closeGroup = UIMenu(
             title: "",
@@ -89,7 +89,7 @@ enum AppMenus {
             children: [
                 command(#selector(AppCommandResponder.closeTab(_:))),
                 command(#selector(AppCommandResponder.closeWindow(_:))),
-            ]
+            ],
         )
         let exportGroup = UIMenu(
             title: "",
@@ -97,7 +97,7 @@ enum AppMenus {
             options: .displayInline,
             children: [
                 command(#selector(AppCommandResponder.exportTabText(_:))),
-            ]
+            ],
         )
         builder.insertChild(newGroup, atStartOfMenu: .file)
         builder.insertSibling(closeGroup, afterMenu: newGroup.identifier)
@@ -114,7 +114,7 @@ enum AppMenus {
             options: .displayInline,
             children: [
                 command(#selector(AppCommandResponder.showSettings(_:))),
-            ]
+            ],
         )
         if builder.menu(for: .preferences) != nil {
             builder.replace(menu: .preferences, with: settings)
@@ -142,7 +142,7 @@ enum AppMenus {
                 command(#selector(AppCommandResponder.toggleTabSidebar(_:))),
                 hidden(#selector(AppCommandResponder.toggleTabSidebar(_:))),
                 command(#selector(AppCommandResponder.toggleTabSwitcher(_:))),
-            ].compactMap { $0 }
+            ].compactMap(\.self),
         )
         let text = UIMenu(
             title: "",
@@ -153,7 +153,7 @@ enum AppMenus {
                 hidden(#selector(AppCommandResponder.increaseFontSize(_:))),
                 command(#selector(AppCommandResponder.decreaseFontSize(_:))),
                 command(#selector(AppCommandResponder.resetFontSize(_:))),
-            ].compactMap { $0 }
+            ].compactMap(\.self),
         )
         let screen = UIMenu(
             title: "",
@@ -161,7 +161,7 @@ enum AppMenus {
             options: .displayInline,
             children: [
                 command(#selector(AppCommandResponder.clearScreen(_:))),
-            ]
+            ],
         )
         builder.insertChild(chrome, atStartOfMenu: .view)
         builder.insertSibling(text, afterMenu: chrome.identifier)
@@ -187,9 +187,9 @@ enum AppMenus {
                 UIMenu(
                     title: NSLocalizedString("Go to Tab", comment: "Menu: submenu listing tab positions"),
                     identifier: UIMenu.Identifier("wiki.qaq.iGhostVT.window.goto"),
-                    children: gotoChildren
+                    children: gotoChildren,
                 ),
-            ].compactMap { $0 }
+            ].compactMap(\.self),
         )
         var lockChildren: [UIMenuElement] = [
             command(#selector(AppCommandResponder.toggleTabLock(_:))),
@@ -203,7 +203,7 @@ enum AppMenus {
             title: "",
             identifier: UIMenu.Identifier("wiki.qaq.iGhostVT.window.locks"),
             options: .displayInline,
-            children: lockChildren
+            children: lockChildren,
         )
         builder.insertChild(navigation, atStartOfMenu: .window)
         builder.insertSibling(locks, afterMenu: navigation.identifier)
@@ -223,7 +223,7 @@ enum AppMenus {
             action: action,
             input: shortcut.input,
             modifierFlags: shortcut.modifiers,
-            propertyList: propertyList
+            propertyList: propertyList,
         )
     }
 
@@ -245,7 +245,7 @@ enum AppMenus {
             input: shortcut.input,
             modifierFlags: shortcut.modifiers,
             propertyList: "alias",
-            attributes: .hidden
+            attributes: .hidden,
         )
     }
 }

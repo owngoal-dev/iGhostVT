@@ -31,7 +31,7 @@ func run(
     credentials: ShellLaunch.Credentials? = nil,
     workingDirectory: String? = nil,
     fallbackWorkingDirectory: String? = nil,
-    timeout: TimeInterval = 10
+    timeout: TimeInterval = 10,
 ) -> (output: String, exitCode: Int32?, session: PTYSession)? {
     let session: PTYSession
     do {
@@ -44,7 +44,7 @@ func run(
             credentials: credentials,
             workingDirectory: workingDirectory,
             fallbackWorkingDirectory: fallbackWorkingDirectory,
-            queue: harnessQueue
+            queue: harnessQueue,
         )
     } catch {
         return nil
@@ -66,7 +66,7 @@ func run(
             exitCode = code
             lock.unlock()
             finished.signal()
-        }
+        },
     )
 
     if let resizeTo {
@@ -117,7 +117,7 @@ if let result = run(command: ["/bin/sh", "-c", "pwd"], workingDirectory: "/priva
 if let plan = ShellLaunch.plan(requestedShell: nil) {
     check(
         plan.workingDirectory == NSHomeDirectory(),
-        "the default plan starts a session in the session user's home (got \(String(describing: plan.workingDirectory)))"
+        "the default plan starts a session in the session user's home (got \(String(describing: plan.workingDirectory)))",
     )
 }
 
@@ -126,7 +126,7 @@ if let plan = ShellLaunch.plan(requestedShell: nil) {
 if let result = run(
     command: ["/bin/sh", "-c", "pwd"],
     workingDirectory: "/nonexistent/ighostvt-harness",
-    fallbackWorkingDirectory: "/private/tmp"
+    fallbackWorkingDirectory: "/private/tmp",
 ) {
     check(result.output.contains("/private/tmp"), "a working directory that refuses falls back to the plan's own")
 } else {
@@ -147,7 +147,7 @@ print("signal death")
 if let result = run(command: ["/bin/sh", "-c", "kill -TERM $$"]) {
     check(
         result.exitCode == 128 + 15,
-        "a signalled child reports 128+signal (got \(String(describing: result.exitCode)))"
+        "a signalled child reports 128+signal (got \(String(describing: result.exitCode)))",
     )
 } else {
     check(false, "spawning a self-terminating shell succeeded")
@@ -182,7 +182,7 @@ do {
         environment: ["TERM": "xterm-256color", "PATH": "/usr/bin:/bin"],
         columns: 80,
         rows: 24,
-        queue: harnessQueue
+        queue: harnessQueue,
     )
     let echoLock = NSLock()
     var echoed = Data()
@@ -192,7 +192,7 @@ do {
             echoed.append(data)
             echoLock.unlock()
         },
-        onExit: { _, _ in }
+        onExit: { _, _ in },
     )
     Thread.sleep(forTimeInterval: 0.4)
     check(harnessQueue.sync { session.write(Data(bytes)) }, "the write is accepted")
@@ -213,19 +213,19 @@ do {
     }
     check(
         settled.count == bytes.count + tail.count,
-        "every byte written comes back (\(settled.count) of \(bytes.count + tail.count))"
+        "every byte written comes back (\(settled.count) of \(bytes.count + tail.count))",
     )
     check(
         Array(settled.prefix(bytes.count)) == bytes,
-        "and in the order it was written, byte for byte"
+        "and in the order it was written, byte for byte",
     )
     check(
         Array(settled.suffix(tail.count)) == tail,
-        "with the write that followed it landing after, not interleaved"
+        "with the write that followed it landing after, not interleaved",
     )
     check(
         String(decoding: settled, as: UTF8.self).contains("L0400 中文"),
-        "the last line survives, multibyte characters intact"
+        "the last line survives, multibyte characters intact",
     )
     check(harnessQueue.sync { session.pendingInputByteCount } == 0, "nothing is left pending once it is all in")
     harnessQueue.sync { session.invalidate() }
@@ -244,7 +244,7 @@ do {
         environment: ["TERM": "xterm-256color", "PATH": "/usr/bin:/bin"],
         columns: 80,
         rows: 24,
-        queue: harnessQueue
+        queue: harnessQueue,
     )
     session.start(onOutput: { _, _ in }, onExit: { _, _ in })
     Thread.sleep(forTimeInterval: 0.4)
@@ -263,7 +263,7 @@ do {
     let held = harnessQueue.sync { session.pendingInputByteCount }
     check(
         held <= iGhostVTProtocol.sessionPendingInputByteCount,
-        "and holds no more than its cap (\(held) bytes after \(accepted) chunks)"
+        "and holds no more than its cap (\(held) bytes after \(accepted) chunks)",
     )
     harnessQueue.sync { session.invalidate() }
     check(harnessQueue.sync { session.pendingInputByteCount } == 0, "invalidating releases the pending input")
@@ -276,12 +276,12 @@ if let result = run(
     command: [shellPath(), "-c", "sleep 0.6; stty size"],
     columns: 80,
     rows: 24,
-    resizeTo: (columns: 100, rows: 40)
+    resizeTo: (columns: 100, rows: 40),
 ) {
     // `stty size` prints "rows cols".
     check(
         result.output.contains("40 100"),
-        "TIOCSWINSZ reaches the child (stty size said: \(result.output.split(separator: "\n").last.map(String.init) ?? "nothing"))"
+        "TIOCSWINSZ reaches the child (stty size said: \(result.output.split(separator: "\n").last.map(String.init) ?? "nothing"))",
     )
 } else {
     check(false, "spawning a shell for stty succeeded")
@@ -307,21 +307,21 @@ print("replay buffer is capped")
 let flood = iGhostVTProtocol.sessionReplayByteCount * 3
 if let result = run(
     command: ["/bin/sh", "-c", "dd if=/dev/zero bs=1024 count=\(flood / 1024) 2>/dev/null | tr '\\0' 'x'"],
-    timeout: 30
+    timeout: 30,
 ) {
     let retained = result.session.replayData().count
     check(
         retained <= iGhostVTProtocol.sessionReplayByteCount,
-        "a session that printed \(flood / 1024) KiB retains at most \(iGhostVTProtocol.sessionReplayByteCount / 1024) KiB (kept \(retained / 1024) KiB)"
+        "a session that printed \(flood / 1024) KiB retains at most \(iGhostVTProtocol.sessionReplayByteCount / 1024) KiB (kept \(retained / 1024) KiB)",
     )
     check(
         retained > iGhostVTProtocol.sessionReplayByteCount / 2,
-        "and it keeps the most recent output rather than discarding everything"
+        "and it keeps the most recent output rather than discarding everything",
     )
     result.session.invalidate()
     check(
         result.session.replayData().isEmpty,
-        "invalidating a session releases the buffer instead of waiting for deinit"
+        "invalidating a session releases the buffer instead of waiting for deinit",
     )
 } else {
     check(false, "spawning a shell that floods the buffer succeeded")
@@ -340,7 +340,7 @@ do {
         environment: ["PATH": "/usr/bin:/bin"],
         columns: 80,
         rows: 24,
-        queue: harnessQueue
+        queue: harnessQueue,
     )
     bystander.start(onOutput: { _, _ in }, onExit: { _, _ in })
     Thread.sleep(forTimeInterval: 0.2)
@@ -358,7 +358,7 @@ do {
         }
         check(
             descriptors.sorted() == [0, 1, 2],
-            "a child holds nothing beyond its terminal (saw \(descriptors.sorted()))"
+            "a child holds nothing beyond its terminal (saw \(descriptors.sorted()))",
         )
         result.session.invalidate()
     } else {
@@ -393,7 +393,7 @@ if let result = run(command: ["/bin/sh", "-c", "yes | head -c 1 >/dev/null; echo
     check(result.output.contains("pipe-done"), "the pipeline completes")
     check(
         !result.output.contains("Broken pipe"),
-        "and the writer dies of SIGPIPE instead of reporting EPIPE (output: \(result.output.trimmingCharacters(in: .whitespacesAndNewlines)))"
+        "and the writer dies of SIGPIPE instead of reporting EPIPE (output: \(result.output.trimmingCharacters(in: .whitespacesAndNewlines)))",
     )
     result.session.invalidate()
 } else {
@@ -408,7 +408,7 @@ do {
         environment: [:],
         columns: 80,
         rows: 24,
-        queue: harnessQueue
+        queue: harnessQueue,
     )
     check(false, "an empty command is rejected")
 } catch {
@@ -429,7 +429,7 @@ for (command, expected) in [
             environment: [:],
             columns: 80,
             rows: 24,
-            queue: harnessQueue
+            queue: harnessQueue,
         )
         check(false, "spawning \(command[0]) fails")
     } catch let failure as iGhostVTFailure {
@@ -437,7 +437,7 @@ for (command, expected) in [
             failure.code == .spawnFailed
                 && failure.message.contains(command[0])
                 && failure.message.contains(expected),
-            "\(command[0]) reports the real errno (said: \(failure.message))"
+            "\(command[0]) reports the real errno (said: \(failure.message))",
         )
     } catch {
         check(false, "spawning \(command[0]) throws iGhostVTFailure, not \(error)")
@@ -451,15 +451,15 @@ print("bootstrap path resolution")
 check(RuntimeEnvironment.bootstrap == .none, "no bootstrap is detected off-device")
 check(
     RuntimeEnvironment.resolve("/bin/sh") == "/bin/sh",
-    "resolution is identity without a bootstrap"
+    "resolution is identity without a bootstrap",
 )
 check(
     RuntimeEnvironment.bootstrapPath("/bin/sh") == "/bin/sh",
-    "and so is the bootstrap's own spelling"
+    "and so is the bootstrap's own spelling",
 )
 check(
     RuntimeEnvironment.systemPath("/bin/sh") == "/bin/sh",
-    "and so is the system's"
+    "and so is the system's",
 )
 
 // Only one layout is ever live on a given device, so exercise each one's three
@@ -468,35 +468,35 @@ let jbroot = "/var/containers/Bundle/Application/.jbroot-0123456789ABCDEF"
 let roothide = RuntimeEnvironment.Bootstrap.roothide(jbroot: jbroot)
 check(
     roothide.bootstrapPath("/bin/zsh") == "/bin/zsh",
-    "roothide leaves the bootstrap's own paths unprefixed — vroot resolves them"
+    "roothide leaves the bootstrap's own paths unprefixed — vroot resolves them",
 )
 check(
     roothide.resolve("/bin/zsh") == "\(jbroot)/bin/zsh",
-    "but the kernel is handed the jbroot-prefixed path"
+    "but the kernel is handed the jbroot-prefixed path",
 )
 check(
     roothide.systemPath("/usr/bin") == "/rootfs/usr/bin",
-    "and iOS's own filesystem is reached through the jbroot's /rootfs bridge"
+    "and iOS's own filesystem is reached through the jbroot's /rootfs bridge",
 )
 
 let rootless = RuntimeEnvironment.Bootstrap.rootless(prefix: "/var/jb", root: "/private/var/jb")
 check(
     rootless.bootstrapPath("/bin/zsh") == "/var/jb/bin/zsh",
-    "rootless prefixes the bootstrap's own paths — its binaries have /var/jb compiled in"
+    "rootless prefixes the bootstrap's own paths — its binaries have /var/jb compiled in",
 )
 check(
     rootless.resolve("/var/jb/bin/zsh") == "/var/jb/bin/zsh",
-    "so they are already what the kernel wants"
+    "so they are already what the kernel wants",
 )
 check(
     rootless.systemPath("/usr/bin") == "/usr/bin",
-    "and iOS's own filesystem is just itself"
+    "and iOS's own filesystem is just itself",
 )
 
 check(roothide.root == jbroot, "roothide's root is its jbroot")
 check(
     rootless.root == "/private/var/jb",
-    "rootless recognises paths by what /var/jb resolves to, not the literal"
+    "rootless recognises paths by what /var/jb resolves to, not the literal",
 )
 check(RuntimeEnvironment.Bootstrap.none.root == nil, "and with no bootstrap there is no root")
 
@@ -506,23 +506,23 @@ check(RuntimeEnvironment.Bootstrap.none.root == nil, "and with no bootstrap ther
 // only — `chdir` still wants the kernel path.
 check(
     RuntimeEnvironment.spelling(of: "/usr/src", under: "/", as: "@jb") == "@jb/usr/src",
-    "a directory inside the root is written against the marker"
+    "a directory inside the root is written against the marker",
 )
 check(
     RuntimeEnvironment.spelling(of: "/private/tmp", under: "/private/tmp", as: "~") == "~",
-    "the root itself is the marker alone"
+    "the root itself is the marker alone",
 )
 check(
     RuntimeEnvironment.spelling(of: "/private/tmp/x", under: "/private/tmp", as: "~") == "~/x",
-    "and a file inside it hangs off the marker"
+    "and a file inside it hangs off the marker",
 )
 check(
     RuntimeEnvironment.spelling(of: "/var/mobile", under: "/private/tmp", as: "~") == nil,
-    "a path outside the root gets no second spelling"
+    "a path outside the root gets no second spelling",
 )
 check(
     RuntimeEnvironment.spelling(of: "/private/tmpsomething", under: "/private/tmp", as: "~") == nil,
-    "and one that merely starts with the root's letters is not inside it"
+    "and one that merely starts with the root's letters is not inside it",
 )
 // The bug this whole function exists for: `proc_pidinfo` answers
 // `/var/…` where the daemon's own executable path resolves to
@@ -531,11 +531,11 @@ check(
 // never once appeared.
 check(
     RuntimeEnvironment.spelling(of: "/var/tmp", under: "/private/var/tmp", as: "~") == "~",
-    "the two spellings of one directory are recognised as one"
+    "the two spellings of one directory are recognised as one",
 )
 check(
     RuntimeEnvironment.spelling(of: "/private/var/tmp/x", under: "/var/tmp", as: "~") == "~/x",
-    "in either direction"
+    "in either direction",
 )
 check(RuntimeEnvironment.isExecutable("/bin/sh"), "an existing shell is seen as executable")
 check(!RuntimeEnvironment.isExecutable("/bin/nope-not-here"), "a missing shell is not")
@@ -553,7 +553,7 @@ if let plan = ShellLaunch.plan(requestedShell: nil) {
     check(ctype.hasSuffix("UTF-8"), "LC_CTYPE selects a UTF-8 locale (got '\(ctype)')")
     check(
         FileManager.default.fileExists(atPath: "/usr/share/locale/\(ctype)/LC_CTYPE"),
-        "the exported LC_CTYPE names a locale this system can actually load"
+        "the exported LC_CTYPE names a locale this system can actually load",
     )
     // LANG and LC_ALL set every category at once; on iOS only LC_CTYPE has
     // data, so either of them fails and takes the whole process back to C.
@@ -564,7 +564,7 @@ if let plan = ShellLaunch.plan(requestedShell: nil) {
     // that cannot reach mDNSResponder, killing DNS (see ShellLaunch.plan).
     check(
         plan.command.first?.hasSuffix("/login") != true,
-        "the default plan never routes through login — pam_launchd would cost the session its DNS"
+        "the default plan never routes through login — pam_launchd would cost the session its DNS",
     )
     check(plan.environment["PATH"] != nil, "a directly spawned shell is given a PATH")
     check(plan.environment["USER"] != nil, "a directly spawned shell is told who it is")
@@ -581,11 +581,11 @@ print("shell integration")
 var integrationEnvironment: [String: String] = ["HOME": "/tmp"]
 check(
     ShellIntegration.apply(shell: "/bin/bash", to: &integrationEnvironment).isEmpty,
-    "no scripts on disk means no arguments are added"
+    "no scripts on disk means no arguments are added",
 )
 check(
     integrationEnvironment == ["HOME": "/tmp"],
-    "no scripts on disk means the environment is left alone"
+    "no scripts on disk means the environment is left alone",
 )
 /// `sh` is not a shell anyone ships an integration for, and pointing it at
 /// another shell's rc files is how a session ends up printing syntax errors
@@ -593,7 +593,7 @@ check(
 var shEnvironment: [String: String] = [:]
 check(
     ShellIntegration.apply(shell: "/bin/sh", to: &shEnvironment).isEmpty && shEnvironment.isEmpty,
-    "sh is left untouched"
+    "sh is left untouched",
 )
 
 if let plan = ShellLaunch.plan(requestedShell: "/bin/sh") {
@@ -602,19 +602,19 @@ if let plan = ShellLaunch.plan(requestedShell: "/bin/sh") {
     check(directories.contains("/usr/bin"), "PATH reaches the system's own tools")
     check(
         directories.allSatisfy { !$0.hasPrefix("/var/jb") && !$0.hasPrefix("/rootfs") },
-        "with no bootstrap, PATH assumes no prefixed layout"
+        "with no bootstrap, PATH assumes no prefixed layout",
     )
     check(
         Set(directories).count == directories.count,
-        "the bootstrap and system halves collapse into one another without duplicates"
+        "the bootstrap and system halves collapse into one another without duplicates",
     )
 } else {
     check(false, "an explicit shell produces a plan")
 }
 
-// A caller's argv runs in the terminal's environment, not an empty one: a
-// curses program with no TERM exits at initscr(), and the CLI has printed
-// the session id by then. Only the shell integration stays off.
+/// A caller's argv runs in the terminal's environment, not an empty one: a
+/// curses program with no TERM exits at initscr(), and the CLI has printed
+/// the session id by then. Only the shell integration stays off.
 let verbatim = ShellLaunch.verbatimPlan(command: ["/usr/bin/env"])
 check(verbatim.command == ["/usr/bin/env"], "a verbatim plan runs the argv as given")
 check(verbatim.environment["TERM"] == "xterm-256color", "a verbatim command is given a TERM")
@@ -625,7 +625,7 @@ check(verbatim.environment["SHELL"]?.hasPrefix("/") == true, "and which shell th
 check(
     verbatim.environment["ZDOTDIR"] == nil && verbatim.environment["ENV"] == nil
         && verbatim.environment["GHOSTTY_BASH_INJECT"] == nil,
-    "with no shell integration, which needs an argv of its own"
+    "with no shell integration, which needs an argv of its own",
 )
 
 check(ShellLaunch.plan(requestedShell: "/bin/nope-not-here") == nil, "a missing shell is rejected")
@@ -634,7 +634,7 @@ check(ShellLaunch.validate(["/bin/echo", "hi"]) != nil, "an absolute argv is acc
 check(ShellLaunch.validate(["echo", "hi"]) == nil, "a relative argv is rejected")
 check(
     ShellLaunch.validate(["/bin/echo"] + Array(repeating: "x", count: 200)) == nil,
-    "an over-long argv is rejected"
+    "an over-long argv is rejected",
 )
 
 print("passwd lookup")
@@ -670,12 +670,12 @@ if getuid() == 0 {
         let credentials = ShellLaunch.Credentials(uid: target.uid, gid: target.gid)
         check(
             ShellLaunch.credentials(for: target) == credentials,
-            "root drops to the session user"
+            "root drops to the session user",
         )
         if let result = run(command: ["/usr/bin/id", "-u"], credentials: credentials) {
             check(
                 result.output.contains("\(target.uid)"),
-                "the child execs as uid \(target.uid) (id said: \(result.output.trimmingCharacters(in: .whitespacesAndNewlines)))"
+                "the child execs as uid \(target.uid) (id said: \(result.output.trimmingCharacters(in: .whitespacesAndNewlines)))",
             )
             result.session.invalidate()
         } else {
@@ -685,7 +685,7 @@ if getuid() == 0 {
 } else {
     check(
         ShellLaunch.credentials(for: PasswdEntry.forCurrentUser()) == nil,
-        "a non-root daemon drops nothing — setuid would only fail"
+        "a non-root daemon drops nothing — setuid would only fail",
     )
 }
 
@@ -704,7 +704,7 @@ do {
             command: ["/bin/sh", "-c", "cd /private/tmp && exec /bin/sleep 30"],
             environment: [:],
             columns: 80,
-            rows: 24
+            rows: 24,
         )
     }
     var sourceDirectory: String?
@@ -718,15 +718,15 @@ do {
     }
     check(
         sourceDirectory == "/private/tmp",
-        "a live session's current directory is read from the kernel (got \(String(describing: sourceDirectory)))"
+        "a live session's current directory is read from the kernel (got \(String(describing: sourceDirectory)))",
     )
     check(
         harnessQueue.sync { registry.inheritableDirectory(from: source.id) } == "/private/tmp",
-        "the registry offers a live session's directory"
+        "the registry offers a live session's directory",
     )
     check(
         harnessQueue.sync { registry.inheritableDirectory(from: source.id &+ 1000) } == nil,
-        "an unknown session offers nothing"
+        "an unknown session offers nothing",
     )
 
     let inherited = try harnessQueue.sync {
@@ -735,7 +735,7 @@ do {
             environment: [:],
             columns: 80,
             rows: 24,
-            inheritDirectoryFrom: source.id
+            inheritDirectoryFrom: source.id,
         )
     }
     var inheritedDirectory: String?
@@ -749,7 +749,7 @@ do {
     }
     check(
         inheritedDirectory == "/private/tmp",
-        "a session opened from another starts in its directory (got \(String(describing: inheritedDirectory)))"
+        "a session opened from another starts in its directory (got \(String(describing: inheritedDirectory)))",
     )
 
     let fresh = try harnessQueue.sync {
@@ -758,7 +758,7 @@ do {
             environment: [:],
             columns: 80,
             rows: 24,
-            inheritDirectoryFrom: source.id &+ 1000
+            inheritDirectoryFrom: source.id &+ 1000,
         )
     }
     var freshDirectory: String?
@@ -772,7 +772,7 @@ do {
     }
     check(
         freshDirectory == NSHomeDirectory(),
-        "naming a session that never existed opens in the home (got \(String(describing: freshDirectory)))"
+        "naming a session that never existed opens in the home (got \(String(describing: freshDirectory)))",
     )
 
     // A directory named outright — the client's recent list, whose session
@@ -784,7 +784,7 @@ do {
             environment: [:],
             columns: 80,
             rows: 24,
-            startDirectory: "/private/tmp"
+            startDirectory: "/private/tmp",
         )
     }
     var namedDirectory: String?
@@ -798,7 +798,7 @@ do {
     }
     check(
         namedDirectory == "/private/tmp",
-        "a session opened on a named directory starts there (got \(String(describing: namedDirectory)))"
+        "a session opened on a named directory starts there (got \(String(describing: namedDirectory)))",
     )
 
     let refused = try harnessQueue.sync {
@@ -807,7 +807,7 @@ do {
             environment: [:],
             columns: 80,
             rows: 24,
-            startDirectory: "/nonexistent/ighostvt-harness"
+            startDirectory: "/nonexistent/ighostvt-harness",
         )
     }
     var refusedDirectory: String?
@@ -821,11 +821,11 @@ do {
     }
     check(
         refusedDirectory == NSHomeDirectory(),
-        "a named directory that is gone opens in the home (got \(String(describing: refusedDirectory)))"
+        "a named directory that is gone opens in the home (got \(String(describing: refusedDirectory)))",
     )
     check(
         harnessQueue.sync { registry.enterableDirectory("private/tmp") } == nil,
-        "a relative directory is refused outright"
+        "a relative directory is refused outright",
     )
 
     // A live session outranks a remembered path, since it is the same read
@@ -837,7 +837,7 @@ do {
             columns: 80,
             rows: 24,
             inheritDirectoryFrom: source.id,
-            startDirectory: NSHomeDirectory()
+            startDirectory: NSHomeDirectory(),
         )
     }
     var bothDirectory: String?
@@ -851,7 +851,7 @@ do {
     }
     check(
         bothDirectory == "/private/tmp",
-        "an inherited session wins over a named directory (got \(String(describing: bothDirectory)))"
+        "an inherited session wins over a named directory (got \(String(describing: bothDirectory)))",
     )
     for session in [named, refused, both] {
         harnessQueue.sync { _ = try? registry.close(session.id) }
@@ -867,7 +867,7 @@ do {
                 command: ["/bin/sh", "-c", "cd '\(removable)' && exec /bin/sleep 30"],
                 environment: [:],
                 columns: 80,
-                rows: 24
+                rows: 24,
             )
         }
         let moverDeadline = Date().addingTimeInterval(5)
@@ -876,13 +876,13 @@ do {
         }
         check(
             harnessQueue.sync { registry.inheritableDirectory(from: mover.id) } == removable,
-            "a directory that exists is offered"
+            "a directory that exists is offered",
         )
         check(rmdir(removable) == 0, "the harness can remove the directory under the session")
         check(mover.currentDirectory == removable, "the kernel still names the removed directory")
         check(
             harnessQueue.sync { registry.inheritableDirectory(from: mover.id) } == nil,
-            "a directory that is gone is not offered"
+            "a directory that is gone is not offered",
         )
         harnessQueue.sync { _ = try? registry.close(mover.id) }
     } else {
@@ -895,7 +895,7 @@ do {
             command: ["/bin/sh", "-c", "cd /private/tmp && exit 0"],
             environment: [:],
             columns: 80,
-            rows: 24
+            rows: 24,
         )
     }
     let departedDeadline = Date().addingTimeInterval(5)
@@ -905,7 +905,7 @@ do {
     check(harnessQueue.sync { registry.session(departed.id) } == nil, "an exited source leaves the registry")
     check(
         harnessQueue.sync { registry.inheritableDirectory(from: departed.id) } == nil,
-        "an exited source offers nothing"
+        "an exited source offers nothing",
     )
 
     for session in [source, inherited, fresh] {
@@ -923,11 +923,11 @@ do {
         environment: ["TERM": "xterm-256color", "PATH": "/usr/bin:/bin"],
         columns: 80,
         rows: 24,
-        queue: harnessQueue
+        queue: harnessQueue,
     )
     check(
         session.foregroundProcessName == "sh",
-        "the initial foreground name is the spawned executable"
+        "the initial foreground name is the spawned executable",
     )
     check(session.isForegroundShell, "a fresh session has its shell in the foreground")
     let namesLock = NSLock()
@@ -943,7 +943,7 @@ do {
                 directories.append(directory)
             }
             namesLock.unlock()
-        }
+        },
     )
     func waitForReport(_ predicate: ((name: String, isShell: Bool)) -> Bool) -> Bool {
         let deadline = Date().addingTimeInterval(5)
@@ -1013,12 +1013,12 @@ do {
     namesLock.unlock()
     check(
         sawPipeline,
-        "a pipeline whose leader is gone is still reported as running (saw: \(pipelineReports.map { "\($0.name):\($0.isShell)" }))"
+        "a pipeline whose leader is gone is still reported as running (saw: \(pipelineReports.map { "\($0.name):\($0.isShell)" }))",
     )
     check(!session.isForegroundShell, "and the session records something in front of the shell")
     check(
         pipelineReports.first(where: { !$0.isShell })?.name == names.last,
-        "with the last resolved name retained rather than dropped"
+        "with the last resolved name retained rather than dropped",
     )
     check(waitForReport(\.isShell), "the shell is reported back once the pipeline ends")
 
@@ -1032,7 +1032,7 @@ do {
     namesLock.unlock()
     check(
         moved,
-        "a `cd` at the prompt is reported although no process changed (saw: \(seen))"
+        "a `cd` at the prompt is reported although no process changed (saw: \(seen))",
     )
     check(session.reportedDirectory == "/private/tmp", "and the session records where it now is")
     session.invalidate()

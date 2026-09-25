@@ -44,7 +44,7 @@ struct SidebarView: View {
                             onSelect: { tabManager.activeTabID = tab.id },
                             onClose: { tabManager.requestClose(tab) },
                             tabManager: tabManager,
-                            window: window
+                            window: window,
                         )
                         .tabReorderable(tab, in: tabManager, dragged: draggedTab, preview: .row, width: rowWidth)
                     }
@@ -71,9 +71,9 @@ struct SidebarView: View {
                     GeometryReader { proxy in
                         Color.clear.preference(
                             key: SidebarRowWidthKey.self,
-                            value: proxy.size.width - DS.Padding.m * 2
+                            value: proxy.size.width - DS.Padding.m * 2,
                         )
-                    }
+                    },
                 )
                 .onPreferenceChange(SidebarRowWidthKey.self) { rowWidth = $0 }
                 .tabReorderContainer(dragged: draggedTab)
@@ -149,7 +149,7 @@ struct SidebarView: View {
     private var countLabel: String {
         String.localizedStringWithFormat(
             NSLocalizedString("%lld Tabs", comment: "Count of open tabs, as a heading"),
-            tabManager.tabs.count
+            tabManager.tabs.count,
         )
     }
 }
@@ -209,7 +209,7 @@ private struct SidebarRow: View {
             // terminal it read as a glitch rather than a highlight.
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                    .fill(isActive ? Color.primary.opacity(0.12) : Color.clear)
+                    .fill(isActive ? Color.primary.opacity(0.12) : Color.clear),
             )
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous))
         }

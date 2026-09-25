@@ -59,7 +59,7 @@ struct RootView: View {
                     SidebarView(
                         tabManager: tabManager,
                         showsSidebar: $showsSidebar,
-                        onShowSettings: { interface.showsSettingsSheet = true }
+                        onShowSettings: { interface.showsSettingsSheet = true },
                     )
                     .frame(width: sidebarWidth)
                     .overlay(alignment: .trailing) {
@@ -116,7 +116,7 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $interface.showsSwitcher, onDismiss: {
             refocusAfterTabSwitch(
-                softwareKeyboardWasVisible: keyboardVisibleBeforeSwitcher
+                softwareKeyboardWasVisible: keyboardVisibleBeforeSwitcher,
             )
         }) {
             TabSwitcherView(tabManager: tabManager)
@@ -125,7 +125,7 @@ struct RootView: View {
         .sheet(item: $tabManager.selectionRequest, onDismiss: refocus) { box in
             TerminalSelectionSheet(
                 text: box.request.text,
-                anchorRange: box.request.anchorRange
+                anchorRange: box.request.anchorRange,
             )
         }
         // One copy for the whole window: each confirmation presents as an
@@ -143,7 +143,7 @@ struct RootView: View {
                 if isRegularWidth {
                     TabStripBar(
                         tabManager: tabManager,
-                        showsSidebar: $showsSidebar
+                        showsSidebar: $showsSidebar,
                     )
                 }
             }
@@ -154,7 +154,7 @@ struct RootView: View {
                     BottomBar(
                         tabManager: tabManager,
                         onShowSettings: { interface.showsSettingsSheet = true },
-                        onShowSwitcher: { interface.showsSwitcher = true }
+                        onShowSwitcher: { interface.showsSwitcher = true },
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -179,11 +179,11 @@ struct RootView: View {
                     focusedTabID: $focusedTabID,
                     onCloseTab: { tabManager.requestClose(tab) },
                     onLockChange: refocus,
-                    onStatusChange: refocusForStatus
+                    onStatusChange: refocusForStatus,
                 )
                 .transition(.asymmetric(
                     insertion: .opacity,
-                    removal: .scale(scale: 0.92).combined(with: .opacity)
+                    removal: .scale(scale: 0.92).combined(with: .opacity),
                 ))
             }
         }
@@ -289,7 +289,7 @@ private struct TerminalPane: View {
                 SessionStatusOverlay(
                     store: tab.store,
                     isActive: isActive,
-                    onCloseTab: onCloseTab
+                    onCloseTab: onCloseTab,
                 )
             }
             .overlay(alignment: .topTrailing) {
@@ -322,7 +322,9 @@ private struct TerminalPane: View {
             // would otherwise hand the front tab's terminal first responder
             // — and the software keyboard with it — for nothing the user did.
             .onReceive(tab.store.$status) { status in
-                if isActive { onStatusChange(status) }
+                if isActive {
+                    onStatusChange(status)
+                }
             }
     }
 }

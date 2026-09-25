@@ -61,7 +61,7 @@ struct TabContextMenu: View {
                 lock: "Lock Keyboard",
                 lockImage: "keyboard",
                 unlock: "Unlock Keyboard",
-                unlockImage: "keyboard"
+                unlockImage: "keyboard",
             )
         #endif
     }
@@ -72,7 +72,7 @@ struct TabContextMenu: View {
         lock: LocalizedStringKey,
         lockImage: String,
         unlock: LocalizedStringKey,
-        unlockImage: String
+        unlockImage: String,
     ) -> some View {
         if #available(iOS 16.0, *) {
             Toggle(isOn: isLocked) {
@@ -128,11 +128,11 @@ struct TabContextMenu: View {
             with: CGSize(width: 4096, height: CGFloat.greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin],
             attributes: attributes,
-            context: nil
+            context: nil,
         )
         let size = CGSize(
             width: ceil(bounds.width) + padding * 2,
-            height: ceil(bounds.height) + padding * 2
+            height: ceil(bounds.height) + padding * 2,
         )
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in
@@ -140,7 +140,7 @@ struct TabContextMenu: View {
             context.fill(CGRect(origin: .zero, size: size))
             (text as NSString).draw(
                 at: CGPoint(x: padding, y: padding),
-                withAttributes: attributes
+                withAttributes: attributes,
             )
         }
     }

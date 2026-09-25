@@ -15,7 +15,7 @@ import SwiftUI
 enum ClipboardConfirmation {
     static func alert(
         for request: TerminalClipboardConfirmationRequest,
-        finish: @escaping () -> Void
+        finish: @escaping () -> Void,
     ) -> AlertViewController {
         AlertViewController(
             title: title(for: request.kind),
@@ -29,7 +29,7 @@ enum ClipboardConfirmation {
                     request.respond(allow: true)
                     finish()
                 },
-            ]
+            ],
         )
     }
 
@@ -71,7 +71,7 @@ extension View {
         modifier(WindowAlertPresenter(
             requests: tabManager.$clipboardRequests.map(\.first),
             onFinish: { tabManager.finishClipboardRequest() },
-            makeAlert: ClipboardConfirmation.alert
+            makeAlert: ClipboardConfirmation.alert,
         ))
     }
 }

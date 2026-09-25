@@ -68,7 +68,7 @@ enum IOWire {
             kind: kind,
             peer: loadUInt64(bytes, at: 8),
             tag: loadUInt64(bytes, at: 16),
-            payloadByteCount: length
+            payloadByteCount: length,
         )
     }
 

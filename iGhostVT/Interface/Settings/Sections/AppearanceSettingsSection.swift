@@ -17,7 +17,7 @@ struct AppearanceSettingsSection: View {
                 SettingsValueRow(
                     title: "Light Theme",
                     icon: "sun.max.fill",
-                    value: theme.selection.lightName ?? Self.defaultLabel(AppTheme.defaultLightName)
+                    value: theme.selection.lightName ?? Self.defaultLabel(AppTheme.defaultLightName),
                 )
             }
             .accessibilityLabel("Light Theme")
@@ -28,7 +28,7 @@ struct AppearanceSettingsSection: View {
                 SettingsValueRow(
                     title: "Dark Theme",
                     icon: "moon.fill",
-                    value: theme.selection.darkName ?? Self.defaultLabel(AppTheme.defaultDarkName)
+                    value: theme.selection.darkName ?? Self.defaultLabel(AppTheme.defaultDarkName),
                 )
             }
             .accessibilityLabel("Dark Theme")
@@ -46,7 +46,7 @@ struct AppearanceSettingsSection: View {
     private static func defaultLabel(_ name: String) -> String {
         String(
             format: NSLocalizedString("%@ (Default)", comment: "Theme name plus the default marker"),
-            name
+            name,
         )
     }
 }

@@ -148,12 +148,12 @@ final class TerminalSessionStore: ObservableObject {
                 AppLog.info(.session, "surface reported viewport \(viewport.columns)x\(viewport.rows)")
                 relay.updateViewport(
                     columns: Int(viewport.columns),
-                    rows: Int(viewport.rows)
+                    rows: Int(viewport.rows),
                 )
             },
             // Only columns and rows are consumed; a report whose grid did
             // not change would only be dropped by the transport anyway.
-            suppressesPixelOnlyResizes: true
+            suppressesPixelOnlyResizes: true,
         )
         // The first viewport report means the surface is attached and
         // rendering, so bytes fed to the session are no longer dropped — the
@@ -218,7 +218,7 @@ final class TerminalSessionStore: ObservableObject {
         let transport = makeTransport()
         AppLog.info(
             .session,
-            "connecting via \(transport.endpointDescription) sceneActive=\(isSceneActive) hasViewport=\(relay.hasViewport)"
+            "connecting via \(transport.endpointDescription) sceneActive=\(isSceneActive) hasViewport=\(relay.hasViewport)",
         )
         // `relay` weak as well: the relay retains the transport, which
         // retains this closure. A strong capture would close that cycle and
@@ -323,7 +323,7 @@ final class TerminalSessionStore: ObservableObject {
         guard reconnectAttempt < Self.reconnectAttemptLimit else {
             reconnectAttempt = 0
             let reason = lastReason ?? String(
-                localized: "Unable to reconnect to the terminal. Try again or close the tab."
+                localized: "Unable to reconnect to the terminal. Try again or close the tab.",
             )
             status = .failed(reason)
             printStatusLine(reason)
@@ -357,7 +357,7 @@ final class TerminalSessionStore: ObservableObject {
             isAwaitingFirstOutput = true
             AppLog.info(
                 .session,
-                "no output \(Self.firstOutputGrace / 1_000_000) ms after connect; showing the shell pill"
+                "no output \(Self.firstOutputGrace / 1_000_000) ms after connect; showing the shell pill",
             )
         }
     }

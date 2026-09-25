@@ -126,13 +126,13 @@ final class TerminalTab: ObservableObject, Identifiable {
     init(
         resumeDaemonSessionID: UInt64? = nil,
         inheritDirectoryFrom: UInt64? = nil,
-        startDirectory: String? = nil
+        startDirectory: String? = nil,
     ) {
         let daemonSession = DaemonSessionBox(id: resumeDaemonSessionID)
         self.daemonSession = daemonSession
         terminal = TerminalViewState(
             theme: AppTheme.shared.terminalTheme,
-            terminalConfiguration: GhosttyAppConfiguration.terminal
+            terminalConfiguration: GhosttyAppConfiguration.terminal,
         )
         // Built before the store exists (the factory closure cannot capture
         // `self` mid-init), armed right after: the exit the transport
@@ -143,7 +143,7 @@ final class TerminalTab: ObservableObject, Identifiable {
                 shellPath: UserDefaults.standard.string(forKey: "Shell.path"),
                 resumeSessionID: daemonSession.id,
                 inheritDirectoryFrom: inheritDirectoryFrom,
-                startDirectory: startDirectory
+                startDirectory: startDirectory,
             )
             // A real process exit (including one we asked for via
             // closeSession) means the ID must never be reused: forget it in
@@ -169,7 +169,7 @@ final class TerminalTab: ObservableObject, Identifiable {
         terminal.configuration = TerminalSurfaceOptions(
             backend: .inMemory(store.session),
             fontSize: TerminalFontSize.preferred,
-            resizeThrottleMilliseconds: Self.resizeThrottle(isShellInForeground: false)
+            resizeThrottleMilliseconds: Self.resizeThrottle(isShellInForeground: false),
         )
         // The right resize throttle depends on what is drawing: an
         // alt-screen program that repaints on every winsize (vim, Claude
@@ -189,14 +189,14 @@ final class TerminalTab: ObservableObject, Identifiable {
         // remounted surface the right pace.
         resizeThrottleObservation = Publishers.CombineLatest(
             store.$status.removeDuplicates(),
-            store.$isShellInForeground.removeDuplicates()
+            store.$isShellInForeground.removeDuplicates(),
         )
         .map { status, isShell in
             Self.resizeThrottle(
                 isShellInForeground: TerminalSessionStore.isIdleAtPrompt(
                     status: status,
-                    isShellInForeground: isShell
-                )
+                    isShellInForeground: isShell,
+                ),
             )
         }
         .removeDuplicates()
@@ -210,7 +210,7 @@ final class TerminalTab: ObservableObject, Identifiable {
         KeyboardBarStore.shared.apply(to: terminal)
         AppLog.info(
             .tabs,
-            "tab \(id) created, resume id \(resumeDaemonSessionID.map(String.init) ?? "none"); waiting for the surface's first viewport"
+            "tab \(id) created, resume id \(resumeDaemonSessionID.map(String.init) ?? "none"); waiting for the surface's first viewport",
         )
         // `displayTitle` reads two other observable objects, and SwiftUI
         // only watches the one a view holds — the tab. Without this the
@@ -222,7 +222,7 @@ final class TerminalTab: ObservableObject, Identifiable {
         titleObservation = Publishers.Merge3(
             terminal.$title.removeDuplicates().map { _ in () },
             store.$inferredTitle.removeDuplicates().map { _ in () },
-            store.$processName.removeDuplicates().map { _ in () }
+            store.$processName.removeDuplicates().map { _ in () },
         )
         .sink { [weak self] in
             withAnimation(DS.Motion.smooth) {
@@ -243,7 +243,7 @@ final class TerminalTab: ObservableObject, Identifiable {
             terminal.$title.removeDuplicates().map { _ in () },
             store.$inferredTitle.removeDuplicates().map { _ in () },
             terminal.$workingDirectory.removeDuplicates().map { _ in () },
-            store.$status.removeDuplicates().map { _ in () }
+            store.$status.removeDuplicates().map { _ in () },
         )
         .merge(with: store.$processName.removeDuplicates().map { _ in () })
         .merge(with: store.$currentDirectory.removeDuplicates().map { _ in () })
@@ -297,7 +297,9 @@ final class TerminalTab: ObservableObject, Identifiable {
         _ = store.pageGeneration
         for line in snapshotPreview().split(separator: "\n", omittingEmptySubsequences: false).reversed() {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty { return trimmed }
+            if !trimmed.isEmpty {
+                return trimmed
+            }
         }
         return store.endpointDescription
     }
@@ -344,8 +346,12 @@ final class TerminalTab: ObservableObject, Identifiable {
     /// ready) is covering this tab, so the surface must not hold first
     /// responder — Return and the software keyboard belong to the card.
     var isCoveredByStatusAlert: Bool {
-        if !MacLaunchAgent.shared.isReady { return true }
-        if case .failed = store.status { return true }
+        if !MacLaunchAgent.shared.isReady {
+            return true
+        }
+        if case .failed = store.status {
+            return true
+        }
         return false
     }
 

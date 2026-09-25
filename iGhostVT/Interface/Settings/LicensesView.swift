@@ -17,7 +17,9 @@ struct LicenseEntry: Decodable, Identifiable {
     let url: String
     let text: String
 
-    var id: String { "\(name)@\(version ?? "")" }
+    var id: String {
+        "\(name)@\(version ?? "")"
+    }
 
     var homepage: URL? {
         url.isEmpty ? nil : URL(string: url)
@@ -25,7 +27,7 @@ struct LicenseEntry: Decodable, Identifiable {
 
     /// "MIT · 1.5.1" — the identifier, then the version when there is one.
     var summary: String {
-        [license, version].compactMap { $0 }.joined(separator: " · ")
+        [license, version].compactMap(\.self).joined(separator: " · ")
     }
 }
 

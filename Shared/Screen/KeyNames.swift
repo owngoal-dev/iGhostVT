@@ -50,8 +50,12 @@ enum KeyNames {
     private static func controlBytes(for key: String) -> [UInt8]? {
         if key.count == 1, let scalar = key.unicodeScalars.first {
             let value = scalar.value
-            if value >= 97, value <= 122 { return [UInt8(value - 96)] }      // a-z
-            if value >= 65, value <= 90 { return [UInt8(value - 64)] }       // A-Z
+            if value >= 97, value <= 122 {
+                return [UInt8(value - 96)]
+            } // a-z
+            if value >= 65, value <= 90 {
+                return [UInt8(value - 64)]
+            } // A-Z
             switch scalar {
             case "@", " ": return [0x00]
             case "[": return [0x1B]

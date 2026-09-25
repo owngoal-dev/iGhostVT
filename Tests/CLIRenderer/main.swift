@@ -21,7 +21,7 @@ func render(
     _ stream: String,
     columns: UInt16 = 20,
     rows: UInt16 = 5,
-    full: Bool = false
+    full: Bool = false,
 ) -> String {
     let renderer = ScreenRenderer(columns: columns, rows: rows)
     renderer.feed(stream)
@@ -44,11 +44,11 @@ check(render("hello\r\nworld") == "hello\nworld", "CR LF starts a line")
 check(render("hello\nworld") == "hello\n     world", "a bare LF does not return the carriage")
 check(
     render("0123456789abcdefghijklmno", columns: 10, rows: 5) == "0123456789\nabcdefghij\nklmno",
-    "text wraps at the last column"
+    "text wraps at the last column",
 )
 check(
     render("0123456789\r\nnext", columns: 10, rows: 5) == "0123456789\nnext",
-    "a line that exactly fills the width leaves no blank line behind"
+    "a line that exactly fills the width leaves no blank line behind",
 )
 check(render("a\u{8}b") == "b", "backspace moves back over a cell")
 check(render("a\tb", columns: 20) == "a       b", "tab advances to the next stop")
@@ -57,12 +57,12 @@ print("screen renderer: scrolling and history")
 check(
     render("one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix", columns: 20, rows: 3)
         == "four\nfive\nsix",
-    "output scrolls the screen"
+    "output scrolls the screen",
 )
 check(
     render("one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix", columns: 20, rows: 3, full: true)
         == "one\ntwo\nthree\nfour\nfive\nsix",
-    "and the lines that scrolled off are the transcript"
+    "and the lines that scrolled off are the transcript",
 )
 
 print("screen renderer: cursor and erasing")
@@ -79,46 +79,46 @@ check(render("hello\(escape)[s\(escape)[2;1Hthere\(escape)[u!") == "hello!\nther
 check(render("hello\(escape)7\(escape)[2;1Hthere\(escape)8!") == "hello!\nthere", "and so does the ESC 7 / ESC 8 pair")
 check(
     render("line1\r\nline2\r\n\(escape)[=5u> prompt") == "line1\nline2\n> prompt",
-    "the kitty keyboard protocol's CSI = 5 u is not a cursor restore"
+    "the kitty keyboard protocol's CSI = 5 u is not a cursor restore",
 )
 check(
     render("line1\r\nline2\r\n\(escape)[>1u\(escape)[<u\(escape)[=0ux") == "line1\nline2\nx",
-    "nor are the > and < forms"
+    "nor are the > and < forms",
 )
 check(render("hello\(escape)[?25lx") == "hellox", "a ? private mode with an unhandled final is ignored")
 
 print("screen renderer: lines and regions")
 check(
     render("one\r\ntwo\r\nthree\(escape)[1;1H\(escape)[L", columns: 20, rows: 3) == "one\ntwo",
-    "insert-line pushes the screen down, off the bottom"
+    "insert-line pushes the screen down, off the bottom",
 )
 check(
     render("one\r\ntwo\r\nthree\(escape)[1;1H\(escape)[M", columns: 20, rows: 4) == "two\nthree",
-    "delete-line pulls it up"
+    "delete-line pulls it up",
 )
 check(
     render("\(escape)[2;3r\(escape)[2;1Ha\r\nb\r\nc", columns: 20, rows: 4) == "b\nc",
-    "output scrolls inside a scroll region, leaving the rows outside it alone"
+    "output scrolls inside a scroll region, leaving the rows outside it alone",
 )
 check(
     render("one\r\ntwo\r\nthree\(escape)[2;3r\(escape)[2;1H\(escape)M", columns: 20, rows: 3)
         == "one\n\ntwo",
-    "reverse index scrolls the region down"
+    "reverse index scrolls the region down",
 )
 
 print("screen renderer: alternate screen")
 check(
     render("shell\(escape)[?1049hfullscreen\(escape)[?1049l") == "shell",
-    "leaving the alternate screen puts the primary back"
+    "leaving the alternate screen puts the primary back",
 )
 check(
     render("shell\(escape)[?1049hfullscreen") == "fullscreen",
-    "and while it is up, it is what is shown"
+    "and while it is up, it is what is shown",
 )
 check(
     render("one\r\ntwo\r\nthree\r\nfour\(escape)[?1049hx\(escape)[?1049l", columns: 20, rows: 2, full: true)
         == "one\ntwo\nthree\nfour",
-    "the alternate screen does not add to the transcript"
+    "the alternate screen does not add to the transcript",
 )
 
 print("screen renderer: escapes that carry no text")
@@ -143,24 +143,24 @@ print("screen renderer: character width")
 check(render("\u{4F60}\u{597D}", columns: 4, rows: 2) == "\u{4F60}\u{597D}", "CJK text renders")
 check(
     render("\u{4F60}\u{597D}ab", columns: 4, rows: 2) == "\u{4F60}\u{597D}\nab",
-    "a wide character occupies two columns"
+    "a wide character occupies two columns",
 )
 check(render("e\u{301}") == "e\u{301}", "a combining mark joins the character before it")
 check(
     render("\u{4E2D}\(escape)[2Gx", columns: 4, rows: 2) == " x",
-    "writing over a wide glyph's right half blanks its left"
+    "writing over a wide glyph's right half blanks its left",
 )
 check(
     render("\u{4E2D}\(escape)[1Gx", columns: 4, rows: 2) == "x",
-    "writing over its left half blanks its right"
+    "writing over its left half blanks its right",
 )
 check(
     render("\u{4E2D}\u{6587}\(escape)[2G\u{56FD}", columns: 4, rows: 2) == " \u{56FD}",
-    "a wide glyph written across two others blanks both orphaned halves"
+    "a wide glyph written across two others blanks both orphaned halves",
 )
 check(
     render("ab\u{4E2D}\(escape)[3Gxy", columns: 4, rows: 2) == "abxy",
-    "overwriting both halves in turn leaves no gap"
+    "overwriting both halves in turn leaves no gap",
 )
 
 print("screen renderer: prompt marks")
@@ -169,6 +169,7 @@ func marks(_ stream: String, columns: UInt16 = 20, rows: UInt16 = 5) -> ScreenRe
     renderer.feed(stream)
     return renderer.transcript()
 }
+
 let plain = marks("$ ls\r\na b c\r\n$")
 check(plain.outputStart == nil && plain.promptStart == nil, "a session without shell integration has no marks")
 let marked = marks("\(escape)]133;A\u{7}$ \(escape)]133;B\u{7}ls\r\n\(escape)]133;C\u{7}a b c\r\nd\r\n\(escape)]133;D;0\u{7}\(escape)]133;A\u{7}$ ")
@@ -178,30 +179,30 @@ check(marked.promptStart == 3, "the prompt-start mark is the row of the last pro
 let scrolled = marks(
     "one\r\ntwo\r\n\(escape)]133;C\u{7}three\r\nfour\r\nfive\r\n\(escape)]133;A\u{7}$ ",
     columns: 20,
-    rows: 3
+    rows: 3,
 )
 check(scrolled.lines == ["one", "two", "three", "four", "five", "$"], "a scrolled transcript keeps every line")
 check(scrolled.outputStart == 2 && scrolled.promptStart == 5, "and its marks are transcript indices, not screen rows")
 let leading = marks("\r\n\r\n\(escape)]133;C\u{7}out\r\n\(escape)]133;A\u{7}$ ")
 check(
     leading.lines == ["out", "$"] && leading.outputStart == 0 && leading.promptStart == 1,
-    "blank rows trimmed off the top shift the indices with them"
+    "blank rows trimmed off the top shift the indices with them",
 )
 let pending = marks("$ sleep\r\n\(escape)]133;C\u{7}")
 check(pending.lines == ["$ sleep"] && pending.outputStart == 1, "a mark on a still-blank row points past the last line")
 let alternate = marks("\(escape)]133;A\u{7}$ \(escape)[?1049h\(escape)]133;C\u{7}x\(escape)[?1049l")
 check(
     alternate.promptStart == 0 && alternate.outputStart == nil,
-    "a mark on the alternate screen is not on the transcript"
+    "a mark on the alternate screen is not on the transcript",
 )
 let erased = marks(
     "\(escape)]133;C\u{7}gone\r\nx\r\n\(escape)[3J\(escape)[H\(escape)]133;A\u{7}$ ",
     columns: 20,
-    rows: 2
+    rows: 2,
 )
 check(
     erased.lines == ["$"] && erased.outputStart == nil && erased.promptStart == 0,
-    "a mark whose row was erased with the scrollback is gone"
+    "a mark whose row was erased with the scrollback is gone",
 )
 
 print("key names")
@@ -214,6 +215,8 @@ if failures.isEmpty {
     exit(EXIT_SUCCESS)
 } else {
     print("cli renderer: \(failures.count) failure(s)")
-    for failure in failures { print("  - \(failure)") }
+    for failure in failures {
+        print("  - \(failure)")
+    }
     exit(EXIT_FAILURE)
 }

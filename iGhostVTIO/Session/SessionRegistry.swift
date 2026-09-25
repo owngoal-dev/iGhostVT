@@ -72,7 +72,7 @@ final class SessionRegistry {
                     isAttached: attachments[$0.id] != nil,
                     processName: $0.foregroundProcessName,
                     isForegroundShell: $0.isForegroundShell,
-                    currentDirectory: $0.currentDirectory
+                    currentDirectory: $0.currentDirectory,
                 )
             }
     }
@@ -100,12 +100,12 @@ final class SessionRegistry {
         columns: UInt16,
         rows: UInt16,
         inheritDirectoryFrom sourceSessionID: UInt64? = nil,
-        startDirectory: String? = nil
+        startDirectory: String? = nil,
     ) throws -> PTYSession {
         guard sessions.count < iGhostVTProtocol.maximumSessions else {
             throw iGhostVTFailure(
                 .sessionLimitReached,
-                "You already have \(sessions.count) terminals open. Close one and try again."
+                "You already have \(sessions.count) terminals open. Close one and try again.",
             )
         }
         let plan = try resolvePlan(command: requestedCommand, shell: requestedShell)
@@ -126,17 +126,17 @@ final class SessionRegistry {
             credentials: plan.credentials,
             workingDirectory: requestedDirectory ?? plan.workingDirectory,
             fallbackWorkingDirectory: requestedDirectory == nil ? nil : plan.workingDirectory,
-            queue: queue
+            queue: queue,
         )
         sessions[id] = session
         DaemonLog.sessions.info(
-            "session \(id) spawned \(plan.command.first ?? "?", privacy: .public), \(self.sessions.count)/\(iGhostVTProtocol.maximumSessions) held"
+            "session \(id) spawned \(plan.command.first ?? "?", privacy: .public), \(sessions.count)/\(iGhostVTProtocol.maximumSessions) held",
         )
         DaemonFileLog.log(
             "session \(id) spawned \(plan.command.first ?? "?")"
                 + (requestedDirectory.map { " in \($0)" } ?? "")
                 + (sourceSessionID.map { " (from session \($0))" } ?? "")
-                + ", \(sessions.count)/\(iGhostVTProtocol.maximumSessions) held"
+                + ", \(sessions.count)/\(iGhostVTProtocol.maximumSessions) held",
         )
         session.start(
             onOutput: { [weak self] sessionID, data in
@@ -147,7 +147,7 @@ final class SessionRegistry {
             },
             onForegroundChange: { [weak self] session in
                 self?.attachments[session.id]?.deliverForeground(of: session)
-            }
+            },
         )
         if isOutputPaused {
             session.setOutputPaused(true)
@@ -219,10 +219,10 @@ final class SessionRegistry {
     /// keeps a tab pointing at a session the daemon no longer has.
     private func handleExit(sessionID: UInt64, exitCode: Int32) {
         DaemonLog.sessions.info(
-            "session \(sessionID) exited with status \(exitCode), \(self.sessions.count - 1) remain"
+            "session \(sessionID) exited with status \(exitCode), \(sessions.count - 1) remain",
         )
         DaemonFileLog.log(
-            "session \(sessionID) exited with status \(exitCode), \(sessions.count - 1) remain"
+            "session \(sessionID) exited with status \(exitCode), \(sessions.count - 1) remain",
         )
         attachments[sessionID]?.deliverExit(sessionID: sessionID, exitCode: exitCode)
         discard(sessionID)
@@ -265,7 +265,7 @@ final class SessionRegistry {
             guard let command = ShellLaunch.validate(requested) else {
                 throw iGhostVTFailure(
                     .invalidRequest,
-                    "Unable to run that command. Check the command and try again."
+                    "Unable to run that command. Check the command and try again.",
                 )
             }
             return ShellLaunch.verbatimPlan(command: command)
@@ -274,7 +274,7 @@ final class SessionRegistry {
             guard let plan = ShellLaunch.plan(requestedShell: requestedShell) else {
                 throw iGhostVTFailure(
                     .invalidRequest,
-                    "Unable to run \(requestedShell). Choose another shell in Settings."
+                    "Unable to run \(requestedShell). Choose another shell in Settings.",
                 )
             }
             return plan
@@ -282,7 +282,7 @@ final class SessionRegistry {
         guard let plan = ShellLaunch.plan(requestedShell: nil) else {
             throw iGhostVTFailure(
                 .spawnFailed,
-                "No usable shell was found. Check the default shell in Settings."
+                "No usable shell was found. Check the default shell in Settings.",
             )
         }
         return plan

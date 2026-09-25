@@ -10,7 +10,7 @@ enum Commands {
         let client = DaemonClient()
         try client.connect()
         defer { client.cancel() }
-        let sessions = DaemonClient.sessions(in: try client.request(.listSessions))
+        let sessions = try DaemonClient.sessions(in: client.request(.listSessions))
         guard !sessions.isEmpty else { return }
 
         var table: [[String]] = [["SID", "PROCESS", "SIZE", "ATTACHED", "CWD"]]
@@ -50,7 +50,7 @@ enum Commands {
         let rows = UInt16(truncatingIfNeeded: xpc_dictionary_get_uint64(reply, iGhostVTWireKey.rows))
         let renderer = ScreenRenderer(
             columns: columns == 0 ? iGhostVTProtocol.defaultColumns : columns,
-            rows: rows == 0 ? iGhostVTProtocol.defaultRows : rows
+            rows: rows == 0 ? iGhostVTProtocol.defaultRows : rows,
         )
         if let replay = DaemonClient.data(reply, iGhostVTWireKey.data) {
             renderer.feed(replay)
@@ -119,7 +119,7 @@ enum Commands {
         // way the app does as it quits.
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline {
-            let sessions = DaemonClient.sessions(in: try client.request(.listSessions))
+            let sessions = try DaemonClient.sessions(in: client.request(.listSessions))
             if !sessions.contains(where: { $0.id == sessionID }) {
                 return
             }
@@ -132,7 +132,9 @@ enum Commands {
 private extension String {
     func trimmedTrailingSpaces() -> String {
         var text = self
-        while text.hasSuffix(" ") { text.removeLast() }
+        while text.hasSuffix(" ") {
+            text.removeLast()
+        }
         return text
     }
 }

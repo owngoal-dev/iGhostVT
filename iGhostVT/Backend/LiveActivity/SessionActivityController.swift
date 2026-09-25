@@ -4,7 +4,7 @@
 //
 
 #if canImport(ActivityKit)
-import ActivityKit
+    import ActivityKit
 #endif
 import Foundation
 
@@ -80,8 +80,8 @@ final class SessionActivityController {
                         shell: Self.configuredShellName,
                         number: number,
                         status: Self.status(for: tab.store.status),
-                        isActive: tab.id == window.activeTabID
-                    )
+                        isActive: tab.id == window.activeTabID,
+                    ),
                 )
             }
         }
@@ -95,7 +95,7 @@ final class SessionActivityController {
         return TerminalSessionAttributes.ContentState(
             sessions: Array(sessions.prefix(Self.listLimit)),
             overflowCount: max(0, sessions.count - Self.listLimit),
-            detachedCount: detached
+            detachedCount: detached,
         )
     }
 
@@ -108,7 +108,7 @@ final class SessionActivityController {
 
     @available(iOS 16.2, *)
     private static func status(
-        for status: TerminalSessionStore.Status
+        for status: TerminalSessionStore.Status,
     ) -> TerminalSessionAttributes.Session.Status {
         switch status {
         case .idle, .connecting: .starting
@@ -144,7 +144,7 @@ final class SessionActivityController {
             guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
             _ = try? Activity.request(
                 attributes: TerminalSessionAttributes(),
-                content: content
+                content: content,
             )
         }
     #else

@@ -11,7 +11,7 @@ import XPC
 private func ighostvtCreateMachServiceConnection(
     _ name: UnsafePointer<CChar>,
     _ queue: DispatchQueue?,
-    _ flags: UInt64
+    _ flags: UInt64,
 ) -> xpc_connection_t?
 
 enum CLIError: Error {
@@ -24,9 +24,9 @@ enum CLIError: Error {
 
     var exitCode: Int32 {
         switch self {
-        case .usage: return 64
-        case .daemonUnreachable, .timedOut, .daemonTooOld: return 69
-        case .refused, .sessionLingered: return 1
+        case .usage: 64
+        case .daemonUnreachable, .timedOut, .daemonTooOld: 69
+        case .refused, .sessionLingered: 1
         }
     }
 
@@ -41,7 +41,9 @@ enum CLIError: Error {
         case .daemonTooOld:
             return "The terminal daemon is out of date. Update iGhostVT and try again."
         case let .refused(code, detail):
-            if let detail, !detail.isEmpty { return detail }
+            if let detail, !detail.isEmpty {
+                return detail
+            }
             switch code {
             case .unknownSession: return "No session with that id. Run `ighostvt-cli list` to see them."
             case .sessionBusy: return "The session is already open in another window."
@@ -126,7 +128,7 @@ final class DaemonClient {
     @discardableResult
     func request(
         _ operation: iGhostVTOperation,
-        _ fill: (xpc_object_t) -> Void = { _ in }
+        _ fill: (xpc_object_t) -> Void = { _ in },
     ) throws -> xpc_object_t {
         guard let connection else { throw CLIError.daemonUnreachable }
         let message = xpc_dictionary_create(nil, nil, 0)
@@ -200,8 +202,8 @@ final class DaemonClient {
                     isAttached: xpc_dictionary_get_bool(row, iGhostVTWireKey.isAttached),
                     processName: string(row, iGhostVTWireKey.processName),
                     currentDirectory: string(row, iGhostVTWireKey.currentDirectory),
-                    displayDirectory: string(row, iGhostVTWireKey.displayDirectory)
-                )
+                    displayDirectory: string(row, iGhostVTWireKey.displayDirectory),
+                ),
             )
         }
         return summaries

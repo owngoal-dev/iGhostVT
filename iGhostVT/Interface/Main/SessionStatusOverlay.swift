@@ -83,10 +83,10 @@ struct SessionStatusOverlay: View {
                     localized: """
                     The background helper that runs your terminals is switched \
                     off. Turn it back on to open a terminal.
-                    """
+                    """,
                 ),
                 actions: [AlertAction("Turn On Helper", kind: .accent) { agent.activate() }],
-                claimsFirstResponder: isActive
+                claimsFirstResponder: isActive,
             )
         case .needsApproval:
             AlertCardView(
@@ -96,7 +96,7 @@ struct SessionStatusOverlay: View {
                     iGhostVT needs its background helper before it can open a \
                     terminal. Turn on iGhostVT under Login Items in System \
                     Settings.
-                    """
+                    """,
                 ),
                 actions: [
                     AlertAction("Check Again") { agent.refresh() },
@@ -104,7 +104,7 @@ struct SessionStatusOverlay: View {
                         agent.openLoginItemsSettings()
                     },
                 ],
-                claimsFirstResponder: isActive
+                claimsFirstResponder: isActive,
             )
         case .brokenInstallation:
             // Nothing in the app can repair a bundle with pieces missing, so
@@ -116,7 +116,7 @@ struct SessionStatusOverlay: View {
                     localized: """
                     Part of iGhostVT is missing, so it cannot open a terminal. \
                     Download iGhostVT again and replace this copy.
-                    """
+                    """,
                 ),
                 actions: [
                     AlertAction("Quit") { agent.quit() },
@@ -124,7 +124,7 @@ struct SessionStatusOverlay: View {
                         UIApplication.shared.open(MacLaunchAgent.downloadPageURL)
                     },
                 ],
-                claimsFirstResponder: isActive
+                claimsFirstResponder: isActive,
             )
         case let .failed(reason):
             AlertCardView(
@@ -134,7 +134,7 @@ struct SessionStatusOverlay: View {
                     AlertAction("Check Again") { agent.refresh() },
                     AlertAction("Turn On Helper", kind: .accent) { agent.activate() },
                 ],
-                claimsFirstResponder: isActive
+                claimsFirstResponder: isActive,
             )
         case .notApplicable, .unsupported, .rebinding, .enabled:
             EmptyView()
@@ -149,6 +149,7 @@ struct SessionStatusOverlay: View {
             // milliseconds, but if it sticks the pill is the only sign the
             // window isn't just an empty terminal.
             pill("Starting…")
+
         case .connecting:
             pill("Connecting…")
 
@@ -225,7 +226,7 @@ struct SessionStatusOverlay: View {
                         store.connect()
                     },
                 ],
-            claimsFirstResponder: isActive
+            claimsFirstResponder: isActive,
         )
     }
 }

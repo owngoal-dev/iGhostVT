@@ -103,7 +103,7 @@ enum AppLog {
     private static let loggers: [Category: Logger] = Dictionary(
         uniqueKeysWithValues: Category.allCases.map {
             ($0, Logger(subsystem: "wiki.qaq.iGhostVT", category: $0.rawValue))
-        }
+        },
     )
 
     /// Opens this launch's file. Called once, first thing in
@@ -159,7 +159,7 @@ enum AppLog {
                 Dog.shared.join(
                     Category.app.rawValue,
                     "journal capped at \(journalByteLimit >> 20) MiB for this launch; the rest reaches the unified log only",
-                    level: .warning
+                    level: .warning,
                 )
                 return
             }

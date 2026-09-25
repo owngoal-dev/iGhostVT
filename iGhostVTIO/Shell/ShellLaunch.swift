@@ -33,7 +33,7 @@ enum ShellLaunch {
             command: [String],
             environment: [String: String],
             credentials: Credentials? = nil,
-            workingDirectory: String? = nil
+            workingDirectory: String? = nil,
         ) {
             self.command = command
             self.environment = environment
@@ -243,7 +243,7 @@ enum ShellLaunch {
             command: [RuntimeEnvironment.resolve(shell)] + integrationArguments + ["-il"],
             environment: environment,
             credentials: credentials(for: user),
-            workingDirectory: workingDirectory(for: user)
+            workingDirectory: workingDirectory(for: user),
         )
     }
 
@@ -290,7 +290,7 @@ enum ShellLaunch {
             command: command,
             environment: environment,
             credentials: credentials(for: user),
-            workingDirectory: workingDirectory(for: user)
+            workingDirectory: workingDirectory(for: user),
         )
     }
 
@@ -364,7 +364,7 @@ struct PasswdEntry {
     private static func first(where matches: (PasswdEntry) -> Bool) -> PasswdEntry? {
         guard let contents = try? String(
             contentsOfFile: RuntimeEnvironment.resolve(RuntimeEnvironment.bootstrapPath("/etc/passwd")),
-            encoding: .utf8
+            encoding: .utf8,
         ) else { return nil }
 
         for line in contents.split(separator: "\n") {
@@ -379,7 +379,7 @@ struct PasswdEntry {
                 uid: uid,
                 gid: gid,
                 home: String(fields[5]),
-                shell: String(fields[6])
+                shell: String(fields[6]),
             )
             if matches(entry) {
                 return entry
@@ -396,7 +396,7 @@ struct PasswdEntry {
             uid: pwd.pointee.pw_uid,
             gid: pwd.pointee.pw_gid,
             home: String(cString: pwd.pointee.pw_dir),
-            shell: String(cString: pwd.pointee.pw_shell)
+            shell: String(cString: pwd.pointee.pw_shell),
         )
     }
 }

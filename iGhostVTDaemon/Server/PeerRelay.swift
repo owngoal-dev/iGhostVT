@@ -24,7 +24,7 @@ final class PeerRelay: IOPeer {
         clientPID: Int32,
         queue: DispatchQueue,
         supervisor: IOSupervisor,
-        onInvalidate: @escaping (PeerRelay) -> Void
+        onInvalidate: @escaping (PeerRelay) -> Void,
     ) {
         self.peerID = peerID
         self.connection = connection

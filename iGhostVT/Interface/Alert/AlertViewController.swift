@@ -33,7 +33,7 @@ final class AlertViewController: OverlayPanelController {
     init(
         title: String.LocalizationValue,
         message: String.LocalizationValue,
-        actions: [AlertAction]
+        actions: [AlertAction],
     ) {
         alertTitle = String(localized: title)
         alertMessage = String(localized: message)

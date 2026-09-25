@@ -68,7 +68,7 @@ final class PeerSession {
         Self.setForegroundProcess(
             name: session.foregroundProcessName,
             isShell: session.isForegroundShell,
-            in: message
+            in: message,
         )
         Self.setDirectory(session.reportedDirectory, in: message)
         host.send(.event, peer: peerID, tag: 0, message: message)
@@ -105,7 +105,8 @@ final class PeerSession {
     /// names the wrong directory under roothide in both directions.
     private static func displaySpelling(of path: String) -> String? {
         if let home = ShellLaunch.sessionHomeDirectory,
-           let spelled = RuntimeEnvironment.spelling(of: path, under: home, as: "~") {
+           let spelled = RuntimeEnvironment.spelling(of: path, under: home, as: "~")
+        {
             return spelled
         }
         return RuntimeEnvironment.displaySpelling(of: path)
@@ -155,7 +156,7 @@ final class PeerSession {
             return Outcome(.unsupportedVersion)
         }
         guard let operation = iGhostVTOperation(
-            rawValue: xpc_dictionary_get_uint64(message, iGhostVTWireKey.operation)
+            rawValue: xpc_dictionary_get_uint64(message, iGhostVTWireKey.operation),
         ) else {
             return Outcome(.invalidRequest)
         }
@@ -213,7 +214,7 @@ final class PeerSession {
             Self.setForegroundProcess(
                 name: summary.processName,
                 isShell: summary.isForegroundShell,
-                in: entry
+                in: entry,
             )
             Self.setDirectory(summary.currentDirectory, in: entry)
             xpc_array_append_value(array, entry)
@@ -254,7 +255,7 @@ final class PeerSession {
                 columns: columns,
                 rows: rows,
                 inheritDirectoryFrom: inheritDirectoryFrom,
-                startDirectory: startDirectory
+                startDirectory: startDirectory,
             )
             _ = try registry.attach(session.id, to: self)
             attachedSessionIDs.insert(session.id)
@@ -263,7 +264,7 @@ final class PeerSession {
                 Self.setForegroundProcess(
                     name: session.foregroundProcessName,
                     isShell: session.isForegroundShell,
-                    in: reply
+                    in: reply,
                 )
                 Self.setDirectory(session.currentDirectory, in: reply)
             }
@@ -272,7 +273,7 @@ final class PeerSession {
             // The app shows this verbatim, so a session that never started can
             // say which shell it tried and what the system answered.
             DaemonLog.sessions.error(
-                "open for peer \(self.peerID) failed: \(failure.message, privacy: .public)"
+                "open for peer \(self.peerID) failed: \(failure.message, privacy: .public)",
             )
             DaemonFileLog.log("open for peer \(peerID) failed: \(failure.message)")
             if let reply {
@@ -281,7 +282,7 @@ final class PeerSession {
             return failure.code
         } catch let code as iGhostVTReplyCode {
             DaemonLog.sessions.error(
-                "open for peer \(self.peerID) failed: reply code \(code.rawValue)"
+                "open for peer \(self.peerID) failed: reply code \(code.rawValue)",
             )
             return code
         } catch {
@@ -297,12 +298,12 @@ final class PeerSession {
             if let reply {
                 Self.describe(session, into: reply)
             }
-            DaemonLog.sessions.info("peer \(self.peerID) attached session \(id)")
+            DaemonLog.sessions.info("peer \(peerID) attached session \(id)")
             DaemonFileLog.log("peer \(peerID) attached session \(id)")
             return .success
         } catch let code as iGhostVTReplyCode {
             DaemonLog.sessions.error(
-                "attach session \(id) for peer \(self.peerID) failed: reply code \(code.rawValue)"
+                "attach session \(id) for peer \(self.peerID) failed: reply code \(code.rawValue)",
             )
             DaemonFileLog.log("attach session \(id) for peer \(peerID) failed: reply code \(code.rawValue)")
             return code
@@ -315,7 +316,7 @@ final class PeerSession {
         let id = xpc_dictionary_get_uint64(message, iGhostVTWireKey.sessionID)
         registry.detach(id, from: self)
         attachedSessionIDs.remove(id)
-        DaemonLog.sessions.info("peer \(self.peerID) detached session \(id)")
+        DaemonLog.sessions.info("peer \(peerID) detached session \(id)")
         return .success
     }
 
@@ -327,7 +328,7 @@ final class PeerSession {
         guard let input = Self.inputData(in: message) else { return .invalidRequest }
         guard session.write(input) else {
             DaemonFileLog.log(
-                "peer \(peerID) write of \(input.count) byte(s) refused: session \(id) holds \(session.pendingInputByteCount) byte(s) its program has not read"
+                "peer \(peerID) write of \(input.count) byte(s) refused: session \(id) holds \(session.pendingInputByteCount) byte(s) its program has not read",
             )
             return .inputBacklog
         }
@@ -367,7 +368,7 @@ final class PeerSession {
         setForegroundProcess(
             name: session.foregroundProcessName,
             isShell: session.isForegroundShell,
-            in: reply
+            in: reply,
         )
         // Read live rather than from the last poll: an attach is rare, and
         // the tab it answers wants the directory the shell is in now.

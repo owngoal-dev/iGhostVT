@@ -8,27 +8,27 @@ import XPC
 @_silgen_name("xpc_connection_get_audit_token")
 func ighostvtXPCConnectionGetAuditToken(
     _ connection: xpc_connection_t,
-    _ token: UnsafeMutablePointer<audit_token_t>
+    _ token: UnsafeMutablePointer<audit_token_t>,
 )
 
 @_silgen_name("xpc_copy_entitlement_for_token")
 func ighostvtXPCCopyEntitlement(
     _ name: UnsafePointer<CChar>,
-    _ token: UnsafeMutablePointer<audit_token_t>
+    _ token: UnsafeMutablePointer<audit_token_t>,
 ) -> xpc_object_t?
 
 @_silgen_name("xpc_connection_create_mach_service")
 func ighostvtCreateMachServiceListener(
     _ name: UnsafePointer<CChar>,
     _ targetQueue: DispatchQueue?,
-    _ flags: UInt64
+    _ flags: UInt64,
 ) -> xpc_connection_t?
 
 @_silgen_name("proc_pidpath")
 func ighostvtProcPIDPath(
     _ pid: Int32,
     _ buffer: UnsafeMutableRawPointer,
-    _ size: UInt32
+    _ size: UInt32,
 ) -> Int32
 
 /// `proc_name` from libproc: the process's short name (its `p_comm`,
@@ -39,7 +39,7 @@ func ighostvtProcPIDPath(
 func ighostvtProcName(
     _ pid: Int32,
     _ buffer: UnsafeMutableRawPointer,
-    _ size: UInt32
+    _ size: UInt32,
 ) -> Int32
 
 /// `proc_pidinfo` from libproc, used with `PROC_PIDVNODEPATHINFO` to read a
@@ -53,7 +53,7 @@ func ighostvtProcPIDInfo(
     _ flavor: Int32,
     _ argument: UInt64,
     _ buffer: UnsafeMutableRawPointer?,
-    _ size: Int32
+    _ size: Int32,
 ) -> Int32
 
 /// ABI of `struct proc_vnodepathinfo` (`sys/proc_info.h`), fixed across
@@ -78,7 +78,7 @@ func ighostvtForkPTY(
     _ master: UnsafeMutablePointer<Int32>,
     _ name: UnsafeMutablePointer<CChar>?,
     _ termios: UnsafeMutableRawPointer?,
-    _ winsize: UnsafeMutablePointer<winsize>?
+    _ winsize: UnsafeMutablePointer<winsize>?,
 ) -> pid_t
 
 // `ioctl` is deliberately NOT redeclared here. It is C-variadic

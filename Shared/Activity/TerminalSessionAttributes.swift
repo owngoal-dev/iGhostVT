@@ -7,7 +7,7 @@
 //
 
 #if canImport(ActivityKit)
-import ActivityKit
+    import ActivityKit
 #endif
 import Foundation
 

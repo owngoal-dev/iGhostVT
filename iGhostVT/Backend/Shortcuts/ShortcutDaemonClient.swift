@@ -12,7 +12,7 @@ import Foundation
 private func ighostvtCreateMachServiceConnection(
     _ name: UnsafePointer<CChar>,
     _ queue: DispatchQueue?,
-    _ flags: UInt64
+    _ flags: UInt64,
 ) -> xpc_connection_t?
 
 /// Why an intent could not do what it was asked. Every case reads as a
@@ -31,7 +31,6 @@ enum ShortcutError: Error {
     case sessionLingered
     case commandTimedOut
     case noWindow
-
 }
 
 @available(iOS 16.0, macCatalyst 16.0, *)
@@ -85,8 +84,13 @@ struct ShortcutSnapshot: Sendable {
 
     /// The grid the replay is rendered on: the session's, or the nominal
     /// one when the daemon reported none.
-    var gridColumns: UInt16 { columns == 0 ? iGhostVTProtocol.defaultColumns : columns }
-    var gridRows: UInt16 { rows == 0 ? iGhostVTProtocol.defaultRows : rows }
+    var gridColumns: UInt16 {
+        columns == 0 ? iGhostVTProtocol.defaultColumns : columns
+    }
+
+    var gridRows: UInt16 {
+        rows == 0 ? iGhostVTProtocol.defaultRows : rows
+    }
 
     /// The replay rendered the way `ighostvt-cli capture` renders it.
     func text(fullTranscript: Bool) -> String {
@@ -129,7 +133,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
     /// Runs `body` against a connected client and closes the connection
     /// afterwards, whatever `body` did.
     static func withConnection<T: Sendable>(
-        _ body: @Sendable (ShortcutDaemonClient) async throws -> T
+        _ body: @Sendable (ShortcutDaemonClient) async throws -> T,
     ) async throws -> T {
         let client = ShortcutDaemonClient()
         // Before `connect()`: a hello that is refused or times out throws
@@ -188,7 +192,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
             ShortcutSnapshot(
                 columns: UInt16(truncatingIfNeeded: xpc_dictionary_get_uint64(reply, iGhostVTWireKey.columns)),
                 rows: UInt16(truncatingIfNeeded: xpc_dictionary_get_uint64(reply, iGhostVTWireKey.rows)),
-                replay: Self.data(reply, iGhostVTWireKey.data) ?? Data()
+                replay: Self.data(reply, iGhostVTWireKey.data) ?? Data(),
             )
         })
     }
@@ -222,7 +226,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
     func openSession(command: [String], inheritDirectoryFrom: UInt64?) async throws -> UInt64 {
         guard command.count <= iGhostVTProtocol.maximumCommandArgumentCount else {
             throw ShortcutError.refused(
-                String(localized: "Too many arguments. Use at most \(iGhostVTProtocol.maximumCommandArgumentCount).")
+                String(localized: "Too many arguments. Use at most \(iGhostVTProtocol.maximumCommandArgumentCount)."),
             )
         }
         return try await request(.openSession, fill: { message in
@@ -262,7 +266,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
         }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            if !(try await listSessions().contains { $0.id == id }) {
+            if try await !(listSessions().contains { $0.id == id }) {
                 return
             }
             try await Task.sleep(nanoseconds: 100_000_000)
@@ -293,7 +297,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
     @discardableResult
     private func request(
         _ operation: iGhostVTOperation,
-        fill: (xpc_object_t) -> Void = { _ in }
+        fill: (xpc_object_t) -> Void = { _ in },
     ) async throws -> Bool {
         try await request(operation, fill: fill, decode: { _ in true })
     }
@@ -304,7 +308,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
     private func request<T: Sendable>(
         _ operation: iGhostVTOperation,
         fill: (xpc_object_t) -> Void = { _ in },
-        decode: @escaping @Sendable (xpc_object_t) -> T
+        decode: @escaping @Sendable (xpc_object_t) -> T,
     ) async throws -> T {
         guard let connection = lock.locked({ self.connection }) else {
             throw ShortcutError.daemonUnreachable
@@ -332,7 +336,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
 
     private static func decodeReply<T>(
         _ reply: xpc_object_t,
-        decode: (xpc_object_t) -> T
+        decode: (xpc_object_t) -> T,
     ) -> Result<T, ShortcutError> {
         guard xpc_get_type(reply) == iGhostVTXPC.typeDictionary,
               xpc_dictionary_get_uint64(reply, iGhostVTWireKey.version) == iGhostVTProtocol.version,
@@ -406,7 +410,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
                 isAttached: xpc_dictionary_get_bool(row, iGhostVTWireKey.isAttached),
                 processName: string(row, iGhostVTWireKey.processName),
                 foregroundIsShell: bool(row, iGhostVTWireKey.foregroundIsShell),
-                currentDirectory: string(row, iGhostVTWireKey.currentDirectory)
+                currentDirectory: string(row, iGhostVTWireKey.currentDirectory),
             ))
         }
         return rows
