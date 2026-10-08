@@ -74,11 +74,24 @@ enum AppLog {
             let base = FileManager.default
                 .urls(for: .libraryDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("Logs/iGhostVT", isDirectory: true)
+            return base.appendingPathComponent("Journal", isDirectory: true)
         #else
-            let base = FileManager.default
+            let fileManager = FileManager.default
+            let documents = fileManager
                 .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Journal", isDirectory: true)
+            // Under roothide the app's home is the jbroot's `/var/mobile`,
+            // and a bootstrap can leave its `Documents` owned by root: the
+            // app, running as mobile, could not make the folder, wrote no
+            // journal, and the viewer said the log could not be read. The
+            // home's `Library` is mobile's own.
+            if (try? fileManager.createDirectory(at: documents, withIntermediateDirectories: true)) != nil {
+                return documents
+            }
+            return fileManager
+                .urls(for: .libraryDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Logs/iGhostVT/Journal", isDirectory: true)
         #endif
-        return base.appendingPathComponent("Journal", isDirectory: true)
     }()
 
     /// The file this launch writes; nil until `start()` ran, or when the

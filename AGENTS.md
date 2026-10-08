@@ -1358,7 +1358,9 @@ Gotchas that bit us:
   each session's first output.
 - **Every line the app logs goes through `AppLog`** (`Backend/Logging/`):
   Dog's journal on disk — one `Journal/Dog_<date>_<id>.log` per launch
-  under the container's Documents on the device and under
+  under the home's Documents on the device — `Library/Logs/iGhostVT`
+  when the app cannot write there, as under a roothide jbroot whose
+  `var/mobile/Documents` a bootstrap left owned by root — and under
   `~/Library/Logs/iGhostVT` on the Mac (the Catalyst app is unsandboxed,
   so its Documents is the user's own), the last 32 kept, opened first
   thing in `didFinishLaunching` —
