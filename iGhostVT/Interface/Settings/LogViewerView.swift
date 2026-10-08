@@ -67,22 +67,29 @@ struct LogViewerView: View {
 
     /// The file's name and how many rows are showing, above the first row.
     private func header(count: Int) -> some View {
-        HStack(spacing: DS.Padding.s) {
+        HStack(alignment: .firstTextBaseline, spacing: DS.Padding.s) {
             Image(systemName: "doc.text")
                 .accessibilityHidden(true)
-            Text(verbatim: model.fileName)
-            Text(String.localizedStringWithFormat(
-                NSLocalizedString("%lld entries", comment: "A log entry count"),
-                count,
-            ))
-            .foregroundColor(Color.secondary.opacity(0.7))
-            Spacer()
+            VStack(alignment: .leading, spacing: DS.Padding.xs) {
+                Text(verbatim: model.fileName)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(String.localizedStringWithFormat(
+                    NSLocalizedString("%lld entries", comment: "A log entry count"),
+                    count,
+                ))
+                .foregroundColor(Color.secondary.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .font(DS.Font.caption)
         .foregroundColor(.secondary)
         .padding(.horizontal, DS.Padding.l)
         .padding(.vertical, DS.Padding.s)
         .background(Color(.secondarySystemGroupedBackground))
+        .overlay(alignment: .bottom) {
+            Divider()
+        }
         .accessibilityElement(children: .combine)
     }
 

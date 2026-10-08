@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// A labelled row with its current value trailing in secondary colour —
-/// the shape shared by the theme slots and the text-size steppers.
+/// the label for the text-size steppers.
 struct SettingsValueRow: View {
     let title: LocalizedStringKey
     let value: String

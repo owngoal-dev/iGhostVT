@@ -45,7 +45,6 @@ struct ShortcutsSettingsView: View {
                 Text(shortcut.title)
                 Spacer()
                 Text(shortcut.display)
-                    .font(DS.Font.caption)
                     .foregroundColor(.secondary)
                     .padding(.trailing, DS.Padding.s)
             }

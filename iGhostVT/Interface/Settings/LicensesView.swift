@@ -25,6 +25,14 @@ struct LicenseEntry: Decodable, Identifiable {
         url.isEmpty ? nil : URL(string: url)
     }
 
+    var licenseName: String {
+        switch license {
+        case "MIT": String(localized: "MIT License")
+        case "Apache-2.0": String(localized: "Apache 2.0")
+        default: license
+        }
+    }
+
     /// "MIT · 1.5.1" — the identifier, then the version when there is one.
     var summary: String {
         [license, version].compactMap(\.self).joined(separator: " · ")
@@ -72,10 +80,9 @@ struct LicensesView: View {
                     } label: {
                         LicenseRow(entry: entry)
                     }
-                    // Component names and license identifiers are catalog
-                    // data, so the label is the row's own text, verbatim.
+                    // Component names are catalog data, spoken verbatim.
                     .accessibilityLabel(Text(verbatim: entry.name))
-                    .accessibilityValue(entry.shortSummary)
+                    .accessibilityValue(entry.licenseName)
                 }
             }
         }
@@ -88,13 +95,10 @@ private struct LicenseRow: View {
     let entry: LicenseEntry
 
     var body: some View {
-        HStack {
+        VStack(alignment: .leading, spacing: DS.Padding.xs) {
             Text(verbatim: entry.name)
-            Spacer()
-            Text(verbatim: entry.shortSummary)
-                .font(DS.Font.detail)
+            Text(verbatim: entry.licenseName)
                 .foregroundColor(.secondary)
-                .lineLimit(1)
         }
     }
 }

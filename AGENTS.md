@@ -945,6 +945,9 @@ the catalog's generated symbols, which is why the menu's entry is keyed
 
 ## Build & verify
 
+- After each requested change, build the roothide package and install it on
+  the already-mapped physical device for the user's inspection before handing
+  back. Verify the mapped device and the installed build; report any blocker.
 - `make check` — project/packaging validation
 - `make build` bumps `CURRENT_PROJECT_VERSION` before xcodebuild, so
   `Version.xcconfig` comes out of a build dirty by design

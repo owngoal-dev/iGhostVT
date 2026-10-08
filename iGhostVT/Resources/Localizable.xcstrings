@@ -777,7 +777,7 @@
               "zero" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld علامة تبويب"
+                  "value" : "لا توجد علامات تبويب"
                 }
               }
             }
@@ -797,6 +797,12 @@
                   "state" : "translated",
                   "value" : "%lld Tabs"
                 }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kein Tab"
+                }
               }
             }
           }
@@ -814,6 +820,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld Tabs"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No Tab"
                 }
               }
             }
@@ -833,6 +845,12 @@
                   "state" : "translated",
                   "value" : "%lld pestañas"
                 }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ninguna pestaña"
+                }
               }
             }
           }
@@ -850,6 +868,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld onglets"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aucun onglet"
                 }
               }
             }
@@ -869,6 +893,12 @@
                   "state" : "translated",
                   "value" : "%lld schede"
                 }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nessuna scheda"
+                }
               }
             }
           }
@@ -881,6 +911,12 @@
                   "state" : "translated",
                   "value" : "%lld 個のタブ"
                 }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "タブなし"
+                }
               }
             }
           }
@@ -892,6 +928,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "탭 %lld개"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "탭 없음"
                 }
               }
             }
@@ -910,6 +952,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld abas"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nenhuma aba"
                 }
               }
             }
@@ -941,6 +989,12 @@
                   "state" : "translated",
                   "value" : "%lld вкладки"
                 }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Нет вкладок"
+                }
               }
             }
           }
@@ -952,6 +1006,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld tab"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Không có tab"
                 }
               }
             }
@@ -965,6 +1025,12 @@
                   "state" : "translated",
                   "value" : "%lld 个标签页"
                 }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "无标签页"
+                }
               }
             }
           }
@@ -976,6 +1042,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld 個分頁"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "無分頁"
                 }
               }
             }
@@ -3217,6 +3289,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "另一台裝置以本機身分註冊了"
+          }
+        }
+      }
+    },
+    "Apache 2.0" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apache 2.0"
           }
         }
       }
@@ -17554,6 +17709,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記錄會在「主控台」中打開。"
+          }
+        }
+      }
+    },
+    "MIT License" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ترخيص MIT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT-Lizenz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT License"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licencia MIT"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licence MIT"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licenza MIT"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MITライセンス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT 라이선스"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licença MIT"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лицензия MIT"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giấy phép MIT"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT 许可证"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT 授權條款"
           }
         }
       }

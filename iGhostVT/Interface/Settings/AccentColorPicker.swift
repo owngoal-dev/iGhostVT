@@ -6,18 +6,19 @@
 import SwiftUI
 
 /// One round swatch per colour, the app's own accent first, the chosen one
-/// ringed. Its name is the row's to show (`AccentColorPreference.current`),
-/// beside the row's title. Shared by the iOS settings page and the Mac's
-/// Appearance pane.
+/// ringed. Scrollable touch targets on iOS; a compact row on the Mac.
 struct AccentColorPicker: View {
     @AppStorage(AccentColorPreference.key) private var rawValue = AccentColorPreference.appDefault.rawValue
 
-    private static let side: CGFloat = 20
+    #if targetEnvironment(macCatalyst)
+        private static let side: CGFloat = 20
+    #else
+        private static let side: CGFloat = 28
+        private static let touchTargetSide: CGFloat = 44
+    #endif
     private static let ring: CGFloat = 2
     private static let gap: CGFloat = 2
-    /// The row's width at macOS's own 10pt spacing. A narrower row — an
-    /// iPhone's settings form has well under this — closes the spacing up
-    /// instead of clipping the last swatches.
+    /// The Mac row's width at its own 10pt spacing.
     private static let preferredWidth: CGFloat = {
         let count = CGFloat(AccentColorPreference.allCases.count)
         return count * side + 2 * (ring + gap) + (count - 1) * 10
@@ -28,18 +29,30 @@ struct AccentColorPicker: View {
     }
 
     var body: some View {
-        // The slack goes between the swatches only: a frame around each
-        // one split it into half a gap past either end, and the row read as
-        // inset from the edges it is aligned to.
-        HStack(spacing: 0) {
-            ForEach(Array(AccentColorPreference.allCases.enumerated()), id: \.element) { index, choice in
-                if index > 0 {
-                    Spacer(minLength: 0)
+        Group {
+            #if targetEnvironment(macCatalyst)
+                HStack(spacing: 0) {
+                    ForEach(Array(AccentColorPreference.allCases.enumerated()), id: \.element) { index, choice in
+                        if index > 0 {
+                            Spacer(minLength: 0)
+                        }
+                        swatch(choice)
+                    }
                 }
-                swatch(choice)
-            }
+                .frame(maxWidth: Self.preferredWidth)
+            #else
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 0) {
+                        ForEach(AccentColorPreference.allCases) { choice in
+                            swatch(choice)
+                        }
+                    }
+                    .padding(.horizontal, DS.Padding.m)
+                }
+                .frame(height: Self.touchTargetSide)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            #endif
         }
-        .frame(maxWidth: Self.preferredWidth)
         .animation(.spring(response: 0.3, dampingFraction: 0.75), value: rawValue)
     }
 
@@ -53,18 +66,19 @@ struct AccentColorPicker: View {
                 .overlay {
                     Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5)
                 }
-                // Only the chosen swatch makes room for its ring. Room kept
-                // around every swatch inset the row's last circle from the
-                // trailing edge the label above it ends on, by exactly the
-                // ring nobody was wearing; now the ring opens out of the
-                // swatch as it is picked and closes back into it.
                 .padding(isSelected ? Self.ring + Self.gap : 0)
                 .overlay {
                     Circle()
                         .strokeBorder(ringColor(for: choice), lineWidth: Self.ring)
                         .opacity(isSelected ? 1 : 0)
                 }
+            #if targetEnvironment(macCatalyst)
                 .contentShape(Circle())
+            #else
+                // Reserve every touch target before selection so its centre never moves.
+                .frame(width: Self.touchTargetSide, height: Self.touchTargetSide)
+                .contentShape(Rectangle())
+            #endif
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: choice.title))

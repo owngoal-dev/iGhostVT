@@ -5,10 +5,11 @@
 
 import Combine
 import SwiftUI
+import UIKit
 
 /// The settings page on iPhone and iPad: one section per file under
 /// `Sections/`, stacked in a Form. The sheet itself only owns navigation
-/// and the Done control. The Mac has a settings window instead
+/// and the Close control. The Mac has a settings window instead
 /// (`SettingsWindow`).
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -60,14 +61,11 @@ struct SettingsSheet: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    SettingsCloseButton {
                         dismiss()
-                    } label: {
-                        Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("Done")
-                    .foregroundColor(.accentColor)
+                    .fixedSize()
                 }
             }
         }
@@ -77,4 +75,14 @@ struct SettingsSheet: View {
         // still asked about once.
         .relayImportPrompt()
     }
+}
+
+private struct SettingsCloseButton: UIViewRepresentable {
+    let action: () -> Void
+
+    func makeUIView(context _: Context) -> UIButton {
+        UIButton(type: .close, primaryAction: UIAction { _ in action() })
+    }
+
+    func updateUIView(_: UIButton, context _: Context) {}
 }
