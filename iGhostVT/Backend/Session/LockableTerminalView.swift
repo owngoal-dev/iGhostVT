@@ -99,10 +99,7 @@ final class LockableTerminalView: TerminalView {
         // The bar belongs to the keyboard; leaving it floating over a
         // keyboard that is not there reads as a half-open keyboard. Typing
         // on a hardware keyboard the user may not want it at all.
-        if isSoftwareKeyboardLocked {
-            return nil
-        }
-        if KeyboardBarStore.hidesWithHardwareKeyboard, GCKeyboard.coalesced != nil, !softwareKeysOnScreen {
+        if isSoftwareKeyboardLocked || barHiddenForHardwareKeyboard {
             return nil
         }
         return super.inputAccessoryView
@@ -113,17 +110,27 @@ final class LockableTerminalView: TerminalView {
     /// folio folded behind an iPad stays connected (`GCKeyboard` says so)
     /// while the person types on the onscreen keyboard, and the bar is what
     /// gives that keyboard Esc, Tab and the arrows — hiding it on the
-    /// connection alone took them away.
-    private var softwareKeysOnScreen = false
+    /// connection alone took them away. App-wide, like the keyboard: a
+    /// terminal that joins a window while the keys are up knows they are.
+    private static var softwareKeysOnScreen = false
 
     /// Taller than the strip a hardware keyboard leaves (the bar alone, or
     /// iPadOS's shortcuts bar, about 40–70 pt), shorter than any onscreen
     /// keyboard.
     private static let softwareKeysMinimumHeight: CGFloat = 120
 
-    /// A keyboard connecting or going away, the onscreen keys coming up or
-    /// going down, or the setting flipping, changes the answer above; UIKit
-    /// only asks again on reload.
+    /// Settings ▸ Accessory Keys ▸ Hide with Hardware Keyboard, decided.
+    /// Only the events that can change the answer — a keyboard connecting
+    /// or going away, the keys coming up or going down, the setting flipping
+    /// — move it (`updateHardwareKeyboardBar`). UIKit asks for the bar on
+    /// every reload, and reloads come from everywhere: the library's
+    /// geometry refreshes, and every `UserDefaults` write in the process,
+    /// the app's own records of recent directories and remote tabs among
+    /// them. When each of those recomputed the answer, a stale reading of
+    /// the keys took the bar out from under the onscreen keyboard
+    /// mid-sentence, at the moment some unrelated default was written.
+    private var barHiddenForHardwareKeyboard = false
+
     private var observesHardwareKeyboard = false
 
     private func observeHardwareKeyboard() {
@@ -144,48 +151,97 @@ final class LockableTerminalView: TerminalView {
             name: UIResponder.keyboardDidChangeFrameNotification,
             object: nil,
         )
+        center.addObserver(
+            self,
+            selector: #selector(sceneDidActivate(_:)),
+            name: UIScene.didActivateNotification,
+            object: nil,
+        )
+        updateHardwareKeyboardBar(reason: "window")
     }
+
+    /// Frames announced while the window is not in front — Control Center,
+    /// the app switcher, a notification pulled down — are the system
+    /// putting the keyboard away for a moment, not the person putting the
+    /// keys away. Taken at their word they left the keys "gone" under a
+    /// keyboard that came straight back, and the next decision hid the bar.
+    private var isInFront: Bool {
+        window?.windowScene?.activationState == .foregroundActive
+    }
+
+    /// The on-screen height of the frame UIKit last announced for the
+    /// keyboard. Zero means the keys are hidden or undocked — floating or
+    /// split, which announce a zero frame — and only then is the layout
+    /// guide asked.
+    private static var dockedKeyboardHeight: CGFloat = 0
 
     /// A docked keyboard: the frame UIKit announces, in screen coordinates,
     /// as the keyboard starts to move — early enough that the bar comes up
-    /// with the keys.
+    /// with the keys. A zero frame decides nothing yet: hidden and undocked
+    /// read the same here, and the guide tells them apart once settled.
     @objc private nonisolated func keyboardFrameWillChange(_ notification: Notification) {
         let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
         Task { @MainActor [weak self] in
-            guard let self, let frame, let screen = window?.screen else { return }
+            guard let self, let frame, isInFront, let screen = window?.screen else { return }
             let visible = frame.intersection(screen.bounds)
-            noteKeyboardHeight(visible.isNull ? 0 : visible.height)
+            let height = visible.isNull ? 0 : visible.height
+            Self.dockedKeyboardHeight = height
+            guard height > 0 else { return }
+            noteKeyboardHeight(height, reason: "keyboard frame")
         }
     }
 
-    /// An undocked keyboard — floating or split — announces a zero frame,
-    /// and only a layout guide that follows it knows where it went. The
-    /// window's guide, not this view's: SwiftUI moves the terminal above a
-    /// docked keyboard, so this view's guide overlaps almost nothing. Read
-    /// once the keyboard has settled, when the guide has too. iOS 17 on; an
-    /// older system goes by the docked frame alone.
+    /// An undocked keyboard only a layout guide that follows it can find.
+    /// The window's guide, not this view's: SwiftUI moves the terminal above
+    /// a docked keyboard, so this view's guide overlaps almost nothing. Read
+    /// once the keyboard has settled, when the guide has too — and never
+    /// over a docked frame: with a keyboard folio connected, iPadOS 26 puts
+    /// the guide at the bar alone (0–60 pt) under 400 pt of onscreen keys,
+    /// and each reading hid the bar the frame had just shown, dozens of
+    /// times a second, the grid resizing with it.
     @objc private nonisolated func keyboardFrameDidChange() {
         Task { @MainActor [weak self] in
-            guard #available(iOS 17.0, *), let self, let window else { return }
-            let guide = window.keyboardLayoutGuide
-            guide.followsUndockedKeyboard = true
-            window.layoutIfNeeded()
-            noteKeyboardHeight(guide.layoutFrame.intersection(window.bounds).height)
+            guard let self, isInFront, Self.dockedKeyboardHeight == 0 else { return }
+            measureUndockedKeyboard(reason: "keyboard settled")
         }
+    }
+
+    /// Back in front, an undocked keyboard is wherever the system put it
+    /// back, and it may not announce that.
+    @objc private nonisolated func sceneDidActivate(_ notification: Notification) {
+        guard let scene = notification.object as AnyObject? else { return }
+        let sceneID = ObjectIdentifier(scene)
+        Task { @MainActor [weak self] in
+            guard let self, Self.dockedKeyboardHeight == 0,
+                  let windowScene = window?.windowScene, ObjectIdentifier(windowScene) == sceneID
+            else { return }
+            measureUndockedKeyboard(reason: "scene active")
+        }
+    }
+
+    /// iOS 17 on; an older system has no guide that follows an undocked
+    /// keyboard and takes the zero frame at its word.
+    private func measureUndockedKeyboard(reason: String) {
+        guard let window else { return }
+        guard #available(iOS 17.0, *) else {
+            noteKeyboardHeight(0, reason: reason)
+            return
+        }
+        let guide = window.keyboardLayoutGuide
+        guide.followsUndockedKeyboard = true
+        window.layoutIfNeeded()
+        noteKeyboardHeight(guide.layoutFrame.intersection(window.bounds).height, reason: reason)
     }
 
     /// The keyboard's height includes the bar when the bar is up; only
     /// what is left above it are keys.
-    private func noteKeyboardHeight(_ height: CGFloat) {
+    private func noteKeyboardHeight(_ height: CGFloat, reason: String) {
         var keysHeight = height
         if let bar = super.inputAccessoryView, bar.window != nil {
             keysHeight -= bar.bounds.height
         }
-        let keysOnScreen = keysHeight >= Self.softwareKeysMinimumHeight
-        guard keysOnScreen != softwareKeysOnScreen else { return }
-        softwareKeysOnScreen = keysOnScreen
-        guard isFirstResponder, KeyboardBarStore.hidesWithHardwareKeyboard, GCKeyboard.coalesced != nil else { return }
-        reloadInputViews()
+        Self.softwareKeysOnScreen = keysHeight >= Self.softwareKeysMinimumHeight
+        updateHardwareKeyboardBar(reason: "\(reason), keys \(Int(keysHeight)) pt")
     }
 
     /// Nonisolated: `UserDefaults.didChangeNotification` is posted on
@@ -194,9 +250,21 @@ final class LockableTerminalView: TerminalView {
     /// called there traps before it can hop.
     @objc private nonisolated func hardwareKeyboardChanged() {
         Task { @MainActor [weak self] in
-            guard let self, isFirstResponder else { return }
-            reloadInputViews()
+            self?.updateHardwareKeyboardBar(reason: "keyboard or setting")
         }
+    }
+
+    /// Decides the bar afresh and reloads only when the decision moved, so
+    /// a reload never takes the bar away on its own.
+    private func updateHardwareKeyboardBar(reason: String) {
+        let hides = KeyboardBarStore.hidesWithHardwareKeyboard
+            && GCKeyboard.coalesced != nil
+            && !Self.softwareKeysOnScreen
+        guard hides != barHiddenForHardwareKeyboard else { return }
+        barHiddenForHardwareKeyboard = hides
+        guard isFirstResponder else { return }
+        AppLog.info(.keyboard, "accessory bar \(hides ? "hidden" : "shown") (\(reason))")
+        reloadInputViews()
     }
 
     /// A touch landed on a locked terminal — a tap or drag under the

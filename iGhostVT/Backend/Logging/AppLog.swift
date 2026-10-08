@@ -31,6 +31,7 @@ enum AppLog {
         case drop
         case ghostty
         case zmodem
+        case keyboard
     }
 
     enum Level {
