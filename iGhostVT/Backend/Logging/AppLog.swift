@@ -64,33 +64,34 @@ enum AppLog {
     static let journalFileCount = 32
 
     /// Where the journal lives, whether or not Dog managed to open it: the
-    /// viewer lists this folder. The container's Documents on the device,
-    /// where it can be pulled over usbmuxd beside the app's other files. On
-    /// the Mac the app is unsandboxed and Documents is the user's own
-    /// folder, so the journal goes under `~/Library/Logs`, beside the
-    /// helper's `ighostvtd.log`, where a Mac keeps logs.
+    /// viewer lists this folder. On the device, the app's data folder,
+    /// `Documents/<bundle id>`, where it can be pulled over usbmuxd beside
+    /// the app's other files. The app has no container there, so its home is
+    /// mobile's, shared with every other app without one; the bundle id keeps
+    /// it out of theirs, and the package's postinst makes the folder — and
+    /// `Documents`, which a bootstrap need not have — for mobile. Should that
+    /// folder still be out of reach, the home's `Library`, which is mobile's
+    /// own: a roothide iPad whose `Documents` was left root's wrote no journal
+    /// at all, and the viewer said the log could not be read. On the Mac the
+    /// app is unsandboxed and Documents is the user's own folder, so the
+    /// journal goes under `~/Library/Logs`, beside the helper's
+    /// `ighostvtd.log`, where a Mac keeps logs.
     static let journalDirectory: URL = {
+        let fileManager = FileManager.default
+        let logs = fileManager
+            .urls(for: .libraryDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Logs/iGhostVT/Journal", isDirectory: true)
         #if targetEnvironment(macCatalyst)
-            let base = FileManager.default
-                .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("Logs/iGhostVT", isDirectory: true)
-            return base.appendingPathComponent("Journal", isDirectory: true)
+            return logs
         #else
-            let fileManager = FileManager.default
-            let documents = fileManager
+            let data = fileManager
                 .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent(Bundle.main.bundleIdentifier ?? "wiki.qaq.iGhostVT", isDirectory: true)
                 .appendingPathComponent("Journal", isDirectory: true)
-            // Under roothide the app's home is the jbroot's `/var/mobile`,
-            // and a bootstrap can leave its `Documents` owned by root: the
-            // app, running as mobile, could not make the folder, wrote no
-            // journal, and the viewer said the log could not be read. The
-            // home's `Library` is mobile's own.
-            if (try? fileManager.createDirectory(at: documents, withIntermediateDirectories: true)) != nil {
-                return documents
+            if (try? fileManager.createDirectory(at: data, withIntermediateDirectories: true)) != nil {
+                return data
             }
-            return fileManager
-                .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("Logs/iGhostVT/Journal", isDirectory: true)
+            return logs
         #endif
     }()
 

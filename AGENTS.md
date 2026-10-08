@@ -1353,14 +1353,25 @@ Gotchas that bit us:
   while the device is that busy, and a userspace reboot kills the tunnel
   anyway — turn on Settings ▸ Advanced ▸ Detailed Terminal Log and read
   the app's journal instead (Settings ▸ Advanced ▸ Logs, or
-  `Documents/Journal/Dog_*.log` in the app's container), beside the
+  `Documents/wiki.qaq.iGhostVT/Journal/Dog_*.log` in the app's home), beside the
   daemon's own `/var/mobile/Library/Logs/ighostvtd.log`, which now stamps
   each session's first output.
+- **The app's data folder is `~/Documents/<bundle id>`, and the package
+  makes it.** The device app has no container, so its home is mobile's —
+  `<jbroot>/var/mobile` on roothide, `/var/mobile` on rootless — shared with
+  every other app without one. Anything it keeps there goes in a folder named
+  for its bundle id, the isolation a container would give, inside a
+  `Documents` mobile owns, which a container would have had too. The postinst
+  (dpkg, as root) makes each missing level — home, `Documents`, the folder —
+  and hands it to mobile on its own, leaves a level that exists alone, and
+  never follows a symlink. Never `mkdir -p` as root: Irisin 4.3.4–4.5.25 did,
+  and on a roothide bootstrap with no `Documents` it left `Documents` root's,
+  so this app could make nothing there and wrote no journal. The same block is
+  in every sibling's postinst and in the platformize-app-ios template.
 - **Every line the app logs goes through `AppLog`** (`Backend/Logging/`):
   Dog's journal on disk — one `Journal/Dog_<date>_<id>.log` per launch
-  under the home's Documents on the device — `Library/Logs/iGhostVT`
-  when the app cannot write there, as under a roothide jbroot whose
-  `var/mobile/Documents` a bootstrap left owned by root — and under
+  in the app's data folder on the device, `Documents/<bundle id>/Journal`
+  (`Library/Logs/iGhostVT/Journal` should that be out of reach), and under
   `~/Library/Logs/iGhostVT` on the Mac (the Catalyst app is unsandboxed,
   so its Documents is the user's own), the last 32 kept, opened first
   thing in `didFinishLaunching` —
