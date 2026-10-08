@@ -218,6 +218,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidDisconnect(_: UIScene) {
+        // RootView's closure holds the view, which holds this state and the
+        // tab manager: left set, the window's tabs would outlive it.
+        interface.focusActiveTerminal = nil
         // A discarded window holds no tabs and never claimed the sessions;
         // detaching would hand the launch window's claim back.
         guard !isDiscarded else { return }

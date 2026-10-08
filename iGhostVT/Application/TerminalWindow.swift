@@ -16,6 +16,11 @@ final class WindowInterfaceState: ObservableObject {
     /// The window just became key — on the Mac, came to the front — and its
     /// terminal may take the keyboard again. Sent on the Mac only.
     let didBecomeKey = PassthroughSubject<Void, Never>()
+    /// Gives the active terminal first responder for a typed key, if it may
+    /// take it, and returns it. Set by `RootView`; the closure holds the
+    /// view and the view holds this state, so `SceneDelegate` clears it as
+    /// the window goes.
+    var focusActiveTerminal: (() -> UIResponder?)?
 
     /// Settings, opened on Remote Access: where Ghost Remote sends a new
     /// tab with no paired device to open on.
@@ -80,6 +85,79 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
             options: nil,
             errorHandler: nil,
         )
+    }
+
+    // MARK: - Typing Without Focus
+
+    /// The presses this window handed to a terminal, each with the terminal
+    /// it went to, so the rest of that press follows it there — even after a
+    /// later key went to another tab's.
+    private var forwardedPresses: [UIPress: UIResponder] = [:]
+
+    /// A typed key no responder took: a tab that came up without the
+    /// keyboard (iOS focuses a new or switched-to tab only while the
+    /// onscreen keyboard is up) takes it, and the key with it, so the first
+    /// key on a hardware keyboard is not lost. Not while the focus system
+    /// has something focused (Full Keyboard Access, the Mac's keyboard
+    /// navigation): Tab, the arrows, Space and Return move that focus.
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        guard presses.allSatisfy(Self.isTypingPress),
+              !isShowingModal,
+              UIFocusSystem.focusSystem(for: self)?.focusedItem == nil,
+              let terminal = interface.focusActiveTerminal?()
+        else {
+            super.pressesBegan(presses, with: event)
+            return
+        }
+        for press in presses {
+            forwardedPresses[press] = terminal
+        }
+        terminal.pressesBegan(presses, with: event)
+    }
+
+    override func pressesChanged(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        let rest = forward(presses, ending: false) { $0.pressesChanged($1, with: event) }
+        if !rest.isEmpty { super.pressesChanged(rest, with: event) }
+    }
+
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        let rest = forward(presses, ending: true) { $0.pressesEnded($1, with: event) }
+        if !rest.isEmpty { super.pressesEnded(rest, with: event) }
+    }
+
+    override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        let rest = forward(presses, ending: true) { $0.pressesCancelled($1, with: event) }
+        if !rest.isEmpty { super.pressesCancelled(rest, with: event) }
+    }
+
+    /// Delivers each forwarded press to its terminal, forgetting it when the
+    /// press is over, and returns the presses that were never forwarded.
+    private func forward(
+        _ presses: Set<UIPress>,
+        ending: Bool,
+        deliver: (UIResponder, Set<UIPress>) -> Void,
+    ) -> Set<UIPress> {
+        var rest = presses
+        for press in presses {
+            let terminal = ending ? forwardedPresses.removeValue(forKey: press) : forwardedPresses[press]
+            guard let terminal else { continue }
+            rest.remove(press)
+            deliver(terminal, [press])
+        }
+        return rest
+    }
+
+    private static func isTypingPress(_ press: UIPress) -> Bool {
+        guard let key = press.key else { return false }
+        if key.modifierFlags.contains(.command) || KeyShortcuts.shortcut(for: key) != nil { return false }
+        switch key.keyCode {
+        case .keyboardLeftShift, .keyboardRightShift, .keyboardLeftControl, .keyboardRightControl,
+             .keyboardLeftAlt, .keyboardRightAlt, .keyboardLeftGUI, .keyboardRightGUI,
+             .keyboardCapsLock, .keyboardLANG1, .keyboardLANG2:
+            return false
+        default:
+            return true
+        }
     }
 
     // MARK: - Validation
