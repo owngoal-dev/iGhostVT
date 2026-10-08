@@ -283,6 +283,10 @@ struct RootView: View {
         return tab
     }
 
+    /// A typed key arrived with no terminal focused (`TerminalWindow`): the
+    /// active one takes it now, under `refocus`'s conditions, and
+    /// synchronously — `requestFocus` hops the run loop and the key would
+    /// arrive before it.
     private func focusActiveTerminalForKeyPress() -> UIResponder? {
         guard let tab = focusableActiveTab,
               let view = tab.terminal.attachedPlatformView
