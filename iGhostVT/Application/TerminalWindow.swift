@@ -16,6 +16,7 @@ final class WindowInterfaceState: ObservableObject {
     /// The window just became key — on the Mac, came to the front — and its
     /// terminal may take the keyboard again. Sent on the Mac only.
     let didBecomeKey = PassthroughSubject<Void, Never>()
+    var focusActiveTerminal: (() -> UIResponder?)?
 
     /// Settings, opened on Remote Access: where Ghost Remote sends a new
     /// tab with no paired device to open on.
@@ -80,6 +81,60 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
             options: nil,
             errorHandler: nil,
         )
+    }
+
+    private weak var forwardedTo: UIResponder?
+    private var forwardedPresses: Set<UIPress> = []
+
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        guard presses.allSatisfy(Self.isTypingPress),
+              !isShowingModal,
+              let terminal = interface.focusActiveTerminal?()
+        else {
+            super.pressesBegan(presses, with: event)
+            return
+        }
+        forwardedTo = terminal
+        forwardedPresses.formUnion(presses)
+        terminal.pressesBegan(presses, with: event)
+    }
+
+    override func pressesChanged(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        let (mine, rest) = split(presses)
+        if !mine.isEmpty { forwardedTo?.pressesChanged(mine, with: event) }
+        if !rest.isEmpty { super.pressesChanged(rest, with: event) }
+    }
+
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        let (mine, rest) = split(presses)
+        forwardedPresses.subtract(mine)
+        if !mine.isEmpty { forwardedTo?.pressesEnded(mine, with: event) }
+        if !rest.isEmpty { super.pressesEnded(rest, with: event) }
+    }
+
+    override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        let (mine, rest) = split(presses)
+        forwardedPresses.subtract(mine)
+        if !mine.isEmpty { forwardedTo?.pressesCancelled(mine, with: event) }
+        if !rest.isEmpty { super.pressesCancelled(rest, with: event) }
+    }
+
+    private func split(_ presses: Set<UIPress>) -> (Set<UIPress>, Set<UIPress>) {
+        let mine = presses.intersection(forwardedPresses)
+        return (mine, presses.subtracting(mine))
+    }
+
+    private static func isTypingPress(_ press: UIPress) -> Bool {
+        guard let key = press.key else { return false }
+        if key.modifierFlags.contains(.command) || KeyShortcuts.shortcut(for: key) != nil { return false }
+        switch key.keyCode {
+        case .keyboardLeftShift, .keyboardRightShift, .keyboardLeftControl, .keyboardRightControl,
+             .keyboardLeftAlt, .keyboardRightAlt, .keyboardLeftGUI, .keyboardRightGUI,
+             .keyboardCapsLock, .keyboardLANG1, .keyboardLANG2:
+            return false
+        default:
+            return true
+        }
     }
 
     // MARK: - Validation

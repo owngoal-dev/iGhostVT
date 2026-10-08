@@ -102,6 +102,7 @@ struct RootView: View {
         // The Mac's windows: only the key one's terminal may take the
         // keyboard, so a window gets it as it comes to the front.
         .onReceive(interface.didBecomeKey) { refocus() }
+        .onAppear { interface.focusActiveTerminal = focusActiveTerminalForKeyPress }
         .onChange(of: agent.status) { _ in refocus() }
         .onChange(of: tabManager.closeRequest != nil) { _ in refocus() }
         .onChange(of: tabManager.clipboardRequests.isEmpty) { _ in refocus() }
@@ -266,19 +267,34 @@ struct RootView: View {
         interface.showsSettingsSheet || interface.showsSwitcher
     }
 
-    private func refocus() {
-        guard !isCoveredByPresentation else { return }
+    private var focusableActiveTab: TerminalTab? {
         // A locked tab must not hold keyboard focus: its surface ignores
         // touches, and hardware keys reaching it anyway would defeat the
         // lock. An overlay or modal alert owns first responder instead;
         // handing it to the terminal would leave the accessory bar up
         // under the card.
-        guard let tab = tabManager.activeTab,
+        guard !isCoveredByPresentation,
+              let tab = tabManager.activeTab,
               !tab.isLocked,
               tabManager.closeRequest == nil,
               tabManager.clipboardRequests.isEmpty,
               !tab.isCoveredByStatusAlert
-        else {
+        else { return nil }
+        return tab
+    }
+
+    private func focusActiveTerminalForKeyPress() -> UIResponder? {
+        guard let tab = focusableActiveTab,
+              let view = tab.terminal.attachedPlatformView
+        else { return nil }
+        focusedTabID = tab.id
+        guard view.isFirstResponder || view.becomeFirstResponder() else { return nil }
+        return view
+    }
+
+    private func refocus() {
+        guard !isCoveredByPresentation else { return }
+        guard let tab = focusableActiveTab else {
             focusedTabID = nil
             return
         }
