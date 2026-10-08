@@ -35,6 +35,7 @@ struct ThemeListView: View {
                     HStack(spacing: DS.Padding.m) {
                         swatch(for: definition, isSelected: definition.name == selectedName)
                         Text(definition.name)
+                            .font(DS.Font.body)
                             .foregroundColor(.primary)
                             .lineLimit(1)
                         Spacer(minLength: DS.Padding.s)
@@ -46,6 +47,8 @@ struct ThemeListView: View {
             }
         }
         .searchable(text: $searchText)
+        // A fixed inherited font makes the native search field taller.
+        .font(nil)
         .navigationTitle(slot == .light ? "Light Theme" : "Dark Theme")
         .navigationBarTitleDisplayMode(.inline)
     }
