@@ -5,10 +5,16 @@
 
 import SwiftUI
 
-/// The interface's accent, then the two theme slots, light and dark; each
+/// The interface's accent and whether it follows the system's light or
+/// dark setting, then the two theme slots, light and dark; each
 /// slot opens the catalog list.
 struct AppearanceSettingsSection: View {
     @ObservedObject private var theme = AppTheme.shared
+    @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system.rawValue
+
+    private var appearanceTitle: String {
+        (AppearancePreference(rawValue: appearance) ?? .system).title
+    }
 
     var body: some View {
         Section {
@@ -19,6 +25,23 @@ struct AppearanceSettingsSection: View {
             }
             .padding(.vertical, DS.Padding.xs)
             .listRowInsets(EdgeInsets(top: DS.Padding.m, leading: 0, bottom: DS.Padding.m, trailing: 0))
+            HStack {
+                Text("Appearance")
+                    .layoutPriority(1)
+                Spacer()
+                Menu {
+                    AppearancePreferenceItems(rawValue: $appearance)
+                } label: {
+                    HStack(spacing: DS.Padding.xs) {
+                        Text(verbatim: appearanceTitle)
+                            .lineLimit(1)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .imageScale(.small)
+                    }
+                }
+                .accessibilityLabel("Appearance")
+                .accessibilityValue(appearanceTitle)
+            }
             NavigationLink {
                 ThemeListView(slot: .light)
             } label: {
@@ -49,6 +72,27 @@ struct AppearanceSettingsSection: View {
         } footer: {
             Text("Themes come from the Ghostty theme catalog and apply to every tab in every window.")
                 .font(DS.Font.detail)
+        }
+    }
+}
+
+/// The appearance menu's items, shared with the Mac's settings window; the
+/// current choice is checked. Buttons rather than a Picker, as with the
+/// shell menu (`ShellMenuItems`).
+struct AppearancePreferenceItems: View {
+    @Binding var rawValue: String
+
+    var body: some View {
+        ForEach(AppearancePreference.allCases) { choice in
+            Button {
+                rawValue = choice.rawValue
+            } label: {
+                if rawValue == choice.rawValue {
+                    Label(choice.title, systemImage: "checkmark")
+                } else {
+                    Text(verbatim: choice.title)
+                }
+            }
         }
     }
 }

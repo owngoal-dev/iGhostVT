@@ -39,7 +39,7 @@ class OverlayPanelController: UIViewController {
     }
 
     func install(_ pane: some View) {
-        let host = UIHostingController(rootView: pane.interfaceTextSize().interfaceAccent())
+        let host = UIHostingController(rootView: pane.interfaceTextSize().interfaceAccent().interfaceAppearance())
         host.view.backgroundColor = .clear
         addChild(host)
         view.addSubview(host.view)
