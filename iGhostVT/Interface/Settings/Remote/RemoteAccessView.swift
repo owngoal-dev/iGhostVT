@@ -32,6 +32,7 @@ struct RemoteAccessView: View {
             }
             yourDevicesSection
         }
+        .animation(DS.Motion.smooth, value: model.isEnabled)
         .navigationTitle("Remote Access")
         // Said outright rather than inherited: pushed as the sheet appears
         // (a relay file that launched the app), it came up with a large title.

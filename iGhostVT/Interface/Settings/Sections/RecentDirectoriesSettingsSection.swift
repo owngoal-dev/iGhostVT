@@ -13,7 +13,7 @@ struct RecentDirectoriesSettingsSection: View {
 
     var body: some View {
         Section {
-            Toggle("Remember Directories", isOn: $recents.isEnabled)
+            Toggle("Remember Directories", isOn: $recents.isEnabled.animation(DS.Motion.smooth))
 
             if recents.isEnabled {
                 HStack {
