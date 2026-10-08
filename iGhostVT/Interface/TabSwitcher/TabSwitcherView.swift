@@ -98,8 +98,8 @@ struct TabSwitcherView: View {
                         .font(DS.Font.control)
                         .frame(width: 44, height: 44)
                         .contentShape(Circle())
+                        .barGlass(in: Circle())
                 }
-                .barGlass(in: Circle())
                 .accessibilityLabel("Settings")
 
                 Spacer(minLength: 8)
@@ -115,8 +115,8 @@ struct TabSwitcherView: View {
                             .padding(.horizontal, DS.Padding.l)
                             .frame(height: 44)
                             .contentShape(Capsule())
+                            .barGlass(in: Capsule())
                     }
-                    .barGlass(in: Capsule())
 
                     Spacer(minLength: 8)
                 }
@@ -127,14 +127,15 @@ struct TabSwitcherView: View {
                         .padding(.horizontal, DS.Padding.l)
                         .frame(height: 44)
                         .contentShape(Capsule())
+                        .barGlass(in: Capsule())
                 }
-                .barGlass(in: Capsule())
             }
             .padding(.horizontal, DS.Padding.l)
             .padding(.top, DS.Padding.s)
             .bottomScreenMargin(DS.Padding.s, minimum: DS.Padding.l)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
+        .foregroundColor(.primary)
     }
 
     /// Same rule as a single tab's ×: ask first when running programs would

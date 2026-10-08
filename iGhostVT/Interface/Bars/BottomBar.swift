@@ -36,7 +36,8 @@ struct BottomBar: View {
             .padding(.top, DS.Padding.s)
             .bottomScreenMargin(DS.Padding.xs, minimum: DS.Padding.l)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
+        .foregroundColor(.primary)
         .background(WindowReader(window: $window))
     }
 
@@ -48,16 +49,16 @@ struct BottomBar: View {
                 .font(DS.Font.control)
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
+                .barGlass(in: Circle())
         }
-        .barGlass(in: Circle())
 
         Button(action: onShowSettings) {
             Image(systemName: "gearshape")
                 .font(DS.Font.control)
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
+                .barGlass(in: Circle())
         }
-        .barGlass(in: Circle())
         .accessibilityLabel("Settings")
     }
 
@@ -69,8 +70,8 @@ struct BottomBar: View {
                 .font(DS.Font.control)
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
+                .barGlass(in: Circle())
         }
-        .barGlass(in: Circle())
         .accessibilityLabel("Tab Menu")
     }
 
@@ -93,8 +94,8 @@ struct BottomBar: View {
                     }
                 }
                 .contentShape(Circle())
+                .barGlass(in: Circle())
         }
-        .barGlass(in: Circle())
         .accessibilityLabel("Show All Tabs")
         .accessibilityValue(tabCountValue)
     }
