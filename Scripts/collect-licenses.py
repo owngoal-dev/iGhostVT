@@ -38,6 +38,13 @@ SKIPPED_DIRECTORIES = {
     ".git", ".build", ".swiftpm", "Tests", "Test", "Example", "Examples",
     "docs", "Documentation", "node_modules", "Script", "Scripts", "Patches",
 }
+# Sources named in the nested notices, rather than the package carrying them.
+NESTED_LICENSE_URLS = {
+    ("libghostty-spm", "Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/bash/LICENSE-bash-preexec.md"):
+        "https://github.com/rcaloras/bash-preexec",
+    ("libghostty-spm", "Sources/GhosttyTheme/LICENSE"):
+        "https://github.com/mbadolato/iTerm2-Color-Schemes",
+}
 # Identifier heuristics, first match wins; a text that matches none is shown
 # as "Other" and still shipped whole.
 LICENSE_KINDS = [
@@ -158,7 +165,8 @@ def package_entries(project, checkouts):
                 name = suffix
             else:
                 name = os.path.basename(relative_directory)
-            entries.append(entry(name, version if relative_directory == "." else None, url, read(path)))
+            source_url = NESTED_LICENSE_URLS.get((package, os.path.relpath(path, checkout)), url)
+            entries.append(entry(name, version if relative_directory == "." else None, source_url, read(path)))
     return entries
 
 
