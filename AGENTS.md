@@ -41,7 +41,7 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026100703, Ghostty 35a81a98 on Zig 0.16). 2.x
+  (`upToNextMajor` from 2.2.2026100801, Ghostty 35a81a98 on Zig 0.16). 2.x
   selects text inline on iOS — a long press puts handles and the edit menu
   on the terminal itself — and removed the long-press hand-off
   (`onTextSelectionRequest`) the app's own selection sheet hung off, so the
@@ -59,7 +59,12 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   switching light and dark) no longer snaps an open tab to the config's
   `font-size` — which, after Settings ▸ Text Size changed, resized tabs
   that should keep theirs — and reports the size back
-  (`TerminalViewState.fontSize`). 2.2.2026100703 keeps
+  (`TerminalViewState.fontSize`). 2.2.2026100801 repeats a held
+  arrow, Home/End or function key on Mac Catalyst, at the user's Key Repeat
+  setting — UIKit reports such a press once there and spent its repeats on
+  the empty text document, so a held arrow moved one step; text keys were
+  already repeated by the system — and ends the repeat when the window
+  loses the keyboard or a key command fires. 2.2.2026100703 keeps
   `TerminalViewState.backgroundColor` following the color scheme when a
   view whose delegate is not the state switches it through the controller;
   the app's views always have the state as delegate and read no background
