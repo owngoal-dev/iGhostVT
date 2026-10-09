@@ -9,6 +9,7 @@ struct BottomBar: View {
     let onShowSettings: () -> Void
     let onShowSwitcher: () -> Void
     @State private var window: UIWindow?
+    @StateObject private var newTabRows = NewTabMenuRows()
 
     var body: some View {
         GlassBarContainer(spacing: DS.Padding.m) {
@@ -17,10 +18,15 @@ struct BottomBar: View {
             // (`glassMaterializes`): left to the container, the title capsule
             // melted into the `+` and the buttons split into blobs between.
             HStack(spacing: DS.Padding.m) {
-                if let tab = tabManager.activeTab {
+                if let activeIndex = tabManager.tabs.firstIndex(where: { $0.id == tabManager.activeTabID }) {
                     Group {
-                        TitleCapsule(tab: tab)
-                            .highPriorityGesture(switchTabGesture)
+                        TitleCapsule(
+                            tabs: tabManager.tabs,
+                            activeIndex: activeIndex,
+                            onSwitch: { offset in
+                                tabManager.activateAdjacentTab(offset: offset)
+                            },
+                        )
                         overflowMenu
                         switcherButton
                     }
@@ -64,7 +70,7 @@ struct BottomBar: View {
 
     private var overflowMenu: some View {
         Menu {
-            TabOverflowMenuContent(tabManager: tabManager, window: window)
+            TabOverflowMenuContent(tabManager: tabManager, window: window, newTabRows: newTabRows)
         } label: {
             Image(systemName: "ellipsis")
                 .font(DS.Font.control)
@@ -72,6 +78,7 @@ struct BottomBar: View {
                 .contentShape(Circle())
                 .barGlass(in: Circle())
         }
+        .takesNewTabRows(newTabRows, from: tabManager)
         .accessibilityLabel("Tab Menu")
     }
 
@@ -108,23 +115,115 @@ struct BottomBar: View {
             tabManager.tabs.count,
         )
     }
+}
 
-    private var switchTabGesture: some Gesture {
-        DragGesture(minimumDistance: 30)
+/// The active tab's title, and the way to its neighbours: dragged sideways
+/// the label follows the finger inside the capsule with the neighbour's
+/// coming in behind it, as Safari's address bar does, and let go past a
+/// third of the way (or flicked) it lands on that tab. Dragging left goes
+/// to the next tab. It does not wrap — at either end the label only
+/// stretches and settles back.
+private struct TitleCapsule: View {
+    let tabs: [TerminalTab]
+    let activeIndex: Int
+    let onSwitch: (Int) -> Void
+
+    @State private var dragOffset: CGFloat = 0
+    /// Decided by the drag's first movement: a vertical start is not a
+    /// swipe and is left alone until the finger lifts.
+    @State private var isHorizontal: Bool?
+
+    var body: some View {
+        // The active label, unseen, gives the capsule its height; the
+        // labels that are drawn ride over it.
+        TitleCapsuleLabel(tab: tabs[activeIndex])
+            .hidden()
+            .overlay(
+                GeometryReader { proxy in
+                    // A neighbour's label sits one capsule-width away.
+                    let pageWidth = max(proxy.size.width, 1)
+                    ZStack {
+                        // Keyed by tab, not by slot, so a switch moves the
+                        // same label from where it is rather than swapping
+                        // one in.
+                        ForEach(slots, id: \.tab.id) { slot in
+                            TitleCapsuleLabel(tab: slot.tab)
+                                .offset(x: dragOffset + CGFloat(slot.position) * pageWidth)
+                                // The neighbours are scenery until they arrive.
+                                .accessibilityHidden(slot.position != 0)
+                        }
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .contentShape(Capsule())
+                    .highPriorityGesture(swipe(pageWidth: pageWidth))
+                },
+            )
+            .clipShape(Capsule())
+            .barGlass(in: Capsule())
+    }
+
+    private struct Slot {
+        let tab: TerminalTab
+        let position: Int
+    }
+
+    /// The active tab and whichever neighbours it has.
+    private var slots: [Slot] {
+        (-1 ... 1).compactMap { position in
+            let index = activeIndex + position
+            return tabs.indices.contains(index) ? Slot(tab: tabs[index], position: position) : nil
+        }
+    }
+
+    private func swipe(pageWidth: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 10)
+            .onChanged { value in
+                let translation = value.translation
+                if isHorizontal == nil {
+                    isHorizontal = abs(translation.width) > abs(translation.height)
+                }
+                guard isHorizontal == true else { return }
+                dragOffset = hasNeighbor(toward: translation.width)
+                    ? translation.width
+                    : rubberBand(translation.width, pageWidth: pageWidth)
+            }
             .onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else {
+                defer { isHorizontal = nil }
+                guard isHorizontal == true else { return }
+                let travel = value.translation.width
+                let predicted = value.predictedEndTranslation.width
+                let commits = hasNeighbor(toward: travel)
+                    && (abs(travel) > pageWidth / 3
+                        || (abs(predicted) > pageWidth / 2 && predicted.sign == travel.sign))
+                guard commits else {
+                    withAnimation(DS.Motion.snappy) { dragOffset = 0 }
                     return
                 }
+                let offset = travel < 0 ? 1 : -1
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                // The arriving label is drawn where the finger left it: the
+                // active index moves by one page, the offset back by one, and
+                // the spring carries both labels the rest of the way.
                 withAnimation(DS.Motion.snappy) {
-                    tabManager.activateAdjacentTab(
-                        offset: value.translation.width < 0 ? 1 : -1,
-                    )
+                    onSwitch(offset)
+                    dragOffset = 0
                 }
             }
     }
+
+    private func hasNeighbor(toward translation: CGFloat) -> Bool {
+        tabs.indices.contains(activeIndex + (translation < 0 ? 1 : -1))
+    }
+
+    /// Resistance at an end: the label gives a little and no more.
+    private func rubberBand(_ translation: CGFloat, pageWidth: CGFloat) -> CGFloat {
+        let limit = pageWidth / 4
+        let distance = abs(translation)
+        return (limit * distance / (distance + limit)) * (translation < 0 ? -1 : 1)
+    }
 }
 
-private struct TitleCapsule: View {
+private struct TitleCapsuleLabel: View {
     let tab: TerminalTab
 
     var body: some View {
@@ -137,7 +236,5 @@ private struct TitleCapsule: View {
         .accessibilityElement(children: .combine)
         .padding(.horizontal, DS.Padding.l)
         .frame(maxWidth: .infinity, minHeight: 44)
-        .contentShape(Capsule())
-        .barGlass(in: Capsule())
     }
 }
