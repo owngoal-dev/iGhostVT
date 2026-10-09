@@ -44,8 +44,12 @@ final class RemoteClient {
     /// The device output toward which may be held in the daemon instead of
     /// here: past this much not yet taken by the network, the daemon
     /// connection is suspended, which the proxy feels as a slow peer.
-    private static let pauseAboveByteCount = 1 << 20
-    private static let resumeBelowByteCount = 256 * 1024
+    /// The band is narrow on purpose: the proxy cuts a peer that takes
+    /// nothing for `IOSupervisor.peerCongestionGrace`, and while suspended
+    /// this connection takes nothing — draining 768 KiB before resuming
+    /// was more than ten seconds over a slow relay, and an `sz` died there.
+    private static let pauseAboveByteCount = 512 * 1024
+    private static let resumeBelowByteCount = 384 * 1024
 
     /// The operations a paired device may send, all of them the app's own.
     private static let sessionOperations: Set<iGhostVTOperation> = [

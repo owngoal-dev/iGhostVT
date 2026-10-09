@@ -31,8 +31,11 @@ protocol IOPeer: AnyObject {
 ///   the socket is not read — it fills, and the io side stops draining its
 ///   PTYs, so a shell writing to a client that is not reading blocks the
 ///   way it would on a real terminal. A peer that stays congested for
-///   `peerCongestionGrace` — the app suspended in the background — is cut
-///   instead: the app treats that as an interruption and reattaches when
+///   `peerCongestionGrace` *without taking a byte* — the app suspended in
+///   the background — is cut instead (output reaching it pushes the
+///   deadline back: `ighostvtd-remote` relaying to a device over a slow
+///   link is congested for minutes on end and draining all the while, and
+///   cutting it dropped an `sz` mid-file): the app treats that as an interruption and reattaches when
 ///   it returns, and the shell meanwhile writes into the replay buffer
 ///   rather than waiting on it. The pause is one decision for the whole
 ///   socket, so every peer holding output when it happens gets the timer:
@@ -255,6 +258,10 @@ final class IOSupervisor {
         // part of what holds it; its timer stands until it drains.
         if remaining == 0 || (remaining < Self.peerCongestionByteCount && channel?.isReadSuspended != true) {
             cancelCongestionTimer(for: peerID)
+        } else if byteCount > 0 {
+            // Slow is not stuck: the grace counts from the last output the
+            // peer took.
+            congestionTimers[peerID]?.schedule(deadline: .now() + Self.peerCongestionGrace)
         }
     }
 

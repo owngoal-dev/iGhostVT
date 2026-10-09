@@ -152,6 +152,11 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     /// When the host last sent anything, for the relayed link's heartbeat
     /// and the question asked when the network changes.
     private var lastHeard = Date()
+    /// When this side last sent anything. The host drops a relayed device
+    /// it has not heard from in `RemoteAccess.relayedSilenceLimit`, and a
+    /// download — `sz`, a long `cat` — is all host to device: the app hears
+    /// plenty and says nothing, so the quiet it has to break is its own.
+    private var lastSent = Date()
     private var pathObserver: NSObjectProtocol?
 
     /// Connections still racing, and the paths not tried yet.
@@ -363,6 +368,7 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     }
 
     private func transmit(_ message: xpc_object_t, tag: UInt64, over frames: RemoteFrameConnection) {
+        lastSent = Date()
         if xpc_dictionary_get_uint64(message, iGhostVTWireKey.operation) == iGhostVTOperation.hello.rawValue {
             guard let exporter = RemoteTLS.exporterSecret(of: frames.connection) else {
                 frames.close(reason: "no exporter secret")
@@ -388,7 +394,9 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     /// box on the way may keep its own TCP leg up for a peer that is gone.
     /// A quiet link is pinged; one the host has not answered on for
     /// `RemoteAccess.relayedReplyLimit` is given up, and its owner
-    /// reconnects as after any other loss.
+    /// reconnects as after any other loss. Quiet in *either* direction:
+    /// the host judges the device by what it sends, so a link that only
+    /// receives is pinged as well.
     private func heartbeat() {
         queue.asyncAfter(deadline: .now() + RemoteAccess.relayedPingInterval / 3) { [weak self] in
             guard let self, !isFinished, let frames else { return }
@@ -398,7 +406,8 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
                 finish(lost: true)
                 return
             }
-            if quiet > RemoteAccess.relayedPingInterval, isReady {
+            let silent = Date().timeIntervalSince(lastSent)
+            if quiet > RemoteAccess.relayedPingInterval || silent > RemoteAccess.relayedPingInterval, isReady {
                 ping(over: frames)
             }
             heartbeat()

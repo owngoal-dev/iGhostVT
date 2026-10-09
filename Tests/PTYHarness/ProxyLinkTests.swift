@@ -15,6 +15,10 @@ import XPC
 final class HarnessPeer: IOPeer {
     let peerID: UInt64
     var acknowledgesOutput = true
+    /// Takes output at this many bytes a second rather than at once: a
+    /// peer behind a slow network, congested and draining all the while.
+    var drainBytesPerSecond: Double?
+    private var nextDrain = DispatchTime.now()
     weak var supervisor: IOSupervisor?
     private let lock = NSLock()
     private var events: [xpc_object_t] = []
@@ -64,7 +68,14 @@ final class HarnessPeer: IOPeer {
         var length = 0
         guard xpc_dictionary_get_data(event, iGhostVTWireKey.data, &length) != nil, length > 0 else { return }
         supervisor?.willSend(length, to: peerID)
-        if acknowledgesOutput {
+        if let rate = drainBytesPerSecond {
+            let start = max(nextDrain, DispatchTime.now())
+            nextDrain = start + .nanoseconds(Int(Double(length) / rate * 1_000_000_000))
+            harnessQueue.asyncAfter(deadline: nextDrain) { [weak self] in
+                guard let self else { return }
+                supervisor?.didSend(length, to: peerID)
+            }
+        } else if acknowledgesOutput {
             supervisor?.didSend(length, to: peerID)
         }
     }
@@ -1104,6 +1115,35 @@ func runProxyLinkTests() {
         return listed.flatMap { xpc_dictionary_get_value($0, iGhostVTWireKey.sessions) }
             .map { xpc_array_get_count($0) } == 0
     }
+
+    // A peer behind a slow link — `ighostvtd-remote` relaying an `sz` — is
+    // congested far longer than the grace and drains all the while; it
+    // must be paced, never cut. Before the deadline moved with progress,
+    // it was cut one grace after it first fell behind.
+    print("proxy flow control with a slow peer")
+    let slow = HarnessPeer(peerID: 5)
+    slow.supervisor = supervisor
+    slow.drainBytesPerSecond = 400_000
+    harnessQueue.sync { supervisor.register(slow) }
+    check(replyCode(request(supervisor, from: slow, .hello)) == .success, "a slow peer says hello")
+    let trickle = request(supervisor, from: slow, .openSession) { message in
+        let command = xpc_array_create(nil, 0)
+        for argument in ["/bin/sh", "-c", "head -c 3000000 /dev/zero | tr '\\0' x; echo; echo slow-done; sleep 30"] {
+            xpc_array_append_value(command, xpc_string_create(argument))
+        }
+        xpc_dictionary_set_value(message, iGhostVTWireKey.command, command)
+    }
+    let trickleID = trickle.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.sessionID) } ?? 0
+    check(replyCode(trickle) == .success && trickleID > 0, "a session floods the slow peer")
+    check(
+        waitUntil(20) { slow.output(of: trickleID).contains("slow-done") || slow.wasCut },
+        "the slow peer is paced through the whole flood",
+    )
+    check(!slow.wasCut, "and is never cut while it drains (\(slow.cutReason ?? "not cut"))")
+    _ = request(supervisor, from: slow, .closeSession) {
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, trickleID)
+    }
+    harnessQueue.sync { supervisor.peerGone(slow.peerID) }
 
     // The pause is one decision for the socket, the timer was one per peer:
     // three peers each holding less than the per-peer threshold, together
