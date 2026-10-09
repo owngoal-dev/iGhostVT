@@ -262,6 +262,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             tabManager.retryFailedTabs()
         } else {
             DaemonSessionDirectory.shared.refresh()
+            // A remote tab's link died while the app was away just the same.
+            tabManager.reconnectRemoteTabs()
         }
     }
 

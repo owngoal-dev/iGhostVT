@@ -3,6 +3,7 @@
 //  iGhostVT
 //
 
+import Combine
 import Foundation
 import GhosttyTerminal
 import SwiftUI
@@ -49,7 +50,14 @@ final class TabManager: ObservableObject {
     /// libghostty's silent denial.
     @Published private(set) var clipboardRequests: [TerminalClipboardConfirmationRequest] = []
 
+    private var networkSubscription: AnyCancellable?
+
     init() {
+        networkSubscription = NotificationCenter.default.publisher(for: NetworkPathWatcher.pathDidChange)
+            .filter { $0.userInfo?[NetworkPathWatcher.isSatisfiedKey] as? Bool ?? true }
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated { self?.reconnectRemoteTabs() }
+            }
         SessionActivityController.shared.register(self) { [weak self] in
             self.map {
                 SessionActivityController.WindowSnapshot(
@@ -304,6 +312,15 @@ final class TabManager: ObservableObject {
                 // app was away: now is the moment to try.
                 tab.store.reconnectNowIfWaiting()
             }
+        }
+    }
+
+    /// Every remote tab whose link is down tries again now
+    /// (`TerminalSessionStore.reconnectNow`): the network came back or
+    /// moved, or the app came forward.
+    func reconnectRemoteTabs() {
+        for tab in tabs {
+            tab.store.reconnectNow()
         }
     }
 

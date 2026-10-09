@@ -24,6 +24,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // Surface lifecycle and sizing, so a surface that never comes up on
         // device says where it stopped. Input/output categories stay off —
         // they would log keystrokes.
+        // Remote tabs try again the moment the network comes back.
+        NetworkPathWatcher.shared.start()
         TerminalDebugLog.sink = { message in
             AppLog.verbose(.ghostty, message)
         }

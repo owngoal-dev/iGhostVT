@@ -153,6 +153,9 @@ enum RemoteAccess {
     /// `relayedReplyLimit` without a byte from the host.
     static let relayedPingInterval: TimeInterval = 15
     static let relayedReplyLimit: TimeInterval = 45
+    /// After the device's network changes, the app pings every link and
+    /// gives up one the host has not answered on within this long.
+    static let pathChangeReplyLimit: TimeInterval = 5
     /// The host drops a relayed device it has heard nothing from for this
     /// long — a phone that went to sleep is one, and reattaches when it
     /// wakes.

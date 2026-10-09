@@ -149,8 +149,10 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         }
     }
 
-    /// When the host last sent anything, for the relayed link's heartbeat.
+    /// When the host last sent anything, for the relayed link's heartbeat
+    /// and the question asked when the network changes.
     private var lastHeard = Date()
+    private var pathObserver: NSObjectProtocol?
 
     /// Connections still racing, and the paths not tried yet.
     private var attempts: [RemoteFrameConnection] = []
@@ -264,9 +266,17 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         }
         AppLog.info(.transport, "remote link to \(host.name) \(path.isRelay ? "through the relay" : "direct")")
         ready()
+        lastHeard = Date()
         if path.isRelay {
-            lastHeard = Date()
             heartbeat()
+        }
+        pathObserver = NotificationCenter.default.addObserver(
+            forName: NetworkPathWatcher.pathDidChange,
+            object: nil,
+            queue: nil,
+        ) { [weak self] note in
+            let isSatisfied = note.userInfo?[NetworkPathWatcher.isSatisfiedKey] as? Bool ?? true
+            self?.queue.async { self?.networkChanged(isSatisfied: isSatisfied) }
         }
     }
 
@@ -389,17 +399,46 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
                 return
             }
             if quiet > RemoteAccess.relayedPingInterval, isReady {
-                let ping = xpc_dictionary_create(nil, nil, 0)
-                xpc_dictionary_set_uint64(ping, iGhostVTWireKey.version, iGhostVTProtocol.version)
-                xpc_dictionary_set_uint64(ping, iGhostVTWireKey.operation, iGhostVTOperation.ping.rawValue)
-                let tag = nextTag
-                nextTag &+= 1
-                // The answer is only worth having arrived.
-                pendingReplies[tag] = { _ in }
-                transmit(ping, tag: tag, over: frames)
+                ping(over: frames)
             }
             heartbeat()
         }
+    }
+
+    /// The network went away or moved to other interfaces, and a link on
+    /// the old one is most likely dead — but TCP would take half a minute
+    /// to say so, with the tab sitting on a frozen screen meanwhile. With
+    /// no network at all it is given up at once; otherwise the host is
+    /// asked, and a link it does not answer on within
+    /// `RemoteAccess.pathChangeReplyLimit` is given up. Either way the
+    /// owner reconnects as after any other loss, over the network there is
+    /// now. Every host on the release line answers the ping, direct or
+    /// relayed.
+    private func networkChanged(isSatisfied: Bool) {
+        guard !isFinished, isReady, let frames else { return }
+        guard isSatisfied else {
+            AppLog.info(.transport, "remote link to \(host.name): the network went away")
+            finish(lost: true)
+            return
+        }
+        let asked = Date()
+        ping(over: frames)
+        queue.asyncAfter(deadline: .now() + RemoteAccess.pathChangeReplyLimit) { [weak self] in
+            guard let self, !isFinished, self.frames === frames, lastHeard < asked else { return }
+            AppLog.info(.transport, "remote link to \(host.name): no answer after the network changed")
+            finish(lost: true)
+        }
+    }
+
+    private func ping(over frames: RemoteFrameConnection) {
+        let ping = xpc_dictionary_create(nil, nil, 0)
+        xpc_dictionary_set_uint64(ping, iGhostVTWireKey.version, iGhostVTProtocol.version)
+        xpc_dictionary_set_uint64(ping, iGhostVTWireKey.operation, iGhostVTOperation.ping.rawValue)
+        let tag = nextTag
+        nextTag &+= 1
+        // The answer is only worth having arrived.
+        pendingReplies[tag] = { _ in }
+        transmit(ping, tag: tag, over: frames)
     }
 
     private func received(_ header: IOWire.Header, _ object: xpc_object_t) {
@@ -417,6 +456,10 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     private func finish(lost: Bool) {
         guard !isFinished else { return }
         isFinished = true
+        if let pathObserver {
+            NotificationCenter.default.removeObserver(pathObserver)
+            self.pathObserver = nil
+        }
         untried.removeAll()
         for attempt in attempts where attempt !== frames {
             attempt.onClosed = nil

@@ -146,9 +146,11 @@ final class TerminalSessionStore: ObservableObject {
     /// directories are remembered under that device, never as this one's.
     var recentDirectoryHostID: String?
     /// A session on another device: its link drops with the network, not
-    /// only with a daemon restart, so it is tried for a minute, backing off
-    /// (`patientReconnectDelay`), before the tab says it failed — and again
-    /// whenever the app comes forward.
+    /// only with a daemon restart, so it is tried for a minute of network,
+    /// backing off (`patientReconnectDelay`), before the tab says it failed
+    /// — and again at once whenever the app comes forward or the network
+    /// comes back (`reconnectNow`). Time with no network at all does not
+    /// count against the minute: there was nothing to try.
     var reconnectsPatiently = false
     private var reconnectStartedAt: Date?
     private static let patientReconnectWindow: TimeInterval = 60
@@ -618,6 +620,9 @@ final class TerminalSessionStore: ObservableObject {
     /// the attempts are spent. Runs only after `interrupted` — a final
     /// `disconnected` never starts a cycle.
     private func scheduleReconnect(lastReason: String?) {
+        if reconnectsPatiently, !NetworkPathWatcher.shared.isSatisfied {
+            reconnectStartedAt = nil
+        }
         let startedAt = reconnectStartedAt ?? Date()
         reconnectStartedAt = startedAt
         let isSpent = reconnectsPatiently
@@ -646,10 +651,12 @@ final class TerminalSessionStore: ObservableObject {
         }
     }
 
-    /// 1, 2, 4, 8, then 15 s, each ±20 % so tabs that lost the same link
-    /// do not all knock at once.
+    /// 1, 2, 4, then 5 s, each ±20 % so tabs that lost the same link do
+    /// not all knock at once. Short on purpose: the network coming back is
+    /// answered at once (`reconnectNow`), and these are for a host that
+    /// went away and returns, where 15 s between tries read as hung.
     private static func patientReconnectDelay(attempt: Int) -> UInt64 {
-        let base = min(15, pow(2, Double(max(0, attempt - 1))))
+        let base = min(5, pow(2, Double(max(0, attempt - 1))))
         return UInt64(base * Double.random(in: 0.8 ... 1.2) * 1_000_000_000)
     }
 
@@ -657,6 +664,22 @@ final class TerminalSessionStore: ObservableObject {
     /// link that died in the background is worth trying at once.
     func reconnectNowIfWaiting() {
         guard reconnectAttempt > 0, status == .connecting else { return }
+        connect()
+    }
+
+    /// A session on another device whose link is down tries again now,
+    /// with a fresh minute: the network came back, or moved, or the app
+    /// came forward. One that already gave up is tried again too — unless
+    /// its shell ended, which no reconnect undoes.
+    func reconnectNow() {
+        guard reconnectsPatiently else { return }
+        if hasFailed {
+            guard processExitStatus == nil else { return }
+            connect()
+            return
+        }
+        guard reconnectAttempt > 0, status == .connecting else { return }
+        reconnectStartedAt = nil
         connect()
     }
 
