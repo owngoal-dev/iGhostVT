@@ -165,6 +165,17 @@ final class MemoryWriter: ZmodemFileWriter, @unchecked Sendable {
 
     func write(_ bytes: [UInt8]) {
         current?.data.append(contentsOf: bytes)
+        writtenLock.lock()
+        written += bytes.count
+        writtenLock.unlock()
+    }
+
+    private let writtenLock = NSLock()
+    private var written = 0
+    var writtenSoFar: Int {
+        writtenLock.lock()
+        defer { writtenLock.unlock() }
+        return written
     }
 
     func finishFile() {
@@ -286,6 +297,181 @@ do {
     let (writer, _) = loopback([("a.bin", a), ("b.txt", b)])
     check(writer.files.count == 2, "loopback transfers a batch of two files")
     check(writer.files.first?.data == a && writer.files.last?.data == b, "both files in the batch arrive intact")
+}
+
+// The pill follows the bytes even when they arrive in bursts: the engine
+// throttles progress to ~10 Hz, and once dropped each burst's last figure,
+// leaving the bar on a stale value until the next burst (seconds, over a
+// slow relay).
+print("zmodem: progress reaches the pill between bursts")
+
+final class Box<T>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: T
+    init(_ value: T) { self.value = value }
+    func with<R>(_ body: (inout T) -> R) -> R {
+        lock.lock()
+        defer { lock.unlock() }
+        return body(&value)
+    }
+}
+
+do {
+    let payload = randomBytes(60000)
+    let fromEngine = Box<[UInt8]>([])
+    let lastState = Box<ZmodemTransferInfo?>(nil)
+    let writer = MemoryWriter()
+    let engine = ZmodemEngine(
+        sink: { bytes in fromEngine.with { $0.append(contentsOf: bytes) } },
+        passthrough: { _ in },
+        makeWriter: { writer },
+        requestSource: { $0(nil) },
+        onState: { info in lastState.with { if let info { $0 = info } } },
+    )
+    var toEngine: [UInt8] = []
+    let sender = ZmodemSender(send: { toEngine.append(contentsOf: $0) }, source: MemorySource([("burst.bin", payload)]))
+    let senderParser = ZmodemParser()
+    senderParser.onEvent = { sender.handle($0) }
+
+    // sz announces itself; the engine answers ZRINIT, and the sender, on
+    // hearing it, offers the file and streams once the engine asks.
+    engine.ingest(Data(Array("rz\r".utf8) + ZmodemEncoder.hexHeader(.rqinit)))
+    sender.begin()
+    func pump(until done: () -> Bool, limit: Int) {
+        for _ in 0 ..< 400 {
+            usleep(5000)
+            let back = fromEngine.with { bytes -> [UInt8] in defer { bytes.removeAll() }; return bytes }
+            if !back.isEmpty { senderParser.feed(back) }
+            if !toEngine.isEmpty {
+                let chunk = Array(toEngine.prefix(limit))
+                toEngine.removeFirst(chunk.count)
+                engine.ingest(Data(chunk))
+            }
+            if done() { return }
+        }
+    }
+    // First burst: about a third of the file, then nothing more arrives.
+    pump(until: { writer.writtenSoFar >= 20000 }, limit: 4096)
+    let heldBack = toEngine.count
+    usleep(400_000)
+    let shown = lastState.with { $0?.transferred ?? 0 }
+    let written = writer.writtenSoFar
+    check(heldBack > 0, "the first burst stops short of the whole file (\(heldBack) bytes held back)")
+    check(
+        written >= 20000 && shown == UInt64(written),
+        "between bursts the pill shows everything received so far (\(shown) of \(written))",
+    )
+    // The rest arrives; the transfer completes intact.
+    pump(until: { writer.completed != nil }, limit: 1 << 20)
+    check(writer.files.first?.data == payload, "the burst-split download arrives intact")
+    engine.reset()
+}
+
+// A transfer in the replay, or still streaming after a dropped link, must
+// never be drawn: it is ZDLE-escaped binary that covers the screen and
+// retitles the tab.
+print("zmodem: transfers are kept off the screen outside an engine")
+
+/// What `sz` writes for one file, start to end, from a real sender.
+func szOutput(_ payload: [UInt8]) -> [UInt8] {
+    var out: [UInt8] = Array("rz\r".utf8) + ZmodemEncoder.hexHeader(.rqinit)
+    var toSender: [UInt8] = []
+    let source = MemorySource([("f.bin", payload)])
+    let sender = ZmodemSender(send: { out.append(contentsOf: $0) }, source: source)
+    let receiver = ZmodemReceiver(send: { toSender.append(contentsOf: $0) }, writer: MemoryWriter())
+    let senderParser = ZmodemParser()
+    senderParser.onEvent = { sender.handle($0) }
+    let receiverParser = ZmodemParser()
+    receiverParser.onEvent = { receiver.handle($0) }
+    var fed = 0
+    receiver.begin()
+    sender.begin()
+    for _ in 0 ..< 100_000 {
+        if fed < out.count {
+            let chunk = Array(out[fed...])
+            fed = out.count
+            receiverParser.feed(chunk)
+        }
+        if !toSender.isEmpty {
+            let chunk = toSender
+            toSender.removeAll()
+            senderParser.feed(chunk)
+        }
+        if fed == out.count, toSender.isEmpty { break }
+    }
+    return out
+}
+
+do {
+    let before = Array("$ sz f.bin\r\n".utf8)
+    let after = Array("$ echo next\r\nnext\r\n$ ".utf8)
+    let transfer = szOutput(randomBytes(9000))
+    let stripped = ZmodemStreamScanner.strip(before + transfer + after)
+    check(stripped.removed, "a finished transfer in the replay is found")
+    check(stripped.bytes == before + after, "and taken out, the output on either side kept (\(stripped.bytes.count) bytes)")
+    check(!stripped.bytes.contains(0x18), "no ZDLE is left to draw")
+
+    let cancel = [UInt8](repeating: 0x18, count: 10) + [UInt8](repeating: 0x08, count: 10)
+    let cut = Array(transfer.prefix(transfer.count / 2))
+    let aborted = ZmodemStreamScanner.strip(before + cut + cancel + after)
+    check(aborted.bytes == before + after, "a cancelled transfer ends at its CAN run")
+    let open = ZmodemStreamScanner.strip(before + cut)
+    check(open.removed && open.bytes == before, "a transfer that never ended is taken out to the end")
+    let plain = ZmodemStreamScanner.strip(before + after)
+    check(!plain.removed && plain.bytes == before + after, "output without a transfer is left alone")
+}
+
+do {
+    // The next link after one dropped mid-download: the sender is still
+    // streaming. The engine swallows it, tells the sender to stop, and
+    // draws what comes after the sender's own cancel.
+    let shown = Box<[UInt8]>([])
+    let sent = Box<[UInt8]>([])
+    let engine = ZmodemEngine(
+        sink: { bytes in sent.with { $0.append(contentsOf: bytes) } },
+        passthrough: { bytes in shown.with { $0.append(contentsOf: bytes) } },
+        makeWriter: { MemoryWriter() },
+        requestSource: { $0(nil) },
+        onState: { _ in },
+    )
+    engine.discardInterruptedTransfer()
+    let transfer = szOutput(randomBytes(20000))
+    let middle = Array(transfer[(transfer.count / 3) ..< (transfer.count / 2)])
+    engine.ingest(Data(middle))
+    usleep(100_000)
+    check(shown.with { $0 }.isEmpty, "the stream after the link came back is not drawn")
+    check(
+        sent.with { $0 } == ZmodemEncoder.cancelSequence(),
+        "the sender still streaming is told to stop (\(sent.with { $0.count }) bytes sent)",
+    )
+    engine.ingest(Data(Array(transfer[(transfer.count / 2)...].prefix(3000))))
+    let cancel = [UInt8](repeating: 0x18, count: 10) + [UInt8](repeating: 0x08, count: 10)
+    engine.ingest(Data(cancel + Array("\r\n$ ".utf8)))
+    usleep(100_000)
+    check(shown.with { $0 } == Array("\r\n$ ".utf8), "what follows the sender's cancel is drawn again")
+    engine.ingest(Data(Array("ls\r\n".utf8)))
+    usleep(100_000)
+    check(shown.with { $0 } == Array("\r\n$ ls\r\n".utf8), "and output flows as before")
+}
+
+do {
+    // The sender gave up before the link came back: the first thing to
+    // arrive is the shell. Nothing is swallowed and nothing is sent — a
+    // cancel would reach the shell as keystrokes.
+    let shown = Box<[UInt8]>([])
+    let sent = Box<[UInt8]>([])
+    let engine = ZmodemEngine(
+        sink: { bytes in sent.with { $0.append(contentsOf: bytes) } },
+        passthrough: { bytes in shown.with { $0.append(contentsOf: bytes) } },
+        makeWriter: { MemoryWriter() },
+        requestSource: { $0(nil) },
+        onState: { _ in },
+    )
+    engine.discardInterruptedTransfer()
+    engine.ingest(Data(Array("$ 你好\r\n".utf8)))
+    usleep(100_000)
+    check(shown.with { $0 } == Array("$ 你好\r\n".utf8), "a shell already back at its prompt is drawn at once")
+    check(sent.with { $0 }.isEmpty, "and sent nothing")
 }
 
 // MARK: Result

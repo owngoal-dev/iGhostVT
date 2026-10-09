@@ -376,12 +376,18 @@ final class TerminalSessionStore: ObservableObject {
         // retains this closure. A strong capture would close that cycle and
         // defeat the transport's deinit, whose job is to cancel an XPC
         // connection its owner dropped without disconnecting.
+        let transferCutByLink = transferCutByLink
         let session = session
         let outputSignal = outputSignal
         // Per-connection and holds no shared session state, so another client
         // or an older daemon is unaffected.
         let engine = makeZmodemEngine()
         zmodemEngine = engine
+        // The last link dropped mid-transfer: the program on the other end
+        // is still in it, and its stream must not land on the screen.
+        if transferCutByLink.take() {
+            engine?.discardInterruptedTransfer()
+        }
         AppLog.info(.zmodem, "connect: zmodem engine \(engine == nil ? "OFF" : "ON") (setting=\(ZmodemSetting.isEnabled))")
         // `engine` weak for the same reason `relay` is: the store holds it
         // strongly, and a strong capture here would outlive teardown.
@@ -402,6 +408,17 @@ final class TerminalSessionStore: ObservableObject {
                     // in the buffer must not start a transfer.
                     engine.ingest(data)
                 } else {
+                    // A transfer in the replay — finished minutes ago, or
+                    // cut off by the link that just dropped — is binary
+                    // that would cover the screen and retitle the tab.
+                    var data = data
+                    if replay {
+                        let stripped = ZmodemStreamScanner.strip([UInt8](data))
+                        if stripped.removed {
+                            AppLog.info(.zmodem, "replay: \(data.count - stripped.bytes.count) bytes of a transfer left out")
+                            data = Data(stripped.bytes)
+                        }
+                    }
                     session.receive(data)
                     if outputSignal.noteChunk(byteCount: data.count) {
                         Task { @MainActor [weak self] in
@@ -414,7 +431,14 @@ final class TerminalSessionStore: ObservableObject {
             // A transfer cannot outlive the link it ran on — nor a session
             // another device just took, whose bytes now go there.
             switch event {
-            case .state(.disconnected), .state(.interrupted), .state(.heldElsewhere):
+            case .state(.disconnected), .state(.interrupted):
+                if engine?.abandonForLostLink() == true {
+                    transferCutByLink.set()
+                    Task { @MainActor [weak self] in
+                        self?.finishUpload(.failed(String(localized: "The connection dropped, so the transfer was cancelled.")))
+                    }
+                }
+            case .state(.heldElsewhere):
                 engine?.reset()
             default:
                 break
@@ -465,6 +489,10 @@ final class TerminalSessionStore: ObservableObject {
         }
         zmodemEngine?.cancel()
     }
+
+    /// Set when a link drops mid-transfer, taken by the next connect.
+    /// Touched from the transport's queue and the main actor.
+    private let transferCutByLink = OnceFlag()
 
     /// The copy a drop started toward another device, while it runs.
     private var fileUpload: Task<[String?], Never>?
@@ -1005,5 +1033,25 @@ private final class UploadProgressThrottle: @unchecked Sendable {
             }
             self.apply(value)
         }
+    }
+}
+
+/// A flag one queue sets and another takes, once.
+final class OnceFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var isSet = false
+
+    func set() {
+        lock.lock()
+        isSet = true
+        lock.unlock()
+    }
+
+    func take() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        let value = isSet
+        isSet = false
+        return value
     }
 }
