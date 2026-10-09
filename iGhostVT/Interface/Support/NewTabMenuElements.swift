@@ -220,24 +220,38 @@ enum NewTabMenuElements {
         #endif
     }
 
+    /// Past this many open terminals a device's group leads with Open All.
+    static let openAllThreshold = 3
+
     /// The Open Terminals group as the catalog knows it now, or nothing
-    /// when the device holds none.
+    /// when the device holds none. One line per terminal, its title: the
+    /// process name under it read as noise in a list of agents that all
+    /// run the same binary.
     private static func openTerminalGroup(
         of host: PairedRemoteHost,
         isOpenHere: (PairedRemoteHost, XPCDaemonTransport.SessionSummary) -> Bool,
         attach: @escaping (String, UInt64) -> Void,
     ) -> [UIMenuElement] {
-        let open = (RemoteSessionCatalog.shared.sessions[host.id] ?? []).map { session in
-            let action = UIAction(
+        let sessions = RemoteSessionCatalog.shared.sessions[host.id] ?? []
+        guard !sessions.isEmpty else { return [] }
+        var open: [UIMenuElement] = sessions.map { session in
+            UIAction(
                 title: session.menuTitle,
                 image: UIImage(systemName: isOpenHere(host, session) ? "checkmark" : "terminal"),
             ) { _ in attach(host.id, session.id) }
-            if #available(iOS 16.0, *) {
-                action.subtitle = session.menuSubtitle
-            }
-            return action
         }
-        guard !open.isEmpty else { return [] }
+        if sessions.count > openAllThreshold {
+            let closed = sessions.filter { !isOpenHere(host, $0) }
+            open.insert(UIAction(
+                title: String(localized: "Open All"),
+                image: UIImage(systemName: "square.stack"),
+                attributes: closed.isEmpty ? .disabled : [],
+            ) { _ in
+                for session in closed {
+                    attach(host.id, session.id)
+                }
+            }, at: 0)
+        }
         return [UIMenu(title: String(localized: "Open Terminals"), options: .displayInline, children: open)]
     }
 }
@@ -289,12 +303,4 @@ extension XPCDaemonTransport.SessionSummary {
         return directory?.label ?? String(localized: "Terminal")
     }
 
-    /// The second line, as that tab's own second line reads: the process
-    /// in front, or, where the process is already the title, where it is.
-    var menuSubtitle: String? {
-        if title != nil, let processName, !processName.isEmpty {
-            return processName
-        }
-        return directory?.label
-    }
 }

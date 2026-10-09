@@ -434,7 +434,9 @@ as "keep it in memory" and stops sending on that transport. The CLI's `list`
 shows the `lock` key as a LOCK column. The `title` key is the title the tab
 shows (its reported part, at most once a second, newest wins), so a paired
 device's new-tab menu names the terminal word for word as this one does,
-with the process as its second line.
+on one line — the process under it read as noise in a list of agents that
+all run the same binary. Past three terminals a device's group leads with
+Open All, which attaches every one not already open here.
 
 `uploadFile` (op 15) puts a file on the daemon's device for a shell there
 to read: what a drop on a *remote* tab pastes, since no path on the app's

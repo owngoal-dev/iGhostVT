@@ -253,10 +253,23 @@ struct NewTabMenuContent: View {
         }
     }
 
+    @ViewBuilder
     private func remoteSessionRows(
         _ sessions: [XPCDaemonTransport.SessionSummary],
         on host: PairedRemoteHost,
     ) -> some View {
+        if sessions.count > NewTabMenuElements.openAllThreshold {
+            let closed = sessions.filter { !isOpenHere($0, on: host) }
+            Button {
+                for session in closed {
+                    tabManager.openRemoteTab(attachingTo: session.id, hostID: host.id)
+                }
+                onOpen()
+            } label: {
+                SwiftUI.Label("Open All", systemImage: "square.stack")
+            }
+            .disabled(closed.isEmpty)
+        }
         ForEach(sessions) { session in
             Button {
                 tabManager.openRemoteTab(attachingTo: session.id, hostID: host.id)
@@ -264,9 +277,6 @@ struct NewTabMenuContent: View {
             } label: {
                 SwiftUI.Label {
                     Text(verbatim: session.menuTitle)
-                    if let subtitle = session.menuSubtitle {
-                        Text(verbatim: subtitle)
-                    }
                 } icon: {
                     Image(systemName: isOpenHere(session, on: host) ? "checkmark" : "terminal")
                 }
