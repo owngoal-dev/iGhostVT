@@ -15,6 +15,14 @@ struct RelayConfiguration: Equatable, Sendable {
     static let fileExtension = "vtrpsc"
     static let typeIdentifier = "wiki.qaq.ighostvt.relay-config"
     static let defaultPort: UInt16 = 46405
+    /// Where the Mac app keeps its copy, under the user's Application
+    /// Support. `ighostvt-cli remote relay` writes the same file, as the
+    /// same user, so the app stays the one truth about which relay is used.
+    static let macStoreSubpath = "iGhostVT/Relay.vtrpsc"
+    /// Posted (`notify_post`) after something other than the app rewrote
+    /// that file. It carries nothing and grants nothing — whoever posts it
+    /// only makes the app read its own file again.
+    static let storeChangedNotification = "wiki.qaq.ighostvt.relay-configuration"
 
     enum ParseError: LocalizedError {
         case notConfiguration

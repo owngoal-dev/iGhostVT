@@ -107,6 +107,18 @@
 			);
 			target = AA0000000000000000000607 /* GhostRemote */;
 		};
+		AA0000000000000000000405 /* Exceptions for "Shared/Remote" folder in "ighostvt-cli" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DeviceNaming.swift,
+				PairingExchange.swift,
+				RelayControl.swift,
+				RemoteFrameConnection.swift,
+				RemoteNetwork.swift,
+				RemoteTLS.swift,
+			);
+			target = AA0000000000000000000605 /* ighostvt-cli */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -187,6 +199,9 @@
 		};
 		AA000000000000000000050C /* Shared/Remote */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AA0000000000000000000405 /* Exceptions for "Shared/Remote" folder in "ighostvt-cli" target */,
+			);
 			path = Shared/Remote;
 			sourceTree = "<group>";
 		};
@@ -373,6 +388,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000502 /* Shared/Protocol */,
+				AA000000000000000000050C /* Shared/Remote */,
 				AA0000000000000000000508 /* iGhostVTCLI */,
 				AA0000000000000000000509 /* Shared/Screen */,
 			);

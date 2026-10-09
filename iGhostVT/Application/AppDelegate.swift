@@ -41,6 +41,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // Browsing asks for the local-network permission, so only a launch
         // with a paired device to look for starts it here.
         RemoteDeviceIdentity.noteSystemName()
+        RelayConfigurationStore.observeExternalChanges()
         RemoteHostDirectory.shared.startIfPaired()
         RemoteSessionCatalog.shared.start()
         // This device as a host: Ghost Remote never is one.

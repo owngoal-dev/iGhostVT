@@ -1,4 +1,5 @@
 import Foundation
+import notify
 
 /// The relay this device uses, at most one: the `.vtrpsc` file the user
 /// imported, kept in the app's own container (0600, and on the device under
@@ -11,6 +12,10 @@ import Foundation
 /// the file again (`setRelayConfiguration`) when they differ — a helper that
 /// was not running when the file was imported or removed catches up the
 /// next time anyone looks.
+///
+/// On the Mac, `ighostvt-cli remote relay` writes the same file as the same
+/// user and posts `RelayConfiguration.storeChangedNotification`; the app
+/// then forgets what it read and treats the file as freshly imported.
 enum RelayConfigurationStore {
     static let didChange = Notification.Name("wiki.qaq.ighostvt.relayConfigurationDidChange")
 
@@ -59,10 +64,24 @@ enum RelayConfigurationStore {
         notify()
     }
 
+    /// Reads the file again whenever the CLI says it rewrote it. The
+    /// notification is unauthenticated, which is fine: all it can do is make
+    /// the app read its own file.
+    static func observeExternalChanges() {
+        #if targetEnvironment(macCatalyst)
+            var token: Int32 = 0
+            notify_register_dispatch(RelayConfiguration.storeChangedNotification, &token, .main) { _ in
+                lock.withLock { cache = nil }
+                AppLog.info(.transport, "relay configuration changed outside the app")
+                notify()
+            }
+        #endif
+    }
+
     private static var fileURL: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         #if targetEnvironment(macCatalyst)
-            return base.appendingPathComponent("iGhostVT/Relay.vtrpsc")
+            return base.appendingPathComponent(RelayConfiguration.macStoreSubpath)
         #else
             return base.appendingPathComponent("Relay.vtrpsc")
         #endif

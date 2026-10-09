@@ -362,6 +362,39 @@ shell's `cwd` (the same kernel read `inheritDirectoryFrom` uses) so a
 session can be named by something better than its id. The app sends neither
 op; the daemon's `write` and attach paths are untouched.
 
+`ighostvt-cli remote …` (`status`, `on`/`off`, `pair [--wait | --end]`,
+`revoke`, `name`, `relay <file> | --remove`) sends the management ops
+Settings ▸ Remote Access sends (20–26), and is no new trust either: the
+CLI has the rights of whoever runs it, and any admitted local peer may
+already send them. The pairing code alone goes to stdout; `--wait` ends the
+window if interrupted. On the Mac it must run as the agent's user — root is
+refused by the uid check, so the CLI says so before trying. `relay` is Mac
+only and writes the *app's* file (`RelayConfiguration.macStoreSubpath`,
+`mkstemp` 0600 then `rename`) as that user before handing the helper the
+same bytes, then posts `RelayConfiguration.storeChangedNotification` so a
+running app drops its cache: setting the helper alone would be undone by
+the app's next reconcile, which sends the app's file — or none. `on` and
+`pair` reconcile the same way once the helper listens. On the device the
+CLI cannot name the app's home (and may be root), so `relay` refuses there.
+The CLI compiles `RelayConfiguration.swift` and `RemoteAccess.swift` from
+`Shared/Remote` through an exception set that excludes every other file in
+that folder — a new file there joins the CLI unless it is added to the set.
+`Scripts/mac-install.sh` is the unattended Mac install built on it: root
+copies the notarized bundle into `/Applications` (SHA256SUMS + `spctl`
+checked), and every other step — the open-at-login LaunchAgent
+(`wiki.qaq.ighostvt.open-at-login`, plain `open -g -b`), the relay file,
+`remote on`, `remote pair` — runs as the user through `launchctl asuser`.
+What it cannot do is grant Local Network: that is no TCC entry, no MDM
+payload exists for it, and TN3179 exempts launchd *daemons* and root, never
+an agent — the helper's prompt is attributed to iGhostVT.app. Until someone
+allows it the helper still accepts connections and registers with a relay
+on the internet, but its Bonjour advertisement is blocked, so nearby
+devices do not see the host. The app itself browses only when something is
+paired or Settings ▸ Remote Access is open (`askRemoteDevices` uses
+`startIfPaired`): the Mac's menu bar fills the New Tab on Device element
+at launch, and browsing from there raised the prompt on a first launch with
+nothing to find.
+
 `setSessionAttributes` (op 14) is the one thing the app keeps *in* a
 session: a string→string dictionary (`attrs`) that `ighostvtd-io` stores on
 the `PTYSession`, never reads, and hands back in the open reply (empty),

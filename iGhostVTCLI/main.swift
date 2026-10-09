@@ -2,7 +2,8 @@ import Darwin
 import Foundation
 
 // A one-shot client of `ighostvtd`: it lists the daemon's sessions, reads
-// what one is showing, types into one, opens one, or closes one, and exits.
+// what one is showing, types into one, opens one, or closes one, or manages
+// this device's remote access, and exits.
 // It never attaches — a session the app has open keeps its tab while this
 // runs, and nothing here takes over the terminal it was run from.
 
@@ -12,6 +13,12 @@ usage: ighostvt-cli list
        ighostvt-cli send <sid> (text <string> | key <name>)...
        ighostvt-cli new [-- <command> [argument ...]]
        ighostvt-cli kill <sid>
+       ighostvt-cli remote [status]
+       ighostvt-cli remote (on | off)
+       ighostvt-cli remote pair [--wait | --end]
+       ighostvt-cli remote revoke <device-id>
+       ighostvt-cli remote name <name>
+       ighostvt-cli remote relay (<file.vtrpsc> | --remove)
 
   list          show the daemon's sessions: id, foreground process, size,
                 whether it is attached, the tab's lock, and the shell's
@@ -23,6 +30,21 @@ usage: ighostvt-cli list
   new           start a session and print its id, running the shell or the
                 given command; it stays open for iGhostVT to show
   kill          close a session and wait for it to exit
+  remote        this device's remote access:
+    status      whether it is on, this host's name and id, the relay, the
+                open pairing code, and the paired devices
+    on, off     turn remote access on or off; on waits for it to listen
+    pair        open a pairing window and print its code, which works for
+                \(Int(RemoteAccess.pairingWindowSeconds / 60)) minutes whether or not this waits. --wait
+                stays until a device pairs and closes the window if
+                interrupted; --end closes it
+    revoke      forget a paired device; its key stops working at once
+    name        what other devices call this one; an empty name goes back to
+                the device's own
+    relay       use this relay configuration (Mac only), as importing it in
+                iGhostVT does; --remove stops using a relay
+
+On the Mac, run it as the user iGhostVT runs for, never as root.
 """
 
 enum Command {
@@ -32,6 +54,7 @@ enum Command {
     case send(sessionID: UInt64, input: [UInt8])
     case new(command: [String])
     case kill(sessionID: UInt64)
+    case remote(RemoteCommand)
 }
 
 func parseSessionID(_ text: String?, _ what: String) throws -> UInt64 {
@@ -96,10 +119,58 @@ func parse(_ arguments: [String]) throws -> Command {
         return .new(command: command)
     case "kill":
         return try .kill(sessionID: parseSessionID(rest.first, "kill"))
+    case "remote":
+        return try .remote(parseRemote(rest))
     case "-h", "--help", "help":
         return .help
     default:
         throw CLIError.usage("No command named \(verb)\n\n\(usage)")
+    }
+}
+
+func parseRemote(_ arguments: [String]) throws -> RemoteCommand {
+    let rest = Array(arguments.dropFirst())
+    func noArguments(_ command: RemoteCommand) throws -> RemoteCommand {
+        guard rest.isEmpty else { throw CLIError.usage("The remote \(arguments[0]) command takes no arguments.") }
+        return command
+    }
+    switch arguments.first {
+    case nil, "status":
+        return try noArguments(.status)
+    case "on":
+        return try noArguments(.enable(true))
+    case "off":
+        return try noArguments(.enable(false))
+    case "pair":
+        switch rest {
+        case []: return .pair(wait: false)
+        case ["--wait"]: return .pair(wait: true)
+        case ["--end"]: return .endPairing
+        default: throw CLIError.usage("The remote pair command takes --wait or --end.")
+        }
+    case "revoke":
+        guard rest.count == 1, let deviceID = rest.first, !deviceID.isEmpty else {
+            throw CLIError.usage("The remote revoke command needs a device id. Run `ighostvt-cli remote status` to see them.")
+        }
+        return .revoke(deviceID: deviceID)
+    case "name":
+        guard rest.count == 1, let name = rest.first else {
+            throw CLIError.usage("The remote name command takes one name; \"\" goes back to the device's own.")
+        }
+        return .rename(name)
+    case "relay":
+        guard rest.count == 1, let argument = rest.first else {
+            throw CLIError.usage("The remote relay command takes a .vtrpsc file or --remove.")
+        }
+        if argument == "--remove" {
+            return .relay(path: nil)
+        }
+        guard !argument.hasPrefix("-") else {
+            throw CLIError.usage("The remote relay command takes a .vtrpsc file or --remove.")
+        }
+        return .relay(path: argument)
+    case let verb?:
+        throw CLIError.usage("No remote command named \(verb)\n\n\(usage)")
     }
 }
 
@@ -129,6 +200,8 @@ do {
         try Commands.new(command: command)
     case let .kill(sessionID):
         try Commands.kill(sessionID: sessionID)
+    case let .remote(command):
+        try RemoteCommands.run(command)
     }
     exit(0)
 } catch {

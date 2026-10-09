@@ -21,12 +21,19 @@ enum CLIError: Error {
     case daemonTooOld
     case refused(iGhostVTReplyCode, String?)
     case sessionLingered(UInt64)
+    case runAsRoot
+    case remoteAccessOff
+    case remoteAccessStuck(String?)
+    case pairingClosed
+    case relayStoreFailed(String)
+    case relayUnsupported
 
     var exitCode: Int32 {
         switch self {
         case .usage: 64
-        case .daemonUnreachable, .timedOut, .daemonTooOld: 69
-        case .refused, .sessionLingered: 1
+        case .daemonUnreachable, .timedOut, .daemonTooOld, .relayUnsupported: 69
+        case .runAsRoot: 77
+        case .refused, .sessionLingered, .remoteAccessOff, .remoteAccessStuck, .pairingClosed, .relayStoreFailed: 1
         }
     }
 
@@ -56,6 +63,21 @@ enum CLIError: Error {
             }
         case let .sessionLingered(id):
             return "Session \(id) did not exit. Try again."
+        case .runAsRoot:
+            return "The terminal daemon runs for a user, not for root. Run this as that user: sudo -u <user> ighostvt-cli …"
+        case .remoteAccessOff:
+            return "Remote access is off. Turn it on with `ighostvt-cli remote on`."
+        case let .remoteAccessStuck(detail):
+            if let detail, !detail.isEmpty {
+                return "Remote access could not start: \(detail)"
+            }
+            return "Remote access did not start in time. Try again."
+        case .pairingClosed:
+            return "The pairing window closed before a device paired."
+        case let .relayStoreFailed(path):
+            return "Unable to write \(path)."
+        case .relayUnsupported:
+            return "On this device, import the relay file in iGhostVT Settings ▸ Remote Access."
         }
     }
 }
@@ -100,6 +122,11 @@ final class DaemonClient {
     /// Creates the connection and completes the handshake every other
     /// request is gated on.
     func connect() throws {
+        #if os(macOS)
+            // The Mac's daemon is the user's own agent and admits only that
+            // user; root would be turned away as if nothing were running.
+            guard getuid() != 0 else { throw CLIError.runAsRoot }
+        #endif
         guard let connection = iGhostVTProtocol.serviceName.withCString({
             ighostvtCreateMachServiceConnection($0, queue, 0)
         }) else {

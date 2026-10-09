@@ -24,20 +24,7 @@ enum Commands {
                 session.listedDirectory,
             ])
         }
-        let widths = (0 ..< table[0].count).map { column in table.map { $0[column].count }.max() ?? 0 }
-        for row in table {
-            var line = ""
-            for (column, field) in row.enumerated() {
-                line += field
-                // Padded by hand: `padding(toLength:)` measures — and cuts —
-                // in UTF-16 units, and a process name outside the BMP would
-                // lose its last character to it.
-                if column < row.count - 1 {
-                    line += String(repeating: " ", count: max(0, widths[column] + 2 - field.count))
-                }
-            }
-            print(line.trimmedTrailingSpaces())
-        }
+        printTable(table)
     }
 
     static func capture(sessionID: UInt64, full: Bool) throws {
@@ -127,6 +114,25 @@ enum Commands {
             usleep(100_000)
         }
         throw CLIError.sessionLingered(sessionID)
+    }
+}
+
+/// Prints rows as columns two spaces apart, the first row a header.
+func printTable(_ table: [[String]]) {
+    guard let header = table.first else { return }
+    let widths = (0 ..< header.count).map { column in table.map { $0[column].count }.max() ?? 0 }
+    for row in table {
+        var line = ""
+        for (column, field) in row.enumerated() {
+            line += field
+            // Padded by hand: `padding(toLength:)` measures — and cuts — in
+            // UTF-16 units, and a name outside the BMP would lose its last
+            // character to it.
+            if column < row.count - 1 {
+                line += String(repeating: " ", count: max(0, widths[column] + 2 - field.count))
+            }
+        }
+        print(line.trimmedTrailingSpaces())
     }
 }
 
