@@ -36,6 +36,9 @@ struct RootView: View {
     /// The strip an iPadOS window's own controls take at its top edge
     /// (`WindowControlsInsetReader`); zero everywhere else.
     @State private var windowControls = WindowControlsInset()
+    /// The safe area at the sidebar's edge: a landscape iPhone's notch side.
+    @State private var leadingSafeArea: CGFloat = 0
+    @Environment(\.layoutDirection) private var layoutDirection
     /// Whether this window shows the regular presentation — sidebar, top
     /// strip — as opposed to the phone's bottom bar. Hard-true on the Mac:
     /// a narrow Catalyst window reports a compact width class, and the
@@ -69,10 +72,27 @@ struct RootView: View {
                     .overlay(alignment: .trailing) {
                         SidebarResizeHandle(width: $sidebarWidth)
                     }
-                    .transition(.move(edge: .leading))
+                    // Out past the safe area as well: `move` slides it by its
+                    // own width from where it stands, the safe area's edge,
+                    // and on a landscape iPhone its last stretch then sat in
+                    // the notch's inset until the spring settled.
+                    .transition(
+                        .move(edge: .leading)
+                            .combined(with: .offset(x: layoutDirection == .rightToLeft ? leadingSafeArea : -leadingSafeArea)),
+                    )
                 }
                 terminalColumn
             }
+            .background(
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { leadingSafeArea = proxy.safeAreaInsets.leading }
+                        .onChange(of: proxy.safeAreaInsets.leading) { leadingSafeArea = $0 }
+                }
+                // Laid out over the whole window, so the insets it reads
+                // are the window's, not the zero of a view inside them.
+                .ignoresSafeArea(.container),
+            )
             // The animation must hang off the container, keyed on the value:
             // `showsSidebar` is `@AppStorage`, and a UserDefaults-backed write
             // does not reliably land inside a `withAnimation` transaction, so
