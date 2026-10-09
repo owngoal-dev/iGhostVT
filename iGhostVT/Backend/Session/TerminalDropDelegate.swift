@@ -92,6 +92,11 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
                 resolved = await Self.uploaded(resolved, with: upload)
                 guard !resolved.isEmpty else { return }
             }
+            // A tab still connecting would drop the paste on the floor.
+            if let awaitConnection = terminal.awaitConnection, !(await awaitConnection()) {
+                AppLog.warning(.drop, "drop not pasted: the tab never connected")
+                return
+            }
             let text = resolved.map(\.pasted).joined(separator: " ")
             let trailer = resolved.last?.isPath == true ? " " : ""
             AppLog.info(.drop, "drop pasting \(resolved.count) of \(payloads.count) item(s)")

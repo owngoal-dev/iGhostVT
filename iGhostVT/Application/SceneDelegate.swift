@@ -256,6 +256,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// moment the activity finds out and folds.
     func sceneWillEnterForeground(_: UIScene) {
         guard !isDiscarded else { return }
+        tabManager.armForegroundTakeover()
         if AppEdition.isRemoteOnly {
             // iOS dropped every link while the app was suspended: try them
             // now, not when each back-off timer gets round to it.

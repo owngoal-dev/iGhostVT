@@ -314,6 +314,9 @@ final class TerminalTab: ObservableObject, Identifiable {
         }
         terminal.makePlatformView = { [weak self] in
             let view = LockableTerminalView(frame: .zero)
+            view.awaitConnection = { [weak self] in
+                await self?.store.waitUntilConnected() ?? false
+            }
             view.isInteractionLocked = self?.isLocked ?? false
             view.isSoftwareKeyboardLocked = self?.isKeyboardLocked ?? false
             view.onLockedTouch = { [weak self] in

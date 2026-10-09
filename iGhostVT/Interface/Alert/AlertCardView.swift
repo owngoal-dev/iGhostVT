@@ -69,9 +69,9 @@ struct AlertCardView: View {
     var progress: AlertProgress?
 
     var body: some View {
-        // Two looks and no more: one highlighted answer at most, every
-        // other button plain. Three buttons in three colours read as three
-        // equally urgent choices.
+        // Two looks and no more: filled or plain. One highlighted answer at
+        // most — Return's — and any other filled one is `.filled`. Three
+        // buttons in three colours read as three equally urgent choices.
         assert(actions.filter { $0.kind == .highlighted }.count <= 1, "an alert highlights one action at most")
         return VStack(spacing: DS.Padding.l) {
             Image("AlertIcon")
@@ -321,19 +321,24 @@ private struct AlertFirstResponder: UIViewRepresentable {
 
 /// AlertController's button, translated: full-width rounded rectangle with a
 /// 1pt accent border. The highlighted kind fills with the accent and speaks
-/// semibold; the normal one stays clear with accent-colored text. There is
+/// semibold, and so does the filled kind, which only is not Return's
+/// default; the normal one stays clear with accent-colored text. There is
 /// no third look — a destructive answer is said by its title, not a red
 /// fill, so an alert never shows more than these two.
 struct AlertButtonStyle: ButtonStyle {
     enum Kind {
         case normal
         case highlighted
+        /// Looks highlighted but is not the default action: for a second
+        /// answer as weighty as the first (a remote tab's detach and
+        /// terminate).
+        case filled
     }
 
     let kind: Kind
 
     private var isFilled: Bool {
-        kind == .highlighted
+        kind != .normal
     }
 
     func makeBody(configuration: Configuration) -> some View {

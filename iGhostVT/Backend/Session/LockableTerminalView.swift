@@ -66,6 +66,10 @@ final class LockableTerminalView: TerminalView {
     /// there.
     var uploadDroppedFiles: (@MainActor ([URL]) async -> [String?])?
 
+    /// Waits for the tab's connection before a drop pastes, since a paste
+    /// sent while it connects goes nowhere. False when the wait is given up.
+    var awaitConnection: (@MainActor () async -> Bool)?
+
     /// What the terminal offers UIKit as its keyboard while locked. An empty
     /// view keeps first-responder status — and with it the hardware key
     /// path — while leaving nothing to raise.

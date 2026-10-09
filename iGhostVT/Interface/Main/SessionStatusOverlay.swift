@@ -155,7 +155,14 @@ struct SessionStatusOverlay: View {
             pill("Starting…")
 
         case .connecting:
-            pill("Connecting…")
+            // A file dropped meanwhile waits for the connection; its pill
+            // is up already, so it can be cancelled from here.
+            ZStack {
+                pill("Connecting…")
+                if let transfer = store.zmodemTransfer {
+                    transferPill(transfer)
+                }
+            }
 
         case let .failed(reason):
             if store.processExitStatus == nil, !isAwaitingClose {
@@ -181,20 +188,7 @@ struct SessionStatusOverlay: View {
 
         case .connected:
             if let transfer = store.zmodemTransfer {
-                // The pane ends above the keyboard and its accessory bar
-                // (nothing here ignores the keyboard's safe area), so either
-                // place clears them. Over a bottom bar — a phone, a narrow
-                // iPad window — the transfer sits centred just above it, the
-                // way a toast does, and grows into place; beside a sidebar,
-                // shown or collapsed, it keeps to the corner.
-                ZmodemTransferPill(info: transfer) { store.cancelZmodemTransfer() }
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: isCompactWidth ? .bottom : .bottomTrailing,
-                    )
-                    .padding(DS.Padding.l)
-                    .transition(isCompactWidth ? .scale(scale: 0.85).combined(with: .opacity) : .opacity)
+                transferPill(transfer)
             } else if store.isAwaitingFirstOutput {
                 // The session is open but the shell has yet to print a byte —
                 // the first shell after a reboot can take half a minute over
@@ -215,6 +209,22 @@ struct SessionStatusOverlay: View {
         #else
             horizontalSizeClass == .compact
         #endif
+    }
+
+    /// The pane ends above the keyboard and its accessory bar (nothing here
+    /// ignores the keyboard's safe area), so either place clears them. Over
+    /// a bottom bar — a phone, a narrow iPad window — the transfer sits
+    /// centred just above it, the way a toast does, and grows into place;
+    /// beside a sidebar, shown or collapsed, it keeps to the corner.
+    private func transferPill(_ transfer: ZmodemTransferInfo) -> some View {
+        ZmodemTransferPill(info: transfer) { store.cancelZmodemTransfer() }
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: isCompactWidth ? .bottom : .bottomTrailing,
+            )
+            .padding(DS.Padding.l)
+            .transition(isCompactWidth ? .scale(scale: 0.85).combined(with: .opacity) : .opacity)
     }
 
     private func pill(_ title: LocalizedStringKey) -> some View {

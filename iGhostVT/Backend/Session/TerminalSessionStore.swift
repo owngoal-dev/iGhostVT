@@ -42,7 +42,73 @@ final class TerminalSessionStore: ObservableObject {
         return false
     }
 
-    @Published private(set) var status: Status = .idle
+    @Published private(set) var status: Status = .idle {
+        didSet {
+            if status == .connected, oldValue != .connected {
+                // A fresh attach since the app came forward: the tab has
+                // the session, so a later loss is someone else's choice.
+                takeoverArmed = false
+            }
+            claimIfArmed()
+        }
+    }
+
+    /// One automatic Use Here, armed each time the app comes back to the
+    /// foreground (`TabManager.armForegroundTakeover`). The first time the
+    /// tab is in front afterwards, a session another device holds is taken
+    /// back without asking — coming back to the app is the person saying
+    /// they are here now. Spent by that takeover, by a fresh attach, or by
+    /// `takeoverGrace` in front still connected; after that, a device that
+    /// takes the session again is met with the card, as before. Two devices
+    /// cannot trade a session back and forth on their own: each takes it at
+    /// most once per return to the foreground, and only a person brings an
+    /// app forward.
+    private var takeoverArmed = false
+    private var takeoverGeneration = 0
+    private static let takeoverGrace: UInt64 = 5_000_000_000
+
+    /// The tab is the one its window shows (`TabManager`).
+    var isFrontTab = false {
+        didSet {
+            if isFrontTab != oldValue { claimIfArmed() }
+        }
+    }
+
+    func armForegroundTakeover() {
+        takeoverArmed = true
+        takeoverGeneration &+= 1
+        claimIfArmed()
+    }
+
+    private func claimIfArmed() {
+        guard takeoverArmed, isFrontTab else { return }
+        switch status {
+        case let .elsewhere(holder?):
+            takeoverArmed = false
+            AppLog.info(.session, "back in the foreground: taking the session from \(holder)")
+            // Not from inside `status`'s own observer: the takeover sets it.
+            Task { @MainActor [weak self] in
+                guard let self, case .elsewhere = status else { return }
+                takeOver()
+            }
+        case .elsewhere(nil):
+            // Another window of this app holds it; windows never fight.
+            takeoverArmed = false
+        case .connected:
+            // A link that looked fine as the app came forward may have
+            // died while it was suspended — it is found out within seconds
+            // and the reconnect then meets the holder. Seen connected that
+            // long, the tab has the session.
+            let generation = takeoverGeneration
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: Self.takeoverGrace)
+                guard let self, takeoverGeneration == generation, isFrontTab, status == .connected else { return }
+                takeoverArmed = false
+            }
+        case .idle, .connecting, .failed:
+            break
+        }
+    }
 
     /// Whether the session is sitting on a failure a retry could clear. Read
     /// by `TabManager.retryFailedTabs()` when the reason for the failure was
@@ -428,7 +494,19 @@ final class TerminalSessionStore: ObservableObject {
             info.transferred = sent
             zmodemTransfer = info
         }
-        let task = Task { () -> [String?] in
+        let task = Task { [weak self] () -> [String?] in
+            // Dropped while the tab connects: the pill says so and keeps its
+            // ×, and the copy starts once the connection is up.
+            if self?.status != .connected {
+                self?.zmodemTransfer?.isWaitingForConnection = true
+                guard await self?.waitUntilConnected() == true else {
+                    if !Task.isCancelled {
+                        self?.finishUpload(.failed(String(localized: "The terminal did not connect.")))
+                    }
+                    return files.map { _ in nil }
+                }
+                self?.zmodemTransfer?.isWaitingForConnection = false
+            }
             var paths: [String?] = []
             var base: UInt64 = 0
             for (file, size) in zip(files, sizes) {
@@ -474,8 +552,24 @@ final class TerminalSessionStore: ObservableObject {
         return paths
     }
 
+    /// Returns once the tab is connected: true then, false if the waiting
+    /// task is cancelled or the connection gives up (failed, or the session
+    /// is in use elsewhere). Reconnects in between are waited out.
+    func waitUntilConnected() async -> Bool {
+        for await status in $status.values {
+            if Task.isCancelled { return false }
+            switch status {
+            case .connected: return true
+            case .failed, .elsewhere: return false
+            case .idle, .connecting: continue
+            }
+        }
+        return false
+    }
+
     private func finishUpload(_ phase: ZmodemTransferPhase) {
         guard var info = zmodemTransfer, info.phase == .active else { return }
+        info.isWaitingForConnection = false
         info.phase = phase
         if phase == .done, let total = info.total {
             info.transferred = total

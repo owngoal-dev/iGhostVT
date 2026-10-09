@@ -260,6 +260,7 @@ final class TabManager: ObservableObject {
     private func syncSurfaceVisibility() {
         for tab in tabs {
             let visible = tab.id == activeTabID
+            tab.store.isFrontTab = visible
             if tab.terminal.isSurfaceVisible != visible {
                 if !visible {
                     tab.capturePreview()
@@ -312,6 +313,15 @@ final class TabManager: ObservableObject {
                 // app was away: now is the moment to try.
                 tab.store.reconnectNowIfWaiting()
             }
+        }
+    }
+
+    /// The app came back to the foreground: each tab takes its session
+    /// back, once, the first time it is in front
+    /// (`TerminalSessionStore.armForegroundTakeover`).
+    func armForegroundTakeover() {
+        for tab in tabs {
+            tab.store.armForegroundTakeover()
         }
     }
 
@@ -501,7 +511,16 @@ final class TabManager: ObservableObject {
     /// would die with the tab, close straight away when there is nothing to
     /// lose — no session, or a shell idling at its prompt.
     func requestClose(_ tab: TerminalTab, from origin: TabCloseOrigin) {
-        // A remote tab always asks: leave the shell running on its host,
+        // A remote tab another device is using has nothing to end from
+        // here: it lets go and the shell keeps running, without a question.
+        // (A local tab held elsewhere still asks — detached, it would come
+        // straight back as a held tab, `HostSessionWatcher`.)
+        if tab.isRemote, tab.store.isHeldElsewhere {
+            AppLog.info(.tabs, "close of tab \(tab.id) (\(origin.rawValue)) held elsewhere: detaching")
+            detach(tab)
+            return
+        }
+        // A remote tab otherwise asks: leave the shell running on its host,
         // or end it.
         if tab.hasRunningProgram || tab.isRemote {
             AppLog.info(.tabs, "close of tab \(tab.id) (\(origin.rawValue)) awaits confirmation, session \(Self.describeSession(of: tab))")

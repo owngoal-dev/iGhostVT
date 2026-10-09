@@ -41,7 +41,11 @@ struct ZmodemTransferPill: View {
     private var caption: some View {
         switch info.phase {
         case .active:
-            if let fraction {
+            if info.isWaitingForConnection {
+                Text("Waiting for connection…")
+                    .font(DS.Font.detail)
+                    .foregroundStyle(.secondary)
+            } else if let fraction {
                 ProgressView(value: fraction)
                     .progressViewStyle(.linear)
             } else {

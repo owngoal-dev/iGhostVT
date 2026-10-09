@@ -405,6 +405,19 @@ paired or Settings ▸ Remote Access is open (`askRemoteDevices` uses
 at launch, and browsing from there raised the prompt on a first launch with
 nothing to find.
 
+A session held by another device shows the tab's "In Use on …" card, and
+Use Here takes it. Coming back to the app is taken as that answer once:
+every scene arms its tabs as it enters the foreground
+(`TerminalSessionStore.armForegroundTakeover`), and the first time a tab
+is in front afterwards a session another *device* holds is taken back on
+the spot — another window of this app (no holder name) never is. The arm is
+spent by that takeover, by a fresh attach, or by five seconds in front
+still connected (a link that looked alive on return may have died while
+suspended, and its reconnect is what meets the holder); a later loss shows
+the card. No two devices can trade a session on their own: each takes it
+at most once per return to the foreground, and only a person brings an app
+forward.
+
 `setSessionAttributes` (op 14) is the one thing the app keeps *in* a
 session: a string→string dictionary (`attrs`) that `ighostvtd-io` stores on
 the `PTYSession`, never reads, and hands back in the open reply (empty),

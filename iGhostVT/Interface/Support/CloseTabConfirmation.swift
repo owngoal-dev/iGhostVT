@@ -19,16 +19,16 @@ extension View {
                     return AlertViewController(
                         title: "Close “\(tab.displayTitle)”?",
                         message: "The terminal can keep running on “\(hostName)”.",
-                        // The two answers first, the one that keeps the
-                        // work leading and highlighted; Cancel last, and
-                        // still what a dismissal without an answer means
-                        // (the last `.normal` action).
+                        // The two answers first, both filled, the one that
+                        // keeps the work leading and Return's default;
+                        // Cancel last, and still what a dismissal without
+                        // an answer means (the last `.normal` action).
                         actions: [
-                            AlertAction("Keep Running", kind: .highlighted) {
+                            AlertAction("Detach Session", kind: .highlighted) {
                                 tabManager.detach(tab)
                                 finish()
                             },
-                            AlertAction("End Session") {
+                            AlertAction("Terminate Session", kind: .filled) {
                                 tabManager.close(tab, from: .confirmation)
                                 finish()
                             },

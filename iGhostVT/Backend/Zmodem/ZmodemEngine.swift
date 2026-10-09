@@ -25,6 +25,9 @@ struct ZmodemTransferInfo: Equatable {
     var transferred: UInt64
     var total: UInt64?
     var phase: ZmodemTransferPhase = .active
+    /// A drop's copy is held until the tab's own connection is up: the
+    /// paste that follows it travels on that connection.
+    var isWaitingForConnection = false
 }
 
 /// Every mutable field is touched only on `queue`; the public entry points hop

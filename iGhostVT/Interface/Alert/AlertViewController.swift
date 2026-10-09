@@ -40,7 +40,7 @@ final class AlertViewController: OverlayPanelController {
     /// confirmation), or its window closed. Without it no action runs and
     /// the presenter's slot stays busy for the window's life. The last
     /// plain action by default, which is the cancel in every confirmation
-    /// (a remote tab's close has a plain End Session before it); an
+    /// (a remote tab's Terminate Session before it is `.filled`); an
     /// alert whose plain answer does something (the relocation prompt's
     /// Quit) sets its own.
     var onDismissUnanswered: (() -> Void)?
