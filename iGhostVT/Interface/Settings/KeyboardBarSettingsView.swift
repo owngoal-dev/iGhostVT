@@ -207,9 +207,10 @@ import SwiftUI
                 Image(systemName: systemImage)
                     .font(.system(size: size * 0.42, weight: .medium))
                     .foregroundColor(.primary)
-            } else if case let .symbol(symbol) = key {
-                // A long key sends all of its text but shows only the start.
-                Text(String(symbol.prefix(4)))
+            } else if let symbol = key.accessoryItem.buttonTitle {
+                // The bar's own label: a long key sends all of its text but
+                // shows only its first four characters.
+                Text(symbol)
                     .font(.system(size: size * 0.4, weight: .semibold, design: .monospaced))
                     .foregroundColor(.primary)
                     .lineLimit(1)

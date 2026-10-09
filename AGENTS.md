@@ -47,7 +47,7 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026100901, Ghostty 35a81a98 on Zig 0.16). 2.x
+  (`upToNextMajor` from 2.2.2026100902, Ghostty 35a81a98 on Zig 0.16). 2.x
   selects text inline on iOS — a long press puts handles and the edit menu
   on the terminal itself — and removed the long-press hand-off
   (`onTextSelectionRequest`) the app's own selection sheet hung off, so the
@@ -65,7 +65,11 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   switching light and dark) no longer snaps an open tab to the config's
   `font-size` — which, after Settings ▸ Text Size changed, resized tabs
   that should keep theirs — and reports the size back
-  (`TerminalViewState.fontSize`). 2.2.2026100901 copies without the
+  (`TerminalViewState.fontSize`). 2.2.2026100902 draws a symbol key of
+  the accessory bar as its first four characters on one line, widening
+  the button into a capsule (`TerminalInputAccessoryItem.buttonTitle`,
+  which the app's key editor reads too); a key still sends all of its
+  text. 2.2.2026100901 copies without the
   padding a TUI paints around its lines — trailing blanks off every line,
   and at most the selection's start column of indent off every later one
   (`TerminalCopyText`) — from the touch selection, the menu's Copy and ⌘C
