@@ -24,6 +24,10 @@ import UIKit
 struct WindowControlsInset: Equatable {
     var top: CGFloat = 0
     var leading: CGFloat = 0
+    /// The plain safe area at the leading edge — a landscape iPhone's
+    /// notch side — which the sidebar's slide has to clear. Read here
+    /// because a SwiftUI `GeometryReader` in that layout reported zero.
+    var safeAreaLeading: CGFloat = 0
 }
 
 struct WindowControlsInsetReader: UIViewRepresentable {
@@ -64,15 +68,21 @@ struct WindowControlsInsetReader: UIViewRepresentable {
         }
 
         private var controlsInset: WindowControlsInset {
+            let safeAreaLeading = effectiveUserInterfaceLayoutDirection == .rightToLeft
+                ? safeAreaInsets.right
+                : safeAreaInsets.left
             #if targetEnvironment(macCatalyst)
-                return WindowControlsInset()
+                return WindowControlsInset(safeAreaLeading: safeAreaLeading)
             #else
-                guard #available(iOS 26.0, *), window != nil else { return WindowControlsInset() }
+                guard #available(iOS 26.0, *), window != nil else {
+                    return WindowControlsInset(safeAreaLeading: safeAreaLeading)
+                }
                 let vertical = directionalEdgeInsets(for: .safeArea(cornerAdaptation: .vertical))
                 let horizontal = directionalEdgeInsets(for: .safeArea(cornerAdaptation: .horizontal))
                 return WindowControlsInset(
                     top: max(0, vertical.top - safeAreaInsets.top),
                     leading: max(0, horizontal.leading - safeAreaInsets.left),
+                    safeAreaLeading: safeAreaLeading,
                 )
             #endif
         }
