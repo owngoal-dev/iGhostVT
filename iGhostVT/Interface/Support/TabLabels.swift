@@ -22,23 +22,28 @@ struct ObservedTabTitle: View {
     var font: DS.Font = .labelEmphasis
 
     var body: some View {
-        HStack(spacing: 4) {
-            // A shell on another device wears the network glyph before its
-            // title, in every presentation of the tab.
-            if tab.isRemote {
-                Image(systemName: "network")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.accentColor)
-                    .accessibilityLabel(tab.remoteHostName ?? String(localized: "Remote"))
+        Text(tab.displayTitle)
+            .font(font)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .retitleTransition()
+            .animation(tab.animatesRetitle ? DS.Motion.smooth : nil, value: tab.displayTitle)
+            // A shell on another device is marked as Fila marks the current
+            // directory: a short thick highlighter band in a wash of the
+            // accent colour, sitting on the baseline behind the text, in
+            // every presentation of the tab.
+            .background(alignment: Alignment(horizontal: .center, vertical: .lastTextBaseline)) {
+                if tab.isRemote {
+                    Capsule()
+                        .fill(Color.accentColor.opacity(Self.remoteMarkerOpacity))
+                        .frame(height: Self.remoteMarkerHeight)
+                }
             }
-            Text(tab.displayTitle)
-                .font(font)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .retitleTransition()
-                .animation(tab.animatesRetitle ? DS.Motion.smooth : nil, value: tab.displayTitle)
-        }
+            .accessibilityValue(tab.isRemote ? (tab.remoteHostName ?? String(localized: "Remote")) : "")
     }
+
+    private static let remoteMarkerHeight: CGFloat = 3
+    private static let remoteMarkerOpacity: Double = 0.2
 }
 
 /// The dim line beside the title: what the session reports about itself
