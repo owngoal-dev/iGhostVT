@@ -253,6 +253,10 @@ cut from one tag.
 - A cold launch reattaches through `RemoteTabLedger`, written whenever a
   window goes to the background (iOS kills a suspended app without a
   word), and a return to the foreground retries every tab's link at once.
+  Leaving with a remote tab open — in either edition — holds a background
+  task (`RemoteBackgroundGrace`, no `UIBackgroundModes`: none of them is
+  this), so a short trip away keeps the links, a transfer included; it
+  ends on return, when iOS calls time, or with the last remote tab.
 - The Live Activity, and no other widget: `GhostRemoteWidgets` builds the
   `iGhostVTWidgets/` sources a second time (bundle id
   `wiki.qaq.GhostRemote.widgets`, a host's bundle id must prefix its

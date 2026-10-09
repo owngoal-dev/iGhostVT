@@ -26,6 +26,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // they would log keystrokes.
         // Remote tabs try again the moment the network comes back.
         NetworkPathWatcher.shared.start()
+        // A remote tab's links stay up for a while after the app leaves.
+        RemoteBackgroundGrace.install()
         TerminalDebugLog.sink = { message in
             AppLog.verbose(.ghostty, message)
         }

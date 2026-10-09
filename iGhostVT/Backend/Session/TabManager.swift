@@ -510,6 +510,7 @@ final class TabManager: ObservableObject {
             }
         }
         SessionActivityController.shared.refresh()
+        RemoteBackgroundGrace.noteTabsChanged()
     }
 
     /// The path every close control takes: ask first when a running program
@@ -560,6 +561,7 @@ final class TabManager: ObservableObject {
         activeTabID = nil
         DaemonSessionDirectory.shared.releaseResumableClaim()
         SessionActivityController.shared.refresh()
+        RemoteBackgroundGrace.noteTabsChanged()
     }
 
     /// The user emptied the window from the tab switcher: every shell dies,
@@ -580,6 +582,7 @@ final class TabManager: ObservableObject {
             activeTabID = nil
         }
         SessionActivityController.shared.refresh()
+        RemoteBackgroundGrace.noteTabsChanged()
     }
 
     /// Whether closing everything would interrupt a running program — the
