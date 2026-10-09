@@ -71,6 +71,10 @@ final class LockableTerminalView: TerminalView {
     /// path — while leaving nothing to raise.
     private lazy var suppressedInputView = UIView(frame: .zero)
 
+    /// What dictation has typed and may still revise
+    /// (`LockableTerminalView+Dictation`).
+    var dictatedText = DictatedText()
+
     override var canBecomeFirstResponder: Bool {
         !isInteractionLocked && super.canBecomeFirstResponder
     }
@@ -328,6 +332,8 @@ final class LockableTerminalView: TerminalView {
     /// claim has to be made here, before the library. Escape is never in
     /// the list: it always reaches the terminal.
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        // A key edits the line behind dictation's back.
+        releaseDictatedText()
         var remaining = presses
         for press in presses {
             if let key = press.key, isRemotePaste(key) {
