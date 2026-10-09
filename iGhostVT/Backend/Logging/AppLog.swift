@@ -160,11 +160,19 @@ enum AppLog {
         write(.error, category, message)
     }
 
+    /// Whether verbose lines reach the journal (`DetailedTerminalLog`).
+    /// The unified log has them either way; it keeps debug lines in memory
+    /// only.
+    nonisolated(unsafe) static var writesVerbose = false
+
     private static func write(_ level: Level, _ category: Category, _ message: String) {
         // Public on purpose: nothing here carries user content beyond
         // session ids, sizes, and paths, and a redacted line is useless for
         // the on-device debugging this exists for.
         loggers[category]?.log(level: level.osLogType, "\(message, privacy: .public)")
+        if level == .verbose, !writesVerbose {
+            return
+        }
         queue.async {
             guard journalBytesWritten <= journalByteLimit else { return }
             // Counted with Dog's framing — the level, the timestamp, a tag

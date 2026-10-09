@@ -39,9 +39,6 @@ struct AdvancedSettingsView: View {
         } header: {
             Text("File Transfer")
                 .font(DS.Font.caption)
-        } footer: {
-            Text("Send and receive files with `rz` and `sz`.")
-                .font(DS.Font.detail)
         }
     }
 
@@ -60,14 +57,6 @@ struct AdvancedSettingsView: View {
         } header: {
             Text("Debugging")
                 .font(DS.Font.caption)
-        } footer: {
-            Text(
-                """
-                Writes detailed terminal activity to the log, \
-                including every keystroke, while this is on.
-                """,
-            )
-            .font(DS.Font.detail)
         }
     }
 
@@ -100,8 +89,12 @@ enum ZmodemSetting {
 enum DetailedTerminalLog {
     static let key = "Debug.verboseTerminalLog"
 
+    /// Verbose lines — libghostty's own, a chunk of output, a ZMODEM
+    /// block — reach the journal only while this is on. Off, they went to
+    /// the file all the same, and a download left eighty thousand lines.
     static func apply(_ enabled: Bool) {
-        TerminalDebugLog.enable(enabled ? .standard : [.lifecycle, .metrics])
+        TerminalDebugLog.enable(enabled ? .standard : [])
+        AppLog.writesVerbose = enabled
     }
 }
 
