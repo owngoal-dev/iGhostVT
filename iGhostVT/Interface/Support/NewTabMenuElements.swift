@@ -48,8 +48,13 @@ enum NewTabMenuElements {
     /// Starts asking every paired device for its terminals as a menu
     /// opens, so a device's submenu has the answer by the time the pointer
     /// reaches it. Returns at once.
+    ///
+    /// Browsing raises the local-network prompt, and on the Mac the menu
+    /// bar fills this in as the app launches — so with nothing paired there
+    /// is nobody to ask, and no browsing (Settings ▸ Remote Access browses
+    /// when someone sets out to pair).
     static func askRemoteDevices() {
-        RemoteHostDirectory.shared.start()
+        RemoteHostDirectory.shared.startIfPaired()
         let hosts = RemoteHostDirectory.shared.reachablePaired
             .filter { RemoteHostDirectory.shared.mismatchedVersion(of: $0.id) == nil }
         for host in hosts {
