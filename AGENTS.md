@@ -241,11 +241,21 @@ cut from one tag.
 - A cold launch reattaches through `RemoteTabLedger`, written whenever a
   window goes to the background (iOS kills a suspended app without a
   word), and a return to the foreground retries every tab's link at once.
-- No widget or Live Activity: a free signing account is short of App IDs,
-  and a suspended app's links are down anyway. The bundle id is rewritten
-  by most signing tools, so nothing may depend on it.
+- The Live Activity, and no other widget: `GhostRemoteWidgets` builds the
+  `iGhostVTWidgets/` sources a second time (bundle id
+  `wiki.qaq.GhostRemote.widgets`, a host's bundle id must prefix its
+  extension's), named for this app through `WIDGETS_DISPLAY_NAME`, which
+  each widget target sets and the extension's Info.plist reads. It asks
+  for no entitlement — Live Activities need only `NSSupportsLiveActivities`
+  — but it is one more App ID for whoever signs the .ipa, which a free
+  account has few of; it was left out for that reason until people asked
+  for the activity. A suspended app's links are down, so the activity
+  shows the tabs as they were until the app comes back. The bundle id is
+  rewritten by most signing tools, so nothing may depend on it.
 - CI's `package-ipa` job builds `GhostRemote-<version>.ipa` from the same
-  run number as the debs, refuses one carrying any entitlement (a free
+  run number as the debs (`make ipa` seals the extension first, then the
+  app), refuses one carrying any extension but `GhostRemoteWidgets.appex`
+  or any entitlement on either (a free
   certificate cannot grant it, and AltStore 2 refuses an app whose
   entitlements or usage descriptions differ from its source), and the
   Release run attaches it beside them. The AltStore source,
@@ -577,6 +587,21 @@ that bit:
   a splice idle for 75 s; the host's control connection pings every minute
   and registers again when no pong comes back in 20 s. The direct path is
   unchanged.
+- **A remote link is questioned when the network changes, not left to
+  TCP.** Keepalive and the drop time notice a dead link in 25 s or more,
+  and the tab's back-off used to spend its minute against no network at
+  all — Wi-Fi coming back found the next try up to fifteen seconds away,
+  or the tab failed. `NetworkPathWatcher` (an `NWPathMonitor`, the
+  interfaces' names as the signature, settled for 0.4 s) posts each
+  change; every live `RemoteDaemonLink` then gives up at once if there is
+  no network, and otherwise pings the host and gives up a link it has not
+  heard from in `pathChangeReplyLimit` (5 s). Every host on the line
+  answers the ping, direct or relayed, so this is no compatibility path.
+  When the path comes back, every remote tab tries again at once with a
+  fresh minute (`TabManager.reconnectRemoteTabs`, also run as the app
+  comes forward in both editions), a failed one included unless its shell
+  ended. Time with no network does not count against the minute, and the
+  patient back-off tops out at 5 s.
 - **The relay rate-limits data connections per address** (60 per 10 s,
   `RELAY_RATE_PER_IP`, 0 off): a window restoring a dozen tabs, or several
   devices behind one NAT, must stay under it. The helper sets up at most

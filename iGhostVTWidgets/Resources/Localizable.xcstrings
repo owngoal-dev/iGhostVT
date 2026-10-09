@@ -630,23 +630,6 @@
         }
       }
     },
-    "iGhostVT" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT"
-          }
-        }
-      },
-      "shouldTranslate" : false
-    },
     "Pairing a device" : {
       "localizations" : {
         "ar" : {

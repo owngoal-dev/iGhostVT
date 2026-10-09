@@ -20,7 +20,7 @@ struct TerminalSessionActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     // Same inset as IslandSummary's, so the name sits flush
                     // over the number below it.
-                    Text("iGhostVT")
+                    Text(verbatim: AppName.text)
                         .font(.subheadline.weight(.bold))
                         .fontDesign(.rounded)
                         .padding(.leading, Spacing.line)
@@ -42,7 +42,7 @@ struct TerminalSessionActivityWidget: Widget {
                     .scaledToFit()
                     .frame(width: 20, height: 20)
                     .frame(width: 24, alignment: .leading)
-                    .accessibilityLabel("iGhostVT")
+                    .accessibilityLabel(Text(verbatim: AppName.text))
             } compactTrailing: {
                 // Up for remote access alone: the network glyph, not a 0.
                 if context.state.totalCount == 0, context.state.remoteAccess != nil {
@@ -62,7 +62,7 @@ struct TerminalSessionActivityWidget: Widget {
                 Image("GhostGlyph")
                     .resizable()
                     .scaledToFit()
-                    .accessibilityLabel("iGhostVT")
+                    .accessibilityLabel(Text(verbatim: AppName.text))
             }
         }
     }

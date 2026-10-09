@@ -373,8 +373,9 @@ deb: build
 # certificate) re-signs it with that person's identity. The ad-hoc seal only
 # gives those tools a well-formed bundle to start from; an entitlement here
 # would be one the installer's profile cannot grant, and AltStore checks the
-# ones it finds against its source. Like mac-zip it needs nothing but Xcode,
-# so it neither needs nor runs `check`.
+# ones it finds against its source. The Live Activity extension is sealed
+# first, inside out, with none either. Like mac-zip it needs nothing but
+# Xcode, so it neither needs nor runs `check`.
 ipa:
 	XCBUILD_LABEL=build-ghost-remote $(DEVICE_XCODEBUILD) \
 		-configuration "$(CONFIGURATION)" \
@@ -385,6 +386,9 @@ ipa:
 	@staging="$$(mktemp -d)"; trap 'rm -rf "$$staging"' EXIT; \
 	mkdir -p "$$staging/Payload" "$$(dirname "$(IPA_OUTPUT)")"; \
 	ditto "$(GHOST_REMOTE_APP)" "$$staging/Payload/GhostRemote.app"; \
+	for appex in "$$staging"/Payload/GhostRemote.app/PlugIns/*.appex; do \
+		codesign --force --sign - --timestamp=none "$$appex"; \
+	done; \
 	codesign --force --sign - --timestamp=none "$$staging/Payload/GhostRemote.app"; \
 	rm -f "$(IPA_OUTPUT)"; \
 	(cd "$$staging" && zip -qry "$(IPA_OUTPUT)" Payload); \

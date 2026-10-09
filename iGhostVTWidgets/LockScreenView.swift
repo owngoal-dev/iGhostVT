@@ -48,7 +48,7 @@ struct SummaryHeader: View {
                 .scaledToFit()
                 .frame(width: glyphSize, height: glyphSize)
                 .accessibilityHidden(true)
-            Text("iGhostVT")
+            Text(verbatim: AppName.text)
                 .font(.subheadline.weight(.bold))
             Spacer(minLength: Spacing.line)
             if let summary = state.summaryLine {

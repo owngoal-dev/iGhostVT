@@ -16,6 +16,7 @@
 		AA0000000000000000000107 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000206 /* GhosttyTheme */; };
 		AA0000000000000000000108 /* Dog in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000207 /* Dog */; };
 		AA0000000000000000000109 /* SPIndicator in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000208 /* SPIndicator */; };
+		AA000000000000000000010A /* GhostRemoteWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA000000000000000000030C /* GhostRemoteWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,13 @@
 			remoteGlobalIDString = AA0000000000000000000606;
 			remoteInfo = "ighostvtd-remote";
 		};
+		AA0000000000000000000C05 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000608;
+			remoteInfo = GhostRemoteWidgets;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,6 +69,17 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000710 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA000000000000000000010A /* GhostRemoteWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +90,7 @@
 		AA0000000000000000000309 /* ighostvt-cli */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "ighostvt-cli"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000000000000000000030A /* ighostvtd-remote */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "ighostvtd-remote"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000000000000000000030B /* GhostRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GhostRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000000000000000000030C /* GhostRemoteWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GhostRemoteWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -87,6 +107,13 @@
 				Resources/Info.plist,
 			);
 			target = AA0000000000000000000603 /* iGhostVTWidgets */;
+		};
+		AA0000000000000000000406 /* Exceptions for "iGhostVTWidgets" folder in "GhostRemoteWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = AA0000000000000000000608 /* GhostRemoteWidgets */;
 		};
 		AA0000000000000000000403 /* Exceptions for "iGhostVT" folder in "GhostRemote" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -158,6 +185,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				AA0000000000000000000402 /* Exceptions for "iGhostVTWidgets" folder in "iGhostVTWidgets" target */,
+				AA0000000000000000000406 /* Exceptions for "iGhostVTWidgets" folder in "GhostRemoteWidgets" target */,
 			);
 			path = iGhostVTWidgets;
 			sourceTree = "<group>";
@@ -264,6 +292,7 @@
 				AA000000000000000000030A /* ighostvtd-remote */,
 				AA0000000000000000000307 /* iGhostVTWidgets.appex */,
 				AA000000000000000000030B /* GhostRemote.app */,
+				AA000000000000000000030C /* GhostRemoteWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -431,10 +460,12 @@
 				AA000000000000000000070D /* Frameworks */,
 				AA000000000000000000070E /* Resources */,
 				AA000000000000000000070F /* Collect Licenses */,
+				AA0000000000000000000710 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AA0000000000000000000D05 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA000000000000000000050D /* GhostRemote */,
@@ -455,6 +486,28 @@
 			productName = GhostRemote;
 			productReference = AA000000000000000000030B /* GhostRemote.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AA0000000000000000000608 /* GhostRemoteWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000909 /* Build configuration list for PBXNativeTarget "GhostRemoteWidgets" */;
+			buildPhases = (
+				AA0000000000000000000711 /* Sources */,
+				AA0000000000000000000712 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000504 /* iGhostVTWidgets */,
+				AA0000000000000000000505 /* Shared/Activity */,
+			);
+			name = GhostRemoteWidgets;
+			packageProductDependencies = (
+			);
+			productName = GhostRemoteWidgets;
+			productReference = AA000000000000000000030C /* GhostRemoteWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -484,6 +537,9 @@
 						CreatedOnToolsVersion = 16.0;
 					};
 					AA0000000000000000000607 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AA0000000000000000000608 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -526,6 +582,7 @@
 				AA0000000000000000000606 /* ighostvtd-remote */,
 				AA0000000000000000000603 /* iGhostVTWidgets */,
 				AA0000000000000000000607 /* GhostRemote */,
+				AA0000000000000000000608 /* GhostRemoteWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -546,6 +603,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AA000000000000000000070E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000712 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -661,6 +725,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000711 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -684,6 +755,11 @@
 			isa = PBXTargetDependency;
 			target = AA0000000000000000000606 /* ighostvtd-remote */;
 			targetProxy = AA0000000000000000000C04 /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000D05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000608 /* GhostRemoteWidgets */;
+			targetProxy = AA0000000000000000000C05 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -883,6 +959,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
+				WIDGETS_DISPLAY_NAME = iGhostVT;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -906,6 +983,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
+				WIDGETS_DISPLAY_NAME = iGhostVT;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1052,6 +1130,56 @@
 			};
 			name = Release;
 		};
+		AA0000000000000000000B11 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
+				WIDGETS_DISPLAY_NAME = "Ghost Remote";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.GhostRemote.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000B12 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
+				WIDGETS_DISPLAY_NAME = "Ghost Remote";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.GhostRemote.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1123,6 +1251,15 @@
 			buildConfigurations = (
 				AA0000000000000000000B0F /* Debug */,
 				AA0000000000000000000B10 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000909 /* Build configuration list for PBXNativeTarget "GhostRemoteWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000B11 /* Debug */,
+				AA0000000000000000000B12 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

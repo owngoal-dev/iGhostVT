@@ -51,6 +51,10 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Ghost Remote finds and connects to your devices with remote access turned on, so you can open terminals on them.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
