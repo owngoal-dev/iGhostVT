@@ -65,13 +65,17 @@ enum RelayConfigurationStore {
     }
 
     /// Reads the file again whenever the CLI says it rewrote it. The
-    /// notification is unauthenticated, which is fine: all it can do is make
-    /// the app read its own file.
+    /// notification is unauthenticated — any process may post it — so it
+    /// only makes the app read its own file, and goes further (asking the
+    /// relay, syncing the helper) only when what the file holds changed:
+    /// a flood of posts must not become a flood of relay requests.
     static func observeExternalChanges() {
         #if targetEnvironment(macCatalyst)
             var token: Int32 = 0
             notify_register_dispatch(RelayConfiguration.storeChangedNotification, &token, .main) { _ in
+                let before = fingerprint
                 lock.withLock { cache = nil }
+                guard fingerprint != before else { return }
                 AppLog.info(.transport, "relay configuration changed outside the app")
                 notify()
             }
