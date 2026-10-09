@@ -31,7 +31,13 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   the operation code, so the protocol grows without it changing; it counts
   output in flight per peer (`xpc_connection_send_barrier`) and stops reading
   the socket — stalling the io side's PTYs — rather than queue without bound,
-  and cuts a peer that will not drain (the app reconnects and replays). The
+  and cuts a peer that will not drain (the app reconnects and replays) —
+  one that takes *nothing* for the grace, since every byte it does take
+  pushes the deadline back: `ighostvtd-remote` behind a slow relay is
+  congested for minutes and draining all along, and cutting it after ten
+  seconds is what dropped an `sz` mid-file. The helper's own pause band
+  (512 → 384 KiB) is narrow for the same reason: while it holds the
+  connection suspended it takes nothing. The
   other direction is bounded the same way: when the io socket's write
   backlog passes 1 MiB the proxy `xpc_connection_suspend`s every peer (a
   peer arriving mid-pause is suspended at registration) and resumes them,
@@ -754,9 +760,21 @@ output through, swallows a transfer, and replies via `transport.send` (the same
 op as keystrokes). Files cross through `ZmodemFileBridge`, the only UIKit part —
 temp files and the document pickers. The non-obvious bits are flagged in the
 code: escape *all* control bytes or a PTY mangles a binary upload, window the
-upload under the daemon's input cap, and throttle progress off the main thread.
-The pure core is tested in `Tests/Zmodem` (`make test`), sender and receiver
-driven against each other.
+upload under the daemon's input cap, and throttle progress off the main thread
+— with a trailing update, or the bar stands on a burst's first figure (it
+stood on 0) until the next burst. A transfer never reaches the surface
+outside an engine either: the attach replay (which skips the engine, so a
+stale frame cannot start one) has every conversation cut out by
+`ZmodemStreamScanner` — from `rz\r` and the first hex header to the ZFIN
+exchange or a CAN run — and a link that drops mid-transfer leaves the next
+engine discarding (`discardInterruptedTransfer`): it swallows the sender's
+stream, cancels it once it sees ZDLE, and draws again after the sender's
+own CAN run, at once if the first thing back is plain text. A relayed link
+that only receives — a download — must still talk: the helper drops a
+device silent for 60 s, so `DaemonLink` pings when *it* has sent nothing
+for `relayedPingInterval`, not only when it has heard nothing. The pure
+core is tested in `Tests/Zmodem` (`make test`), sender and receiver driven
+against each other.
 
 Every presentation of a tab — strip chip, title capsule, sidebar row, switcher
 card — carries the same `TabContextMenu` (copy the page as text or image,
@@ -1465,8 +1483,13 @@ Gotchas that bit us:
   path is `iGhostVTProtocol.daemonLogPath` because the app reads what
   `DaemonFileLog` writes, and `LogReader.parseDaemonLine` mirrors that
   line format — change one, change the other. The Detailed Terminal Log
-  switch only widens what libghostty's `TerminalDebugLog` emits; its
-  lines land in the same journal under the `ghostty` tag at verbose.
+  switch decides whether *any* verbose line reaches the journal
+  (`AppLog.writesVerbose`) — libghostty's `TerminalDebugLog`, which it
+  turns on and off with it (under the `ghostty` tag), and the app's own
+  per-chunk lines (output received, ZMODEM blocks). Off, the journal has
+  info and up only; it used to keep the verbose lines anyway, and a
+  download filled it with eighty thousand of them. The unified log has
+  them either way.
 - A GUI app ad-hoc signed with ldid MUST carry
   `com.apple.security.iokit-user-client-class` (with `IOUserClient` / the
   AGX + IOGPU + IOSurface + IOAccel leaves, see

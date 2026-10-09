@@ -37,9 +37,11 @@ final class DaemonSessionDirectory {
     /// without the ledger — until the holder's tabs detach
     /// (`releaseResumableClaim`), when its shells are unattached again and
     /// the next window to ask adopts them.
-    func claimResumable(completion: @escaping @MainActor @Sendable ([UInt64]) -> Void) {
+    /// `answered` is false when the daemon gave no answer — the claim
+    /// then stays open for a retry, and the empty list means nothing.
+    func claimResumable(completion: @escaping @MainActor @Sendable (_ ids: [UInt64], _ answered: Bool) -> Void) {
         guard !hasClaimedResumable else {
-            completion([])
+            completion([], false)
             return
         }
         hasClaimedResumable = true
@@ -49,12 +51,13 @@ final class DaemonSessionDirectory {
                 // starting (the Mac's helper before it is allowed) holds the
                 // last run's shells all the same, and the claim stays open
                 // for the retry once it answers (`TabManager.resumeLeftovers`).
-                if rows == nil {
+                let answered = rows != nil
+                if !answered {
                     self.hasClaimedResumable = false
                 }
                 let rows = rows ?? []
                 self.sessions = rows
-                completion(rows.filter { !$0.isAttached || $0.holder != nil }.map(\.id))
+                completion(rows.filter { !$0.isAttached || $0.holder != nil }.map(\.id), answered)
             }
         }
     }

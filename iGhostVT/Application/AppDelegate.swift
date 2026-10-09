@@ -37,9 +37,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // and relaunch. The lines go where every other line goes — the
         // journal file is what to read on the device, where the unified
         // log's relay drops most of a busy launch's lines.
-        if UserDefaults.standard.bool(forKey: DetailedTerminalLog.key) {
-            TerminalDebugLog.enable(.standard)
-        }
+        DetailedTerminalLog.apply(UserDefaults.standard.bool(forKey: DetailedTerminalLog.key))
         // Browsing asks for the local-network permission, so only a launch
         // with a paired device to look for starts it here.
         RemoteDeviceIdentity.noteSystemName()
@@ -112,11 +110,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     /// is still running (a suspended app gets no notice, and its shells stay
     /// in the daemon either way).
     ///
-    /// Every tab closes here the way its own × would have closed without
-    /// asking: a shell sitting at its prompt has nothing to lose
-    /// (`hasRunningProgram`), so it dies with the app, while a tab with a
-    /// program in front of the shell stays in the daemon for the next
-    /// launch to reattach. With Keep Alive off every session the daemon
+    /// With Keep Alive on every session stays in the daemon, and the next
+    /// launch asks whether to restore them as tabs or discard them
+    /// (`SessionRestore`). With Keep Alive off every session the daemon
     /// holds — attached to a window or not — dies, and the files the
     /// terminal staged for pastes and drops go with the last shell that
     /// could refer to them.
@@ -129,13 +125,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // it whatever this switch says; each tab's link simply drops.
         guard !AppEdition.isRemoteOnly else { return }
         if SessionKeepAlive.isEnabled {
-            let idle = application.connectedScenes
-                .compactMap { ($0.delegate as? SceneDelegate)?.tabManager }
-                .flatMap(\.tabs)
-                .filter { !$0.hasRunningProgram }
-                .compactMap(\.daemonSessionID)
-            AppLog.info(.tabs, "quitting, killing idle sessions \(idle), keeping the rest")
-            XPCDaemonTransport.closeSessionsForQuit(idle)
+            // Every session stays, idle shells included: the next launch
+            // asks whether to bring them back (`SessionRestore`), and
+            // Discard there is what ⌘Q used to do to the idle ones.
+            AppLog.info(.tabs, "quitting, keeping every session for the next launch to offer back")
         } else {
             AppLog.info(.tabs, "quitting with Keep Alive off, killing every session")
             XPCDaemonTransport.closeSessionsForQuit(nil)

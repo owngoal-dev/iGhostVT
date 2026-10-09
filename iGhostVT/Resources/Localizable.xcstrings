@@ -1055,6 +1055,196 @@
         }
       }
     },
+    "%lld terminals from the last time iGhostVT was open are still running." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تزال %lld طرفيات من آخر مرة فُتح فيها iGhostVT قيد التشغيل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Terminals vom letzten Mal, als iGhostVT geöffnet war, laufen noch."
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "A terminal from the last time iGhostVT was open is still running."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld terminals from the last time iGhostVT was open are still running."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguen en ejecución %lld terminales de la última vez que iGhostVT estuvo abierto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld terminaux de la dernière ouverture d’iGhostVT sont toujours actifs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld terminali dell’ultima volta che iGhostVT era aperto sono ancora in esecuzione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回 iGhostVT を開いていたときのターミナルが %lld 個まだ実行中です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지난번 iGhostVT를 열었을 때의 터미널 %lld개가 아직 실행 중입니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld terminais da última vez em que o iGhostVT esteve aberto ainda estão em execução."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Терминалы с прошлого запуска iGhostVT ещё работают: %lld."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld thiết bị đầu cuối từ lần mở iGhostVT trước vẫn đang chạy."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次打开 iGhostVT 时的 %lld 个终端仍在运行。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次打開 iGhostVT 時的 %lld 個終端機仍在執行。"
+          }
+        }
+      }
+    },
+    "%lld terminals on your other devices were open the last time you used this app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كانت %lld طرفيات على أجهزتك الأخرى مفتوحة آخر مرة استخدمت فيها هذا التطبيق."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim letzten Mal waren %lld Terminals auf deinen anderen Geräten geöffnet."
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "A terminal on another device was open the last time you used this app."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld terminals on your other devices were open the last time you used this app."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La última vez que usaste esta app tenías abiertos %lld terminales en tus otros dispositivos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld terminaux de vos autres appareils étaient ouverts lors de votre dernière utilisation de cette app."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’ultima volta che hai usato questa app erano aperti %lld terminali sugli altri dispositivi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回このアプリを使ったとき、ほかのデバイスのターミナルを %lld 個開いていました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지난번 이 앱을 사용할 때 다른 기기의 터미널 %lld개가 열려 있었습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da última vez que você usou este app, %lld terminais nos seus outros dispositivos estavam abertos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В прошлый раз в приложении были открыты терминалы на других устройствах: %lld."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lần trước bạn dùng ứng dụng này, có %lld thiết bị đầu cuối trên các thiết bị khác đang mở."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次使用本应用时，打开了其他设备上的 %lld 个终端。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次使用本 App 時，打開了其他裝置上的 %lld 個終端機。"
+          }
+        }
+      }
+    },
     "000000" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9671,6 +9861,89 @@
         }
       }
     },
+    "Discard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجاهل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwerfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abandonner"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "破棄"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버리기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отбросить"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "丢弃"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捨棄"
+          }
+        }
+      }
+    },
     "Disconnected." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12574,89 +12847,6 @@
         }
       }
     },
-    "Ghostty settings, one key = value per line, applied after iGhostVT's own. New tabs use them; open tabs keep the configuration they were opened with." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعدادات Ghostty، سطر لكل key = value، تُطبَّق بعد إعدادات iGhostVT نفسه. تستخدمها علامات التبويب الجديدة، وتحتفظ علامات التبويب المفتوحة بالإعداد الذي فُتحت به."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghostty-Einstellungen, eine key = value pro Zeile, angewendet nach denen von iGhostVT. Neue Tabs verwenden sie; offene Tabs behalten die Konfiguration, mit der sie geöffnet wurden."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghostty settings, one key = value per line, applied after iGhostVT's own. New tabs use them; open tabs keep the configuration they were opened with."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes de Ghostty, un key = value por línea, aplicados después de los de iGhostVT. Las pestañas nuevas los usan; las abiertas conservan la configuración con la que se abrieron."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réglages Ghostty, un key = value par ligne, appliqués après ceux d’iGhostVT. Les nouveaux onglets les utilisent ; les onglets ouverts conservent la configuration avec laquelle ils ont été ouverts."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impostazioni di Ghostty, una key = value per riga, applicate dopo quelle di iGhostVT. Le nuove schede le usano; quelle aperte mantengono la configurazione con cui sono state aperte."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghostty の設定を 1 行に 1 つ、key = value の形で書きます。iGhostVT 自身の設定のあとに適用されます。新しいタブで使われ、開いているタブは開いたときの設定を保ちます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "한 줄에 하나씩 key = value 형식으로 쓰는 Ghostty 설정으로, iGhostVT 자체 설정 다음에 적용됩니다. 새 탭에 사용되며, 열려 있는 탭은 열 때의 구성을 유지합니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes do Ghostty, um key = value por linha, aplicados depois dos do iGhostVT. As novas abas os usam; as abas abertas mantêm a configuração com que foram abertas."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Настройки Ghostty, по одной key = value в строке, применяются после настроек самого iGhostVT. Новые вкладки используют их; открытые вкладки сохраняют конфигурацию, с которой были открыты."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cài đặt Ghostty, mỗi dòng một key = value, được áp dụng sau cài đặt của chính iGhostVT. Tab mới sẽ dùng chúng; tab đang mở vẫn giữ cấu hình lúc nó được mở."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghostty 设置，每行一条 key = value，在 iGhostVT 自身的设置之后应用。新标签页会使用；已打开的标签页保留打开时的配置。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghostty 設定，每行一條 key = value，在 iGhostVT 本身的設定之後套用。新分頁會使用；已開啟的分頁保留開啟時的設定。"
-          }
-        }
-      }
-    },
     "GitHub answered with an unexpected response (%lld)." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15392,85 +15582,85 @@
         }
       }
     },
-    "Keep Sessions Running lets a session with a program running keep going after the app quits and come back on the next launch; a shell sitting at its prompt closes. With it off, every session closes when the app quits." : {
+    "Keep Sessions Running keeps every session going after the app quits, and the next launch asks whether to restore them. With it off, every session closes when the app quits." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عند تفعيل „إبقاء الجلسات قيد التشغيل“ تستمر الجلسة التي يعمل فيها برنامج بعد إنهاء التطبيق وتعود عند التشغيل التالي؛ أما الصدفة المتوقفة عند موجّهها فتُغلق. وعند تعطيله تُغلق كل الجلسات عند إنهاء التطبيق."
+            "value" : "مع تشغيل «إبقاء الجلسات قيد التشغيل» تستمر كل الجلسات بعد إنهاء التطبيق، ويسألك التشغيل التالي إن كنت تريد استعادتها. عند إيقافه، تُغلق كل الجلسات عند إنهاء التطبيق."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit „Sitzungen weiterlaufen lassen“ läuft eine Sitzung mit einem laufenden Programm nach dem Beenden der App weiter und kehrt beim nächsten Start zurück; eine Shell, die an ihrer Eingabeaufforderung wartet, wird geschlossen. Ist die Option deaktiviert, werden beim Beenden der App alle Sitzungen geschlossen."
+            "value" : "Mit „Sitzungen weiterlaufen lassen“ laufen alle Sitzungen nach dem Beenden der App weiter, und beim nächsten Start wirst du gefragt, ob sie wiederhergestellt werden sollen. Ist es aus, werden beim Beenden alle Sitzungen geschlossen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep Sessions Running lets a session with a program running keep going after the app quits and come back on the next launch; a shell sitting at its prompt closes. With it off, every session closes when the app quits."
+            "value" : "Keep Sessions Running keeps every session going after the app quits, and the next launch asks whether to restore them. With it off, every session closes when the app quits."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Con “Mantener las sesiones activas”, una sesión con un programa en ejecución sigue activa después de salir de la app y vuelve al abrirla de nuevo; un shell que espera en su prompt se cierra. Si está desactivada, todas las sesiones se cierran al salir de la app."
+            "value" : "Con «Mantener sesiones en ejecución», todas las sesiones siguen tras cerrar la app y el siguiente inicio pregunta si restaurarlas. Si está desactivado, todas las sesiones se cierran al salir de la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avec « Garder les sessions actives », une session où un programme s’exécute continue après la fermeture de l’app et revient au lancement suivant ; un shell en attente à son invite est fermé. Désactivée, toutes les sessions sont fermées à la fermeture de l’app."
+            "value" : "Avec « Garder les sessions actives », toutes les sessions continuent après la fermeture de l’app, et le lancement suivant demande s’il faut les restaurer. Désactivé, toutes les sessions se ferment à la fermeture de l’app."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Con “Mantieni attive le sessioni”, una sessione con un programma in esecuzione resta attiva dopo la chiusura dell’app e torna al lancio successivo; una shell ferma al prompt viene chiusa. Se è disattivata, tutte le sessioni vengono chiuse alla chiusura dell’app."
+            "value" : "Con «Mantieni sessioni attive» tutte le sessioni continuano dopo la chiusura dell’app e all’avvio successivo ti viene chiesto se ripristinarle. Se è disattivato, tutte le sessioni si chiudono quando l’app viene chiusa."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「セッションを実行し続ける」がオンの場合、プログラムを実行中のセッションはAppを終了しても実行を続け、次回起動時に復元されます。プロンプトで待機しているだけのシェルは閉じられます。オフにすると、Appの終了時にすべてのセッションが閉じられます。"
+            "value" : "「セッションを実行したままにする」がオンの場合、アプリを終了してもすべてのセッションは動き続け、次回起動時に復元するかどうかを確認します。オフの場合、アプリの終了時にすべてのセッションを閉じます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“세션 계속 실행”을 켜면 프로그램이 실행 중인 세션은 앱을 종료해도 계속 실행되고 다음 실행 시 복원됩니다. 프롬프트에서 대기 중인 셸은 닫힙니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
+            "value" : "\"세션 계속 실행\"을 켜면 앱을 종료해도 모든 세션이 계속 실행되며, 다음 실행 시 복원할지 묻습니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Com “Manter sessões em execução”, uma sessão com um programa em execução continua depois que o app é encerrado e volta na próxima abertura; um shell parado no prompt é fechado. Desativada, todas as sessões são fechadas quando o app é encerrado."
+            "value" : "Com “Manter sessões em execução”, todas as sessões continuam depois que o app é encerrado, e a próxima abertura pergunta se você quer restaurá-las. Desativado, todas as sessões são fechadas ao encerrar o app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Если включён параметр «Не завершать сеансы», сеанс с запущенной программой продолжает работать после выхода из приложения и восстанавливается при следующем запуске; оболочка, ожидающая в приглашении, закрывается. Если выключить, при выходе из приложения закрываются все сеансы."
+            "value" : "Если «Не завершать сеансы» включено, все сеансы продолжают работать после выхода из приложения, а при следующем запуске будет предложено их восстановить. Если выключено, при выходе все сеансы закрываются."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khi bật “Giữ các phiên tiếp tục chạy”, phiên có chương trình đang chạy sẽ tiếp tục sau khi thoát ứng dụng và quay lại ở lần khởi chạy sau; shell đang dừng ở dấu nhắc thì bị đóng. Khi tắt, mọi phiên sẽ bị đóng khi thoát ứng dụng."
+            "value" : "Khi bật “Giữ phiên chạy”, mọi phiên vẫn chạy sau khi thoát ứng dụng và lần mở tiếp theo sẽ hỏi bạn có muốn khôi phục chúng không. Khi tắt, mọi phiên sẽ đóng khi thoát ứng dụng."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开启“保持会话运行”后，有程序正在运行的会话会在应用退出后继续运行，下次启动时自动恢复；停在提示符处的 shell 会被关闭。关闭后，退出应用时将关闭所有会话。"
+            "value" : "开启“保持会话运行”后，退出应用时所有会话都会继续运行，下次启动时会询问是否恢复。关闭后，退出应用时将关闭所有会话。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟「保持工作階段執行」後，有程式正在執行的工作階段會在 App 結束後繼續執行，並在下次啟動時恢復；停在提示字元的 shell 會被關閉。關閉後，結束 App 時將關閉所有工作階段。"
+            "value" : "開啟「保持工作階段執行」後，結束 App 時所有工作階段都會繼續執行，下次啟動時會詢問是否回復。關閉後，結束 App 時將關閉所有工作階段。"
           }
         }
       }
@@ -17792,89 +17982,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "日誌"
-          }
-        }
-      }
-    },
-    "Logs open in Console." : {
-      "comment" : "Mac settings: where the log buttons open the files",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُفتح السجلات في تطبيق Console."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokolle werden in der Konsole geöffnet."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Logs open in Console."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los registros se abren en Consola."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les journaux s’ouvrent dans Console."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I log si aprono in Console."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ログは“コンソール”で開きます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "로그는 콘솔에서 열립니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os registros abrem no Console."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Журналы открываются в приложении «Консоль»."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nhật ký sẽ mở trong Console."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "日志会在“控制台”中打开。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "記錄會在「主控台」中打開。"
           }
         }
       }
@@ -20857,6 +20964,89 @@
         }
       }
     },
+    "Only new tabs load the changed configuration." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تحمّل الإعدادات المعدّلة إلا علامات التبويب الجديدة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur neue Tabs laden die geänderte Konfiguration."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only new tabs load the changed configuration."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo las pestañas nuevas cargan la configuración modificada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuls les nouveaux onglets chargent la configuration modifiée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo le nuove schede caricano la configurazione modificata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更した設定は新しいタブにのみ読み込まれます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변경한 구성은 새 탭에만 적용됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Somente novas abas carregam a configuração alterada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменённая конфигурация загружается только в новых вкладках."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ các tab mới tải cấu hình đã thay đổi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅新建的标签页会加载修改后的配置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅新建的分頁會載入修改後的設定。"
+          }
+        }
+      }
+    },
     "Open a new tab in ${applicationName}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23083,172 +23273,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "與「%@」配對"
-          }
-        }
-      }
-    },
-    "Paired devices on this network can open terminals here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يمكن للأجهزة المقترنة على هذه الشبكة فتح طرفيات هنا."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelte Geräte in diesem Netzwerk können hier Terminals öffnen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paired devices on this network can open terminals here."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los dispositivos enlazados en esta red pueden abrir terminales aquí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les appareils jumelés sur ce réseau peuvent ouvrir des terminaux ici."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I dispositivi abbinati su questa rete possono aprire terminali qui."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このネットワーク上のペアリング済みデバイスは、ここでターミナルを開けます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 네트워크의 페어링된 기기에서 여기의 터미널을 열 수 있습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dispositivos emparelhados nesta rede podem abrir terminais aqui."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Связанные устройства в этой сети могут открывать здесь терминалы."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Các thiết bị đã ghép đôi trong mạng này có thể mở terminal tại đây."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此网络上已配对的设备可以在这里打开终端。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此網路上已配對的裝置可以在這裡開啟終端機。"
-          }
-        }
-      }
-    },
-    "Paired devices on this network, or anywhere through the relay, can open terminals here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يمكن للأجهزة المقترنة على هذه الشبكة، أو من أي مكان عبر المرحّل، فتح طرفيات هنا."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelte Geräte in diesem Netzwerk oder überall über das Relay können hier Terminals öffnen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paired devices on this network, or anywhere through the relay, can open terminals here."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los dispositivos enlazados en esta red, o en cualquier lugar a través del relé, pueden abrir terminales aquí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les appareils jumelés sur ce réseau, ou n’importe où via le relais, peuvent ouvrir des terminaux ici."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I dispositivi abbinati su questa rete, o ovunque tramite il relay, possono aprire terminali qui."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このネットワーク上、またはリレー経由でどこからでも、ペアリング済みのデバイスがここでターミナルを開けます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 네트워크에 있거나 릴레이를 통해 어디서든 페어링된 기기가 여기서 터미널을 열 수 있습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dispositivos pareados nesta rede, ou de qualquer lugar pelo relay, podem abrir terminais aqui."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Устройства в паре из этой сети или откуда угодно через ретранслятор могут открывать здесь терминалы."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Các thiết bị đã ghép đôi trong mạng này, hoặc ở bất cứ đâu qua relay, có thể mở terminal tại đây."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此网络中或通过中继从任何地方连接的已配对设备都可以在这里打开终端。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此網路中或透過中繼從任何地方連線的已配對裝置都可以在這裡開啟終端機。"
           }
         }
       }
@@ -25738,6 +25762,172 @@
         }
       }
     },
+    "Restore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استعادة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederherstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復元"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복원"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khôi phục"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回復"
+          }
+        }
+      }
+    },
+    "Restore Previous Session?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استعادة الجلسة السابقة؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Sitzung wiederherstellen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Previous Session?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Restaurar la sesión anterior?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer la session précédente ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristinare la sessione precedente?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回のセッションを復元しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 세션을 복원할까요?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar a sessão anterior?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить предыдущий сеанс?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khôi phục phiên trước?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复上次的会话？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回復上次的工作階段？"
+          }
+        }
+      }
+    },
     "Retry" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -27066,89 +27256,6 @@
         }
       }
     },
-    "Send and receive files with `rz` and `sz`." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أرسل الملفات واستقبلها باستخدام `rz` و`sz`."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sende und empfange Dateien mit `rz` und `sz`."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send and receive files with `rz` and `sz`."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Envía y recibe archivos con `rz` y `sz`."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Envoyez et recevez des fichiers avec `rz` et `sz`."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invia e ricevi file con `rz` e `sz`."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "`rz` と `sz` でファイルを送受信します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "`rz` 및 `sz`로 파일을 주고받습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Envie e receba arquivos com `rz` e `sz`."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отправляйте и получайте файлы с помощью `rz` и `sz`."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gửi và nhận tệp bằng `rz` và `sz`."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用 `rz` 和 `sz` 收发文件。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用 `rz` 和 `sz` 收發檔案。"
-          }
-        }
-      }
-    },
     "Send Key to Terminal" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -27980,85 +28087,85 @@
         }
       }
     },
-    "Sessions with a program running keep going after the app quits and come back on the next launch; a shell sitting at its prompt closes. Turn this off to close every session when the app quits." : {
+    "Sessions keep going after the app quits, and the next launch asks whether to restore them. Turn this off to close every session when the app quits." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تستمر الجلسات التي يعمل فيها برنامج بعد إنهاء التطبيق وتعود عند التشغيل التالي؛ أما الصدفة المتوقفة عند موجّهها فتُغلق. عطّل هذا الخيار لإغلاق كل الجلسات عند إنهاء التطبيق."
+            "value" : "تستمر الجلسات بعد إنهاء التطبيق، ويسألك التشغيل التالي إن كنت تريد استعادتها. أوقف هذا الخيار لإغلاق كل الجلسات عند إنهاء التطبيق."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sitzungen mit einem laufenden Programm laufen nach dem Beenden der App weiter und kehren beim nächsten Start zurück; eine Shell, die an ihrer Eingabeaufforderung wartet, wird geschlossen. Deaktivieren Sie diese Option, um beim Beenden alle Sitzungen zu schließen."
+            "value" : "Sitzungen laufen nach dem Beenden der App weiter, und beim nächsten Start wirst du gefragt, ob sie wiederhergestellt werden sollen. Schalte dies aus, um beim Beenden alle Sitzungen zu schließen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sessions with a program running keep going after the app quits and come back on the next launch; a shell sitting at its prompt closes. Turn this off to close every session when the app quits."
+            "value" : "Sessions keep going after the app quits, and the next launch asks whether to restore them. Turn this off to close every session when the app quits."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las sesiones con un programa en ejecución siguen activas después de salir de la app y vuelven al abrirla de nuevo; un shell que espera en su prompt se cierra. Desactive esta opción para cerrar todas las sesiones al salir."
+            "value" : "Las sesiones siguen tras cerrar la app y el siguiente inicio pregunta si restaurarlas. Desactívalo para cerrar todas las sesiones al salir de la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les sessions où un programme s’exécute continuent après la fermeture de l’app et reviennent au lancement suivant ; un shell en attente à son invite est fermé. Désactivez cette option pour fermer toutes les sessions à la fermeture de l’app."
+            "value" : "Les sessions continuent après la fermeture de l’app, et le lancement suivant demande s’il faut les restaurer. Désactivez cette option pour fermer toutes les sessions à la fermeture de l’app."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le sessioni con un programma in esecuzione restano attive dopo la chiusura dell’app e tornano al lancio successivo; una shell ferma al prompt viene chiusa. Disattiva questa opzione per chiudere tutte le sessioni alla chiusura dell’app."
+            "value" : "Le sessioni continuano dopo la chiusura dell’app e all’avvio successivo ti viene chiesto se ripristinarle. Disattiva questa opzione per chiudere tutte le sessioni quando l’app viene chiusa."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "プログラムを実行中のセッションはAppを終了しても実行を続け、次回起動時に復元されます。プロンプトで待機しているだけのシェルは閉じられます。オフにすると、終了時にすべてのセッションが閉じられます。"
+            "value" : "アプリを終了してもセッションは動き続け、次回起動時に復元するかどうかを確認します。オフにすると、アプリの終了時にすべてのセッションを閉じます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "프로그램이 실행 중인 세션은 앱을 종료해도 계속 실행되고 다음 실행 시 복원됩니다. 프롬프트에서 대기 중인 셸은 닫힙니다. 이 옵션을 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
+            "value" : "앱을 종료해도 세션이 계속 실행되며, 다음 실행 시 복원할지 묻습니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "As sessões com um programa em execução continuam depois que o app é encerrado e voltam na próxima abertura; um shell parado no prompt é fechado. Desative esta opção para fechar todas as sessões ao sair."
+            "value" : "As sessões continuam depois que o app é encerrado, e a próxima abertura pergunta se você quer restaurá-las. Desative para fechar todas as sessões ao encerrar o app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сеансы с запущенной программой продолжают работать после выхода из приложения и восстанавливаются при следующем запуске; оболочка, ожидающая в приглашении, закрывается. Выключите, чтобы закрывать все сеансы при выходе."
+            "value" : "Сеансы продолжают работать после выхода из приложения, а при следующем запуске будет предложено их восстановить. Выключите, чтобы закрывать все сеансы при выходе."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Các phiên có chương trình đang chạy sẽ tiếp tục sau khi thoát ứng dụng và quay lại ở lần khởi chạy sau; shell đang dừng ở dấu nhắc thì bị đóng. Tắt tùy chọn này để đóng mọi phiên khi thoát ứng dụng."
+            "value" : "Các phiên vẫn chạy sau khi thoát ứng dụng và lần mở tiếp theo sẽ hỏi bạn có muốn khôi phục chúng không. Tắt tùy chọn này để đóng mọi phiên khi thoát ứng dụng."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有程序正在运行的会话会在应用退出后继续运行，下次启动时自动恢复；停在提示符处的 shell 会被关闭。关闭此项后，退出应用时将关闭所有会话。"
+            "value" : "退出应用后会话会继续运行，下次启动时会询问是否恢复。关闭此项后，退出应用时将关闭所有会话。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有程式正在執行的工作階段會在 App 結束後繼續執行，並在下次啟動時恢復；停在提示字元的 shell 會被關閉。關閉此項後，結束 App 時將關閉所有工作階段。"
+            "value" : "結束 App 後工作階段會繼續執行，下次啟動時會詢問是否回復。關閉此項後，結束 App 時將關閉所有工作階段。"
           }
         }
       }
@@ -31799,6 +31906,89 @@
         }
       }
     },
+    "The connection dropped, so the transfer was cancelled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انقطع الاتصال، لذا أُلغي النقل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung wurde unterbrochen, daher wurde die Übertragung abgebrochen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connection dropped, so the transfer was cancelled."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se perdió la conexión, así que se canceló la transferencia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion a été perdue, le transfert a donc été annulé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connessione si è interrotta, quindi il trasferimento è stato annullato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続が切れたため、転送をキャンセルしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결이 끊어져 전송이 취소되었습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A conexão caiu, então a transferência foi cancelada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Соединение прервалось, поэтому передача отменена."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối bị ngắt nên quá trình truyền đã bị hủy."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接已断开，传输已取消。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線已中斷，傳輸已取消。"
+          }
+        }
+      }
+    },
     "The download did not match the checksum GitHub reports for it, so it was not kept." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31961,88 +32151,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檔案在拷貝過程中有所變更。"
-          }
-        }
-      }
-    },
-    "The Ghostty configuration every new terminal opens with: your settings, then the lines above." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعداد Ghostty الذي تُفتح به كل طرفية جديدة: إعداداتك، ثم الأسطر أعلاه."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Ghostty-Konfiguration, mit der jedes neue Terminal geöffnet wird: deine Einstellungen, dann die Zeilen oben."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Ghostty configuration every new terminal opens with: your settings, then the lines above."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La configuración de Ghostty con la que se abre cada terminal nuevo: tus ajustes y, después, las líneas anteriores."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La configuration Ghostty avec laquelle chaque nouveau terminal s’ouvre : vos réglages, puis les lignes ci-dessus."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La configurazione di Ghostty con cui si apre ogni nuovo terminale: le tue impostazioni, poi le righe sopra."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新しいターミナルを開くときに使われる Ghostty の設定ファイルです。あなたの設定のあとに、上の行が続きます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "새 터미널을 열 때 사용되는 Ghostty 구성으로, 사용자의 설정 다음에 위의 줄이 이어집니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A configuração do Ghostty com que cada novo terminal é aberto: seus ajustes e, depois, as linhas acima."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Конфигурация Ghostty, с которой открывается каждый новый терминал: ваши настройки, затем строки выше."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cấu hình Ghostty mà mọi Terminal mới sẽ dùng khi mở: cài đặt của bạn, rồi đến các dòng ở trên."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "每个新终端打开时使用的 Ghostty 配置：先是你的设置，再是上方的这些行。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "每個新終端機開啟時使用的 Ghostty 設定：先是你的設定，再是上方的這些行。"
           }
         }
       }
@@ -39418,88 +39526,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "視窗"
-          }
-        }
-      }
-    },
-    "Writes detailed terminal activity to the log, including every keystroke, while this is on." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "عند التفعيل، يكتب نشاط الطرفية بالتفصيل في السجل، بما في ذلك كل ضغطة مفتاح."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schreibt bei aktivierter Option ausführliche Terminal-Aktivität – einschließlich jedes Tastendrucks – in das Protokoll."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Writes detailed terminal activity to the log, including every keystroke, while this is on."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mientras esté activado, escribe en el registro la actividad detallada del terminal, incluida cada pulsación de tecla."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lorsque cette option est activée, l’activité détaillée du terminal, y compris chaque frappe, est écrite dans le journal."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quando è attivo, scrive nel log l’attività dettagliata del terminale, incluso ogni tasto premuto."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "オンの間、キー入力を含む詳細なターミナルの動作をログに記録します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "켜져 있는 동안 모든 키 입력을 포함한 상세한 터미널 활동을 로그에 기록합니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enquanto estiver ativado, grava no registro a atividade detalhada do terminal, incluindo cada tecla digitada."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пока включено, подробная активность терминала, включая каждое нажатие клавиши, записывается в журнал."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Khi bật, ghi chi tiết hoạt động của Terminal vào nhật ký, bao gồm từng lần nhấn phím."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开启后，会将详细的终端活动（包括每次按键）写入日志。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開啟後，會將詳細的終端機活動（包括每次按鍵）寫入日誌。"
           }
         }
       }

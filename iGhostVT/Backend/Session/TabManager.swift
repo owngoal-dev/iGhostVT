@@ -116,6 +116,19 @@ final class TabManager: ObservableObject {
             }
             return
         }
+        // A cold launch asks first; a scene iOS rebuilt on the way back
+        // from the background takes its own tabs back without a word.
+        if SessionRestore.takeQuestion() {
+            restoreOffer = SessionRestore.Offer(
+                terminals: .remote(entries, activeIndex: activeIndex),
+                opensFreshTab: openingFreshTab,
+            )
+            return
+        }
+        reopenRemoteTabs(entries, activeIndex: activeIndex)
+    }
+
+    private func reopenRemoteTabs(_ entries: [RemoteTabLedger.Entry], activeIndex: Int?) {
         let restored = entries.map { entry in
             let tab = makeTab(resume: entry.sessionID, remoteHostID: entry.hostID)
             tab.store.takesOverOnFirstConnect = true
@@ -132,30 +145,92 @@ final class TabManager: ObservableObject {
     /// when the Mac's helper comes up, because a claim the daemon could not
     /// answer is left open and the shells it holds are reachable only now.
     func resumeLeftovers(openingFreshTab: Bool = false) {
-        DaemonSessionDirectory.shared.claimResumable { [weak self] resumable in
+        DaemonSessionDirectory.shared.claimResumable { [weak self] resumable, answered in
             guard let self else { return }
             // Every window's tabs, not this one's: a session a device holds
             // can already be a tab in another window.
             let held = Set(ShortcutBridge.tabManagers().flatMap(\.tabs).compactMap(\.daemonSessionID))
                 .union(tabs.compactMap(\.daemonSessionID))
-            let resumable = resumable.filter { !held.contains($0) }
+            var resumable = resumable.filter { !held.contains($0) }
+            // The first answer of a cold launch is what the last run left:
+            // asked about, not adopted. A terminal a paired device is using
+            // is that device's and comes back as a held tab regardless.
+            if answered, SessionRestore.takeQuestion() {
+                let rows = DaemonSessionDirectory.shared.sessions
+                let usedElsewhere = Set(rows.filter { $0.holder != nil }.map(\.id))
+                let leftBehind = resumable.filter { !usedElsewhere.contains($0) }
+                resumable = resumable.filter { usedElsewhere.contains($0) }
+                if !leftBehind.isEmpty {
+                    restoreOffer = SessionRestore.Offer(terminals: .local(leftBehind), opensFreshTab: openingFreshTab)
+                }
+            }
             guard !resumable.isEmpty else {
-                if openingFreshTab, tabs.isEmpty {
+                if openingFreshTab, tabs.isEmpty, restoreOffer == nil {
                     newTab()
                 }
                 return
             }
-            let resumed = resumable.map { self.makeTab(resume: $0) }
-            withAnimation(Self.tabTransition) {
-                self.tabs.append(contentsOf: resumed)
-                self.activeTabID = self.tabs.last?.id
+            adoptLeftovers(resumable)
+        }
+    }
+
+    private func adoptLeftovers(_ resumable: [UInt64]) {
+        let resumed = resumable.map { makeTab(resume: $0) }
+        withAnimation(Self.tabTransition) {
+            tabs.append(contentsOf: resumed)
+            activeTabID = tabs.last?.id
+        }
+        if isSceneActive {
+            for tab in tabs {
+                tab.store.noteSceneActive()
             }
-            if isSceneActive {
-                for tab in tabs {
-                    tab.store.noteSceneActive()
-                }
+        }
+        SessionActivityController.shared.refresh()
+    }
+
+    /// What this window asked as it opened (`SessionRestore`), until it is
+    /// answered; presented by `RootView`.
+    @Published private(set) var restoreOffer: SessionRestore.Offer?
+
+    /// Restore: the last run's terminals come back as tabs, as they did
+    /// before the question existed.
+    func acceptRestoreOffer() {
+        guard let offer = restoreOffer else { return }
+        restoreOffer = nil
+        AppLog.info(.tabs, "restoring \(offer.count) terminal(s) from the last run")
+        switch offer.terminals {
+        case let .local(ids):
+            // A session the CLI or a device attached while the question
+            // was up is someone else's now.
+            let held = Set(ShortcutBridge.tabManagers().flatMap(\.tabs).compactMap(\.daemonSessionID))
+            adoptLeftovers(ids.filter { !held.contains($0) })
+        case let .remote(entries, activeIndex):
+            reopenRemoteTabs(entries, activeIndex: activeIndex)
+        }
+    }
+
+    /// Discard: this device's leftovers are ended — the tabs they were are
+    /// gone, so nothing could reach them again — and a window left with
+    /// nothing opens what it would have with nothing to resume. Another
+    /// device's terminals are only not reopened: they are that device's.
+    func declineRestoreOffer() {
+        guard let offer = restoreOffer else { return }
+        restoreOffer = nil
+        switch offer.terminals {
+        case let .local(ids):
+            AppLog.info(.tabs, "discarding \(ids.count) terminal(s) from the last run: \(ids)")
+            for id in ids {
+                DaemonSessionDirectory.shared.evict(id)
+                XPCDaemonTransport.killSession(id)
             }
             SessionActivityController.shared.refresh()
+        case let .remote(entries, _):
+            AppLog.info(.tabs, "not reopening \(entries.count) remote terminal(s) from the last run")
+        }
+        if offer.opensFreshTab, tabs.isEmpty {
+            if !AppEdition.isRemoteOnly || RemoteTabDefaults.preferredHostID != nil {
+                newTab()
+            }
         }
     }
 

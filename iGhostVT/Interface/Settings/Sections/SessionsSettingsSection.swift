@@ -43,10 +43,9 @@ struct SessionsSettingsSection: View {
     private var keepAliveFooter: some View {
         Text(
             """
-            Keep Sessions Running lets a session with a program running \
-            keep going after the app quits and come back on the next \
-            launch; a shell sitting at its prompt closes. With it off, \
-            every session closes when the app quits.
+            Keep Sessions Running keeps every session going after the app \
+            quits, and the next launch asks whether to restore them. With \
+            it off, every session closes when the app quits.
             """,
         )
     }
