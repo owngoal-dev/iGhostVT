@@ -28,22 +28,8 @@ struct ObservedTabTitle: View {
             .truncationMode(.middle)
             .retitleTransition()
             .animation(tab.animatesRetitle ? DS.Motion.smooth : nil, value: tab.displayTitle)
-            // A shell on another device is marked as Fila marks the current
-            // directory: a short thick highlighter band in a wash of the
-            // accent colour, sitting on the baseline behind the text, in
-            // every presentation of the tab.
-            .background(alignment: Alignment(horizontal: .center, vertical: .lastTextBaseline)) {
-                if tab.isRemote {
-                    Capsule()
-                        .fill(Color.accentColor.opacity(Self.remoteMarkerOpacity))
-                        .frame(height: Self.remoteMarkerHeight)
-                }
-            }
             .accessibilityValue(tab.isRemote ? (tab.remoteHostName ?? String(localized: "Remote")) : "")
     }
-
-    private static let remoteMarkerHeight: CGFloat = 3
-    private static let remoteMarkerOpacity: Double = 0.2
 }
 
 /// The dim line beside the title: what the session reports about itself
