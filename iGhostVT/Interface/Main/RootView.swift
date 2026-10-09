@@ -70,6 +70,9 @@ struct RootView: View {
                     .overlay(alignment: .trailing) {
                         SidebarResizeHandle(width: $sidebarWidth)
                     }
+                    // The keyboard is the terminal's: the sidebar keeps its
+                    // full height, settings button at the bottom, under it.
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
                     // Out past the safe area as well: `move` slides it by its
                     // own width from where it stands, the safe area's edge,
                     // and on a landscape iPhone its last stretch then sat in
