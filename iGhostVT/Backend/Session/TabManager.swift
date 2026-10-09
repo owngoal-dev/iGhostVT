@@ -73,11 +73,12 @@ final class TabManager: ObservableObject {
     /// the resumable sessions — the moved one is among them as soon as its
     /// old window lets go — and opens no fresh shell beside it.
     ///
-    /// Any other window: the first one of a cold launch asks the daemon
-    /// what survived the previous run and reattaches to it; every other
-    /// window (and a launch with nothing to resume) starts with one fresh
-    /// tab. The daemon is the only record — nothing about sessions is
-    /// persisted app-side. A session a tab already holds is skipped: a
+    /// Any other window: the first one of a launch brings back, without
+    /// asking, everything the last run left — this device's sessions no tab
+    /// holds, which the daemon lists, and the remote tabs it had open
+    /// (`RemoteTabLedger`), each taken back from whoever holds it now. A
+    /// window opened beside it, or a launch with nothing to resume, starts
+    /// with one fresh tab. A session a tab already holds is skipped: a
     /// Shortcut or URL that launched the app opens its tab before the
     /// daemon has answered, and that tab has not attached yet, so the
     /// answer still lists the session as free.
@@ -95,40 +96,24 @@ final class TabManager: ObservableObject {
             return
         }
         let opensFreshTab = !isOnlyWindow || SessionLaunch.opensNewSession
+        reopenRemoteTabs()
         if AppEdition.isRemoteOnly {
-            restoreRemoteTabs(openingFreshTab: opensFreshTab)
+            if tabs.isEmpty, opensFreshTab, RemoteTabDefaults.preferredHostID != nil {
+                newTab()
+            }
         } else {
             resumeLeftovers(openingFreshTab: opensFreshTab)
         }
     }
 
-    /// Ghost Remote's launch: the paired devices' terminals this app had
-    /// open when it last went to the background (`RemoteTabLedger`), each
-    /// taken back from whoever holds it now, as a terminal picked from the
-    /// new-tab menu is. With none, a fresh shell on the preferred device —
-    /// or, with no device paired yet, the empty window that says where to
-    /// pair one.
-    private func restoreRemoteTabs(openingFreshTab: Bool) {
+    /// The paired devices' terminals this app had open when it last went
+    /// to the background (`RemoteTabLedger`, claimed once per process),
+    /// each taken back from whoever holds it now, as a terminal picked from
+    /// the new-tab menu is.
+    private func reopenRemoteTabs() {
         let (entries, activeIndex) = RemoteTabLedger.claim()
-        guard !entries.isEmpty else {
-            if openingFreshTab, RemoteTabDefaults.preferredHostID != nil {
-                newTab()
-            }
-            return
-        }
-        // A cold launch asks first; a scene iOS rebuilt on the way back
-        // from the background takes its own tabs back without a word.
-        if SessionRestore.takeQuestion() {
-            restoreOffer = SessionRestore.Offer(
-                terminals: .remote(entries, activeIndex: activeIndex),
-                opensFreshTab: openingFreshTab,
-            )
-            return
-        }
-        reopenRemoteTabs(entries, activeIndex: activeIndex)
-    }
-
-    private func reopenRemoteTabs(_ entries: [RemoteTabLedger.Entry], activeIndex: Int?) {
+        guard !entries.isEmpty else { return }
+        AppLog.info(.tabs, "reopening \(entries.count) remote terminal(s) from the last run")
         let restored = entries.map { entry in
             let tab = makeTab(resume: entry.sessionID, remoteHostID: entry.hostID)
             tab.store.takesOverOnFirstConnect = true
@@ -145,27 +130,15 @@ final class TabManager: ObservableObject {
     /// when the Mac's helper comes up, because a claim the daemon could not
     /// answer is left open and the shells it holds are reachable only now.
     func resumeLeftovers(openingFreshTab: Bool = false) {
-        DaemonSessionDirectory.shared.claimResumable { [weak self] resumable, answered in
+        DaemonSessionDirectory.shared.claimResumable { [weak self] resumable, _ in
             guard let self else { return }
             // Every window's tabs, not this one's: a session a device holds
             // can already be a tab in another window.
             let held = Set(ShortcutBridge.tabManagers().flatMap(\.tabs).compactMap(\.daemonSessionID))
                 .union(tabs.compactMap(\.daemonSessionID))
-            var resumable = resumable.filter { !held.contains($0) }
-            // The first answer of a cold launch is what the last run left:
-            // asked about, not adopted. A terminal a paired device is using
-            // is that device's and comes back as a held tab regardless.
-            if answered, SessionRestore.takeQuestion() {
-                let rows = DaemonSessionDirectory.shared.sessions
-                let usedElsewhere = Set(rows.filter { $0.holder != nil }.map(\.id))
-                let leftBehind = resumable.filter { !usedElsewhere.contains($0) }
-                resumable = resumable.filter { usedElsewhere.contains($0) }
-                if !leftBehind.isEmpty {
-                    restoreOffer = SessionRestore.Offer(terminals: .local(leftBehind), opensFreshTab: openingFreshTab)
-                }
-            }
+            let resumable = resumable.filter { !held.contains($0) }
             guard !resumable.isEmpty else {
-                if openingFreshTab, tabs.isEmpty, restoreOffer == nil {
+                if openingFreshTab, tabs.isEmpty {
                     newTab()
                 }
                 return
@@ -175,10 +148,13 @@ final class TabManager: ObservableObject {
     }
 
     private func adoptLeftovers(_ resumable: [UInt64]) {
+        AppLog.info(.tabs, "resuming \(resumable.count) terminal(s) left in the daemon")
         let resumed = resumable.map { makeTab(resume: $0) }
         withAnimation(Self.tabTransition) {
             tabs.append(contentsOf: resumed)
-            activeTabID = tabs.last?.id
+            // The remote tabs reopened before the daemon answered keep the
+            // front they had.
+            activeTabID = activeTabID ?? tabs.last?.id
         }
         if isSceneActive {
             for tab in tabs {
@@ -186,52 +162,6 @@ final class TabManager: ObservableObject {
             }
         }
         SessionActivityController.shared.refresh()
-    }
-
-    /// What this window asked as it opened (`SessionRestore`), until it is
-    /// answered; presented by `RootView`.
-    @Published private(set) var restoreOffer: SessionRestore.Offer?
-
-    /// Restore: the last run's terminals come back as tabs, as they did
-    /// before the question existed.
-    func acceptRestoreOffer() {
-        guard let offer = restoreOffer else { return }
-        restoreOffer = nil
-        AppLog.info(.tabs, "restoring \(offer.count) terminal(s) from the last run")
-        switch offer.terminals {
-        case let .local(ids):
-            // A session the CLI or a device attached while the question
-            // was up is someone else's now.
-            let held = Set(ShortcutBridge.tabManagers().flatMap(\.tabs).compactMap(\.daemonSessionID))
-            adoptLeftovers(ids.filter { !held.contains($0) })
-        case let .remote(entries, activeIndex):
-            reopenRemoteTabs(entries, activeIndex: activeIndex)
-        }
-    }
-
-    /// Discard: this device's leftovers are ended — the tabs they were are
-    /// gone, so nothing could reach them again — and a window left with
-    /// nothing opens what it would have with nothing to resume. Another
-    /// device's terminals are only not reopened: they are that device's.
-    func declineRestoreOffer() {
-        guard let offer = restoreOffer else { return }
-        restoreOffer = nil
-        switch offer.terminals {
-        case let .local(ids):
-            AppLog.info(.tabs, "discarding \(ids.count) terminal(s) from the last run: \(ids)")
-            for id in ids {
-                DaemonSessionDirectory.shared.evict(id)
-                XPCDaemonTransport.killSession(id)
-            }
-            SessionActivityController.shared.refresh()
-        case let .remote(entries, _):
-            AppLog.info(.tabs, "not reopening \(entries.count) remote terminal(s) from the last run")
-        }
-        if offer.opensFreshTab, tabs.isEmpty {
-            if !AppEdition.isRemoteOnly || RemoteTabDefaults.preferredHostID != nil {
-                newTab()
-            }
-        }
     }
 
     var activeTab: TerminalTab? {

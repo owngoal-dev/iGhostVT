@@ -104,7 +104,7 @@ import SwiftUI
                     MacSettingsNote(
                         """
                         Sessions keep going after the app quits, and the next launch \
-                        asks whether to restore them. Turn this off to close every \
+                        brings them all back as tabs. Turn this off to close every \
                         session when the app quits.
                         """,
                     )

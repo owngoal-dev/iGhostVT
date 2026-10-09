@@ -1,9 +1,9 @@
 import Foundation
 
-/// Ghost Remote's record of its tabs, so a cold launch reattaches them.
+/// The record of the app's remote tabs, so a cold launch reattaches them.
 ///
-/// iGhostVT needs none of this: its own daemon lists what is left, and the
-/// launch window claims it (`DaemonSessionDirectory`). A paired device's
+/// This device's own tabs need none of this: its daemon lists what is
+/// left, and the launch window claims it (`DaemonSessionDirectory`). A paired device's
 /// daemon has many clients and cannot say which of its terminals were
 /// open here, and iOS kills a suspended app without telling it — so the
 /// app writes down, whenever a window goes to the background, which

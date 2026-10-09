@@ -44,7 +44,7 @@ struct SessionsSettingsSection: View {
         Text(
             """
             Keep Sessions Running keeps every session going after the app \
-            quits, and the next launch asks whether to restore them. With \
+            quits, and the next launch brings them all back as tabs. With \
             it off, every session closes when the app quits.
             """,
         )

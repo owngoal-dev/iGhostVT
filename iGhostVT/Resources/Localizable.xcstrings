@@ -1055,196 +1055,6 @@
         }
       }
     },
-    "%lld terminals from the last time iGhostVT was open are still running." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا تزال %lld طرفيات من آخر مرة فُتح فيها iGhostVT قيد التشغيل."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Terminals vom letzten Mal, als iGhostVT geöffnet war, laufen noch."
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "A terminal from the last time iGhostVT was open is still running."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld terminals from the last time iGhostVT was open are still running."
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siguen en ejecución %lld terminales de la última vez que iGhostVT estuvo abierto."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld terminaux de la dernière ouverture d’iGhostVT sont toujours actifs."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld terminali dell’ultima volta che iGhostVT era aperto sono ancora in esecuzione."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前回 iGhostVT を開いていたときのターミナルが %lld 個まだ実行中です。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지난번 iGhostVT를 열었을 때의 터미널 %lld개가 아직 실행 중입니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld terminais da última vez em que o iGhostVT esteve aberto ainda estão em execução."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Терминалы с прошлого запуска iGhostVT ещё работают: %lld."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld thiết bị đầu cuối từ lần mở iGhostVT trước vẫn đang chạy."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次打开 iGhostVT 时的 %lld 个终端仍在运行。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次打開 iGhostVT 時的 %lld 個終端機仍在執行。"
-          }
-        }
-      }
-    },
-    "%lld terminals on your other devices were open the last time you used this app." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "كانت %lld طرفيات على أجهزتك الأخرى مفتوحة آخر مرة استخدمت فيها هذا التطبيق."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beim letzten Mal waren %lld Terminals auf deinen anderen Geräten geöffnet."
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "A terminal on another device was open the last time you used this app."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld terminals on your other devices were open the last time you used this app."
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La última vez que usaste esta app tenías abiertos %lld terminales en tus otros dispositivos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld terminaux de vos autres appareils étaient ouverts lors de votre dernière utilisation de cette app."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’ultima volta che hai usato questa app erano aperti %lld terminali sugli altri dispositivi."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前回このアプリを使ったとき、ほかのデバイスのターミナルを %lld 個開いていました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지난번 이 앱을 사용할 때 다른 기기의 터미널 %lld개가 열려 있었습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Da última vez que você usou este app, %lld terminais nos seus outros dispositivos estavam abertos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В прошлый раз в приложении были открыты терминалы на других устройствах: %lld."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lần trước bạn dùng ứng dụng này, có %lld thiết bị đầu cuối trên các thiết bị khác đang mở."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次使用本应用时，打开了其他设备上的 %lld 个终端。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次使用本 App 時，打開了其他裝置上的 %lld 個終端機。"
-          }
-        }
-      }
-    },
     "000000" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9861,89 +9671,6 @@
         }
       }
     },
-    "Discard" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تجاهل"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verwerfen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discard"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Descartar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abandonner"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scarta"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "破棄"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "버리기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Descartar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отбросить"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bỏ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "丢弃"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "捨棄"
-          }
-        }
-      }
-    },
     "Disconnected." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15582,85 +15309,85 @@
         }
       }
     },
-    "Keep Sessions Running keeps every session going after the app quits, and the next launch asks whether to restore them. With it off, every session closes when the app quits." : {
+    "Keep Sessions Running keeps every session going after the app quits, and the next launch brings them all back as tabs. With it off, every session closes when the app quits." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "مع تشغيل «إبقاء الجلسات قيد التشغيل» تستمر كل الجلسات بعد إنهاء التطبيق، ويسألك التشغيل التالي إن كنت تريد استعادتها. عند إيقافه، تُغلق كل الجلسات عند إنهاء التطبيق."
+            "value" : "مع تشغيل «إبقاء الجلسات قيد التشغيل» تستمر كل الجلسات بعد إنهاء التطبيق، ويعيدها التشغيل التالي كلها كعلامات تبويب. عند إيقافه، تُغلق كل الجلسات عند إنهاء التطبيق."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit „Sitzungen weiterlaufen lassen“ laufen alle Sitzungen nach dem Beenden der App weiter, und beim nächsten Start wirst du gefragt, ob sie wiederhergestellt werden sollen. Ist es aus, werden beim Beenden alle Sitzungen geschlossen."
+            "value" : "Mit „Sitzungen weiterlaufen lassen“ laufen alle Sitzungen nach dem Beenden der App weiter, und der nächste Start holt sie alle als Tabs zurück. Ist es aus, werden beim Beenden alle Sitzungen geschlossen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep Sessions Running keeps every session going after the app quits, and the next launch asks whether to restore them. With it off, every session closes when the app quits."
+            "value" : "Keep Sessions Running keeps every session going after the app quits, and the next launch brings them all back as tabs. With it off, every session closes when the app quits."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Con «Mantener sesiones en ejecución», todas las sesiones siguen tras cerrar la app y el siguiente inicio pregunta si restaurarlas. Si está desactivado, todas las sesiones se cierran al salir de la app."
+            "value" : "Con «Mantener sesiones en ejecución», todas las sesiones siguen tras cerrar la app y el siguiente inicio las recupera todas como pestañas. Si está desactivado, todas las sesiones se cierran al salir de la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avec « Garder les sessions actives », toutes les sessions continuent après la fermeture de l’app, et le lancement suivant demande s’il faut les restaurer. Désactivé, toutes les sessions se ferment à la fermeture de l’app."
+            "value" : "Avec « Garder les sessions actives », toutes les sessions continuent après la fermeture de l’app, et le lancement suivant les rouvre toutes en onglets. Désactivé, toutes les sessions se ferment à la fermeture de l’app."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Con «Mantieni sessioni attive» tutte le sessioni continuano dopo la chiusura dell’app e all’avvio successivo ti viene chiesto se ripristinarle. Se è disattivato, tutte le sessioni si chiudono quando l’app viene chiusa."
+            "value" : "Con «Mantieni sessioni attive» tutte le sessioni continuano dopo la chiusura dell’app e all’avvio successivo tornano tutte come pannelli. Se è disattivato, tutte le sessioni si chiudono quando l’app viene chiusa."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「セッションを実行したままにする」がオンの場合、アプリを終了してもすべてのセッションは動き続け、次回起動時に復元するかどうかを確認します。オフの場合、アプリの終了時にすべてのセッションを閉じます。"
+            "value" : "「セッションを実行したままにする」がオンの場合、アプリを終了してもすべてのセッションは動き続け、次回起動時にすべてタブとして復元されます。オフの場合、アプリの終了時にすべてのセッションを閉じます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\"세션 계속 실행\"을 켜면 앱을 종료해도 모든 세션이 계속 실행되며, 다음 실행 시 복원할지 묻습니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
+            "value" : "\"세션 계속 실행\"을 켜면 앱을 종료해도 모든 세션이 계속 실행되며, 다음 실행 시 모두 탭으로 복원됩니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Com “Manter sessões em execução”, todas as sessões continuam depois que o app é encerrado, e a próxima abertura pergunta se você quer restaurá-las. Desativado, todas as sessões são fechadas ao encerrar o app."
+            "value" : "Com “Manter sessões em execução”, todas as sessões continuam depois que o app é encerrado, e a próxima abertura traz todas de volta como abas. Desativado, todas as sessões são fechadas ao encerrar o app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Если «Не завершать сеансы» включено, все сеансы продолжают работать после выхода из приложения, а при следующем запуске будет предложено их восстановить. Если выключено, при выходе все сеансы закрываются."
+            "value" : "Если «Не завершать сеансы» включено, все сеансы продолжают работать после выхода из приложения, а при следующем запуске все они возвращаются вкладками. Если выключено, при выходе все сеансы закрываются."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khi bật “Giữ phiên chạy”, mọi phiên vẫn chạy sau khi thoát ứng dụng và lần mở tiếp theo sẽ hỏi bạn có muốn khôi phục chúng không. Khi tắt, mọi phiên sẽ đóng khi thoát ứng dụng."
+            "value" : "Khi bật “Giữ phiên chạy”, mọi phiên vẫn chạy sau khi thoát ứng dụng và lần mở tiếp theo sẽ khôi phục tất cả thành các tab. Khi tắt, mọi phiên sẽ đóng khi thoát ứng dụng."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开启“保持会话运行”后，退出应用时所有会话都会继续运行，下次启动时会询问是否恢复。关闭后，退出应用时将关闭所有会话。"
+            "value" : "开启“保持会话运行”后，退出应用时所有会话都会继续运行，下次启动时会全部恢复为标签页。关闭后，退出应用时将关闭所有会话。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟「保持工作階段執行」後，結束 App 時所有工作階段都會繼續執行，下次啟動時會詢問是否回復。關閉後，結束 App 時將關閉所有工作階段。"
+            "value" : "開啟「保持工作階段執行」後，結束 App 時所有工作階段都會繼續執行，下次啟動時會全部回復為標籤頁。關閉後，結束 App 時將關閉所有工作階段。"
           }
         }
       }
@@ -25762,172 +25489,6 @@
         }
       }
     },
-    "Restore" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استعادة"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wiederherstellen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurer"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ripristina"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "復元"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "복원"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Восстановить"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Khôi phục"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "恢复"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "回復"
-          }
-        }
-      }
-    },
-    "Restore Previous Session?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استعادة الجلسة السابقة؟"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorherige Sitzung wiederherstellen?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore Previous Session?"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Restaurar la sesión anterior?"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurer la session précédente ?"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ripristinare la sessione precedente?"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前回のセッションを復元しますか？"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이전 세션을 복원할까요?"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurar a sessão anterior?"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Восстановить предыдущий сеанс?"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Khôi phục phiên trước?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "恢复上次的会话？"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "回復上次的工作階段？"
-          }
-        }
-      }
-    },
     "Retry" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -28170,85 +27731,85 @@
         }
       }
     },
-    "Sessions keep going after the app quits, and the next launch asks whether to restore them. Turn this off to close every session when the app quits." : {
+    "Sessions keep going after the app quits, and the next launch brings them all back as tabs. Turn this off to close every session when the app quits." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تستمر الجلسات بعد إنهاء التطبيق، ويسألك التشغيل التالي إن كنت تريد استعادتها. أوقف هذا الخيار لإغلاق كل الجلسات عند إنهاء التطبيق."
+            "value" : "تستمر الجلسات بعد إنهاء التطبيق، ويعيدها التشغيل التالي كلها كعلامات تبويب. أوقف هذا الخيار لإغلاق كل الجلسات عند إنهاء التطبيق."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sitzungen laufen nach dem Beenden der App weiter, und beim nächsten Start wirst du gefragt, ob sie wiederhergestellt werden sollen. Schalte dies aus, um beim Beenden alle Sitzungen zu schließen."
+            "value" : "Sitzungen laufen nach dem Beenden der App weiter, und der nächste Start holt sie alle als Tabs zurück. Schalte dies aus, um beim Beenden alle Sitzungen zu schließen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sessions keep going after the app quits, and the next launch asks whether to restore them. Turn this off to close every session when the app quits."
+            "value" : "Sessions keep going after the app quits, and the next launch brings them all back as tabs. Turn this off to close every session when the app quits."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las sesiones siguen tras cerrar la app y el siguiente inicio pregunta si restaurarlas. Desactívalo para cerrar todas las sesiones al salir de la app."
+            "value" : "Las sesiones siguen tras cerrar la app y el siguiente inicio las recupera todas como pestañas. Desactívalo para cerrar todas las sesiones al salir de la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les sessions continuent après la fermeture de l’app, et le lancement suivant demande s’il faut les restaurer. Désactivez cette option pour fermer toutes les sessions à la fermeture de l’app."
+            "value" : "Les sessions continuent après la fermeture de l’app, et le lancement suivant les rouvre toutes en onglets. Désactivez cette option pour fermer toutes les sessions à la fermeture de l’app."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le sessioni continuano dopo la chiusura dell’app e all’avvio successivo ti viene chiesto se ripristinarle. Disattiva questa opzione per chiudere tutte le sessioni quando l’app viene chiusa."
+            "value" : "Le sessioni continuano dopo la chiusura dell’app e all’avvio successivo tornano tutte come pannelli. Disattiva questa opzione per chiudere tutte le sessioni quando l’app viene chiusa."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アプリを終了してもセッションは動き続け、次回起動時に復元するかどうかを確認します。オフにすると、アプリの終了時にすべてのセッションを閉じます。"
+            "value" : "アプリを終了してもセッションは動き続け、次回起動時にすべてタブとして復元されます。オフにすると、アプリの終了時にすべてのセッションを閉じます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "앱을 종료해도 세션이 계속 실행되며, 다음 실행 시 복원할지 묻습니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
+            "value" : "앱을 종료해도 세션이 계속 실행되며, 다음 실행 시 모두 탭으로 복원됩니다. 끄면 앱을 종료할 때 모든 세션이 닫힙니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "As sessões continuam depois que o app é encerrado, e a próxima abertura pergunta se você quer restaurá-las. Desative para fechar todas as sessões ao encerrar o app."
+            "value" : "As sessões continuam depois que o app é encerrado, e a próxima abertura traz todas de volta como abas. Desative para fechar todas as sessões ao encerrar o app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сеансы продолжают работать после выхода из приложения, а при следующем запуске будет предложено их восстановить. Выключите, чтобы закрывать все сеансы при выходе."
+            "value" : "Сеансы продолжают работать после выхода из приложения, а при следующем запуске все они возвращаются вкладками. Выключите, чтобы закрывать все сеансы при выходе."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Các phiên vẫn chạy sau khi thoát ứng dụng và lần mở tiếp theo sẽ hỏi bạn có muốn khôi phục chúng không. Tắt tùy chọn này để đóng mọi phiên khi thoát ứng dụng."
+            "value" : "Các phiên vẫn chạy sau khi thoát ứng dụng và lần mở tiếp theo sẽ khôi phục tất cả thành các tab. Tắt tùy chọn này để đóng mọi phiên khi thoát ứng dụng."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "退出应用后会话会继续运行，下次启动时会询问是否恢复。关闭此项后，退出应用时将关闭所有会话。"
+            "value" : "退出应用后会话会继续运行，下次启动时会全部恢复为标签页。关闭此项后，退出应用时将关闭所有会话。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "結束 App 後工作階段會繼續執行，下次啟動時會詢問是否回復。關閉此項後，結束 App 時將關閉所有工作階段。"
+            "value" : "結束 App 後工作階段會繼續執行，下次啟動時會全部回復為標籤頁。關閉此項後，結束 App 時將關閉所有工作階段。"
           }
         }
       }

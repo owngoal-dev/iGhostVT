@@ -111,8 +111,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     /// in the daemon either way).
     ///
     /// With Keep Alive on every session stays in the daemon, and the next
-    /// launch asks whether to restore them as tabs or discard them
-    /// (`SessionRestore`). With Keep Alive off every session the daemon
+    /// launch brings every one back as a tab, the remote tabs too
+    /// (`RemoteTabLedger`, written here as well, since a Mac quit need not
+    /// send a window to the background first). With Keep Alive off every session the daemon
     /// holds — attached to a window or not — dies, and the files the
     /// terminal staged for pastes and drops go with the last shell that
     /// could refer to them.
@@ -121,14 +122,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     /// and nothing is held it leaves by itself, on both platforms.
     func applicationWillTerminate(_ application: UIApplication) {
         GhosttyAppConfiguration.removeTemporaryFiles()
+        RemoteTabLedger.save(ShortcutBridge.tabManagers())
         // Ghost Remote's tabs are other devices' sessions, which outlive
         // it whatever this switch says; each tab's link simply drops.
         guard !AppEdition.isRemoteOnly else { return }
         if SessionKeepAlive.isEnabled {
             // Every session stays, idle shells included: the next launch
-            // asks whether to bring them back (`SessionRestore`), and
-            // Discard there is what ⌘Q used to do to the idle ones.
-            AppLog.info(.tabs, "quitting, keeping every session for the next launch to offer back")
+            // brings them all back as tabs.
+            AppLog.info(.tabs, "quitting, keeping every session for the next launch to restore")
         } else {
             AppLog.info(.tabs, "quitting with Keep Alive off, killing every session")
             XPCDaemonTransport.closeSessionsForQuit(nil)

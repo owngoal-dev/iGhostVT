@@ -268,10 +268,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /// Ghost Remote writes down its tabs here, the last moment it is sure
-    /// to run before iOS may kill it (`RemoteTabLedger`).
+    /// The remote tabs are written down here, the last moment the app is
+    /// sure to run before iOS may kill it (`RemoteTabLedger`).
     func sceneDidEnterBackground(_: UIScene) {
-        guard AppEdition.isRemoteOnly, !isDiscarded else { return }
+        guard !isDiscarded else { return }
         RemoteTabLedger.save(ShortcutBridge.tabManagers())
     }
 }

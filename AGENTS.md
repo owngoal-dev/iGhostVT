@@ -519,10 +519,14 @@ tabs of every connected scene (which is why the Mac app opts out of
 automatic and sudden termination — `NSSupportsAutomaticTermination` and
 `NSSupportsSuddenTermination` false in `Info.plist`: a quit that skipped the
 callback would leave every idle shell behind, and one AppKit chose to
-reclaim memory would do it without anyone asking): a tab whose shell is at its prompt
-(`!hasRunningProgram`, the same test that lets its × close without asking)
-is killed, a tab with a program running is left in the daemon for the next
-launch, and with Keep Alive off everything goes. The kills travel over one
+reclaim memory would do it without anyone asking): with Keep Alive on
+every session stays in the daemon, idle shells included, and with it off
+everything goes. The next launch asks nothing: its first window adopts
+every session no tab holds and reopens every remote tab the last run had
+(`RemoteTabLedger`, written as a window goes to the background and again
+at terminate, in both editions), each taken back from whoever holds it.
+A question was tried in 1.4.17 (Restore / Discard) and taken out — the
+answer was always Restore. The kills travel over one
 blocking one-shot connection (`XPCDaemonTransport.closeSessionsForQuit`) —
 not the tabs' transports, whose `closeSession` is fire-and-forget on a queue
 the exit outruns — and the call polls `listSessions` until the closed

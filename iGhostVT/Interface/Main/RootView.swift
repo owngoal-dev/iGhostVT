@@ -151,7 +151,6 @@ struct RootView: View {
         // `AlertViewController` on the front-most context, so it lands above
         // the switcher's cover too.
         .closeTabConfirmation(tabManager)
-        .sessionRestorePrompt(tabManager)
         .clipboardConfirmation(tabManager)
         .relocationPrompt(MacLaunchAgent.shared)
         .updatePrompt(UpdateNotice.shared)
