@@ -227,12 +227,13 @@ private struct TitleCapsuleLabel: View {
     let tab: TerminalTab
 
     var body: some View {
+        // The title alone: a phone's capsule is narrow, and the process
+        // and device beside it left the title a few letters and an
+        // ellipsis. The strip, the sidebar and the switcher still show them.
         HStack(spacing: DS.Padding.s) {
             ObservedTabLockBadge(attributes: tab.attributes)
             ObservedTabTitle(tab: tab)
-            ObservedTabSubtitle(tab: tab)
         }
-        // Title and subtitle name one tab: one VoiceOver stop, not two.
         .accessibilityElement(children: .combine)
         .padding(.horizontal, DS.Padding.l)
         .frame(maxWidth: .infinity, minHeight: 44)
