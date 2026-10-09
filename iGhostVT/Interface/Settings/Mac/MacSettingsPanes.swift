@@ -103,9 +103,9 @@ import SwiftUI
                         .padding(.top, DS.Padding.s)
                     MacSettingsNote(
                         """
-                        Sessions with a program running keep going after the app quits \
-                        and come back on the next launch; a shell sitting at its prompt \
-                        closes. Turn this off to close every session when the app quits.
+                        Sessions keep going after the app quits, and the next launch \
+                        asks whether to restore them. Turn this off to close every \
+                        session when the app quits.
                         """,
                     )
                 }
@@ -327,27 +327,17 @@ import SwiftUI
             MacSettingsForm {
                 MacSettingsRow("File Transfer") {
                     MacCheckbox(String(localized: "ZMODEM File Transfer"), isOn: $zmodemEnabled)
-                } details: {
-                    MacSettingsNote("Send and receive files with `rz` and `sz`.")
                 }
                 Divider()
                 MacSettingsRow("Debugging") {
                     MacCheckbox(String(localized: "Detailed Terminal Log"), isOn: $verboseTerminalLog)
                         .onChange(of: verboseTerminalLog, perform: DetailedTerminalLog.apply)
-                } details: {
-                    MacSettingsNote(
-                        """
-                        Writes detailed terminal activity to the log, \
-                        including every keystroke, while this is on.
-                        """,
-                    )
                 }
                 Divider()
                 MacSettingsRow("Logs") {
                     logFile(AppLog.currentFile ?? AppLog.journalDirectory, label: "Open App Log")
                 } details: {
                     logFile(URL(fileURLWithPath: iGhostVTProtocol.daemonLogPath), label: "Open Helper Log")
-                    MacSettingsNote("Logs open in Console.")
                 }
             }
         }

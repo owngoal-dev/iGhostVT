@@ -40,12 +40,6 @@ import SwiftUI
                             .font(DS.Font.detail)
                             .foregroundColor(.red)
                             .lineLimit(1)
-                    } else {
-                        if directory.relay == nil {
-                            MacSettingsNote("Paired devices on this network can open terminals here.")
-                        } else {
-                            MacSettingsNote("Paired devices on this network, or anywhere through the relay, can open terminals here.")
-                        }
                     }
                 }
                 // Only once a .vtrpsc file has been opened: no relay, no row.

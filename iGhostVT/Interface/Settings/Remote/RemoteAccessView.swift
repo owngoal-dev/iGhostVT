@@ -89,15 +89,6 @@ struct RemoteAccessView: View {
             if let problem {
                 SettingsValueText(title: "Status", value: problem, isWarning: true)
             }
-        } footer: {
-            Group {
-                if directory.relay == nil {
-                    Text("Paired devices on this network can open terminals here.")
-                } else {
-                    Text("Paired devices on this network, or anywhere through the relay, can open terminals here.")
-                }
-            }
-            .font(DS.Font.detail)
         }
     }
 

@@ -61,14 +61,8 @@ struct GhosttyConfigurationView: View {
             Text("Custom Configuration")
                 .font(DS.Font.caption)
         } footer: {
-            Text(
-                """
-                Ghostty settings, one key = value per line, applied after \
-                iGhostVT's own. New tabs use them; open tabs keep the \
-                configuration they were opened with.
-                """,
-            )
-            .font(DS.Font.detail)
+            Text("Only new tabs load the changed configuration.")
+                .font(DS.Font.detail)
         }
     }
 
@@ -92,14 +86,6 @@ struct GhosttyConfigurationView: View {
         } header: {
             Text("Configuration")
                 .font(DS.Font.caption)
-        } footer: {
-            Text(
-                """
-                The Ghostty configuration every new terminal opens with: \
-                your settings, then the lines above.
-                """,
-            )
-            .font(DS.Font.detail)
         }
     }
 }

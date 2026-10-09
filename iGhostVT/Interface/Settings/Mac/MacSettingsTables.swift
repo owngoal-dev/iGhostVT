@@ -196,13 +196,7 @@ import SwiftUI
                     .accessibilityLabel("Custom Configuration")
                 }
                 .frame(height: 110)
-                MacSettingsNote(
-                    """
-                    Ghostty settings, one key = value per line, applied after \
-                    iGhostVT's own. New tabs use them; open tabs keep the \
-                    configuration they were opened with.
-                    """,
-                )
+                MacSettingsNote("Only new tabs load the changed configuration.")
                 MacTableFrame {
                     // The header stays; only the lines scroll.
                     ConfigurationFileView(
@@ -215,7 +209,6 @@ import SwiftUI
                     // made of; a read here re-renders on their change.
                     .id("\(terminalFontSize)-\(theme.selection.lightName ?? "")-\(theme.selection.darkName ?? "")")
                 }
-                MacSettingsNote("The Ghostty configuration every new terminal opens with: your settings, then the lines above.")
             }
             .padding(DS.Padding.xl)
         }
