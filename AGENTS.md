@@ -41,7 +41,7 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026100801, Ghostty 35a81a98 on Zig 0.16). 2.x
+  (`upToNextMajor` from 2.2.2026100901, Ghostty 35a81a98 on Zig 0.16). 2.x
   selects text inline on iOS — a long press puts handles and the edit menu
   on the terminal itself — and removed the long-press hand-off
   (`onTextSelectionRequest`) the app's own selection sheet hung off, so the
@@ -59,7 +59,13 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   switching light and dark) no longer snaps an open tab to the config's
   `font-size` — which, after Settings ▸ Text Size changed, resized tabs
   that should keep theirs — and reports the size back
-  (`TerminalViewState.fontSize`). 2.2.2026100801 repeats a held
+  (`TerminalViewState.fontSize`). 2.2.2026100901 copies without the
+  padding a TUI paints around its lines — trailing blanks off every line,
+  and at most the selection's start column of indent off every later one
+  (`TerminalCopyText`) — from the touch selection, the menu's Copy and ⌘C
+  alike, and the touch highlight covers only each row's text; Claude
+  Code's rows are separate lines with no soft-wrap mark, so the line
+  breaks themselves stay. 2.2.2026100801 repeats a held
   arrow, Home/End or function key on Mac Catalyst, at the user's Key Repeat
   setting — UIKit reports such a press once there and spent its repeats on
   the empty text document, so a held arrow moved one step; text keys were
