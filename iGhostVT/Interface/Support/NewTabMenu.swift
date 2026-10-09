@@ -55,21 +55,38 @@ struct NewTabMenu<Label: View>: View {
 
 /// New Tab as an entry inside another SwiftUI menu — the ⋯ menu's — where
 /// a UIKit button cannot go: the same rows, from the catalog's last answer.
+///
+/// On iOS the rows are `rows`, taken as a finger comes down on ⋯
+/// (`takesNewTabRows`) and left alone until the next touch. UIKit rebuilds
+/// an open menu whenever SwiftUI hands it new content, and these rows
+/// change on their own: a paired device's terminals carry titles that
+/// change with every command (and with every frame of a spinner), and a
+/// device on a weak network drops off the relay's list and comes back.
+/// Each rebuild closed the New Tab submenu as it opened, so on a phone
+/// whose remote tab was busy the submenu would not stay open at all. The
+/// Mac's menu bar draws these menus as NSMenus and keeps observing.
 struct NewTabSubmenu<Label: View>: View {
     @ObservedObject var tabManager: TabManager
+    @ObservedObject var rows: NewTabMenuRows
     @ViewBuilder var label: () -> Label
 
-    @ObservedObject private var recents = RecentDirectoryStore.shared
-    @ObservedObject private var remoteHosts = RemoteHostDirectory.shared
-    @ObservedObject private var remoteSessions = RemoteSessionCatalog.shared
+    #if targetEnvironment(macCatalyst)
+        @ObservedObject private var recents = RecentDirectoryStore.shared
+        @ObservedObject private var remoteHosts = RemoteHostDirectory.shared
+        @ObservedObject private var remoteSessions = RemoteSessionCatalog.shared
+    #endif
 
     var body: some View {
-        let choices = NewTabDirectoryChoices(
-            tabManager: tabManager,
-            recents: recents,
-            remoteHosts: remoteHosts,
-            remoteSessions: remoteSessions,
-        )
+        #if targetEnvironment(macCatalyst)
+            let choices = NewTabDirectoryChoices(
+                tabManager: tabManager,
+                recents: recents,
+                remoteHosts: remoteHosts,
+                remoteSessions: remoteSessions,
+            )
+        #else
+            let choices = rows.choices ?? NewTabDirectoryChoices(tabManager: tabManager)
+        #endif
         if choices.isEmpty {
             Button(action: { tabManager.newTab() }, label: label)
         } else {
@@ -79,6 +96,48 @@ struct NewTabSubmenu<Label: View>: View {
                 label()
             }
         }
+    }
+}
+
+/// The ⋯ menu's New Tab rows as they were when ⋯ was last touched
+/// (`NewTabSubmenu` says why they are not live). One per menu host.
+@MainActor
+final class NewTabMenuRows: ObservableObject {
+    @Published private(set) var choices: NewTabDirectoryChoices?
+
+    func take(from tabManager: TabManager) {
+        choices = NewTabDirectoryChoices(tabManager: tabManager)
+    }
+}
+
+extension View {
+    /// Takes the New Tab rows as a finger comes down on this ⋯ menu, before
+    /// it opens, once per touch. A menu opened another way — the keyboard,
+    /// VoiceOver — shows the rows taken last time.
+    func takesNewTabRows(_ rows: NewTabMenuRows, from tabManager: TabManager) -> some View {
+        modifier(NewTabRowsTaker(rows: rows, tabManager: tabManager))
+    }
+}
+
+private struct NewTabRowsTaker: ViewModifier {
+    let rows: NewTabMenuRows
+    let tabManager: TabManager
+    @State private var isTouching = false
+
+    func body(content: Content) -> some View {
+        #if targetEnvironment(macCatalyst)
+            content
+        #else
+            content.simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard !isTouching else { return }
+                        isTouching = true
+                        rows.take(from: tabManager)
+                    }
+                    .onEnded { _ in isTouching = false },
+            )
+        #endif
     }
 }
 
@@ -265,6 +324,17 @@ struct NewTabDirectoryChoices {
     /// nothing else is not worth opening.
     var isEmpty: Bool {
         openTabs.isEmpty && recents.isEmpty && remoteHosts.isEmpty
+    }
+
+    /// From the shared stores, as they are now.
+    @MainActor
+    init(tabManager: TabManager) {
+        self.init(
+            tabManager: tabManager,
+            recents: .shared,
+            remoteHosts: .shared,
+            remoteSessions: .shared,
+        )
     }
 
     @MainActor

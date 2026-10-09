@@ -798,7 +798,10 @@ for tabs closed since. The opening asks every device at once
 submenu's answer is usually in before the pointer gets there; the menu
 once waited for all of them, and a slow relay put Loading… over the whole
 menu, local rows included. Only the ⋯ menu's entry (`NewTabSubmenu`, a menu
-inside a SwiftUI menu) still renders from the catalog. Three inline groups, in this order — the home; the directories this
+inside a SwiftUI menu) still renders from the catalog — on iOS from rows
+taken as a finger touches ⋯ (`NewTabMenuRows`) and then left alone: a
+remote device's terminal titles change by the second, and every rebuild
+of the open menu closed the New Tab submenu as it opened. Three inline groups, in this order — the home; the directories this
 window's own tabs are in, deduplicated and sorted by path, each naming a
 live session (`inheritDirectoryFrom`) so the daemon re-reads it as the tab
 opens; and the recent list, sorted by the order chosen in Settings. Neither of the last two ever repeats the home (`isHome`) or a

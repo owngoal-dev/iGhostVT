@@ -20,6 +20,7 @@ struct TabStripBar: View {
     @ObservedObject var tabManager: TabManager
     @Binding var showsSidebar: Bool
     @State private var window: UIWindow?
+    @StateObject private var newTabRows = NewTabMenuRows()
     @Environment(\.windowControlsLeading) private var windowControlsLeading
     /// The chip strip's width, for `reveal` to tell whether it scrolls.
     @State private var stripWidth: CGFloat = 0
@@ -58,7 +59,7 @@ struct TabStripBar: View {
                 // doubles as the tab overview at this width, so the strip
                 // carries neither entry.
                 Menu {
-                    TabOverflowMenuContent(tabManager: tabManager, window: window)
+                    TabOverflowMenuContent(tabManager: tabManager, window: window, newTabRows: newTabRows)
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(DS.Font.control)
@@ -66,6 +67,7 @@ struct TabStripBar: View {
                         .contentShape(Circle())
                 }
                 .barGlass(in: Circle())
+                .takesNewTabRows(newTabRows, from: tabManager)
                 .accessibilityLabel("Tab Menu")
             }
             // One inset all round: the controls sit as far from the window's

@@ -209,12 +209,14 @@ private struct TabMoveButton: View {
 struct TabOverflowMenuContent: View {
     @ObservedObject var tabManager: TabManager
     let window: UIWindow?
+    /// The New Tab rows this menu's host took (`NewTabSubmenu`).
+    let newTabRows: NewTabMenuRows
 
     var body: some View {
         #if DEBUG
             let _ = BodyTrace.note("TabOverflowMenuContent")
         #endif
-        NewTabSubmenu(tabManager: tabManager) {
+        NewTabSubmenu(tabManager: tabManager, rows: newTabRows) {
             Label("New Tab", systemImage: "plus")
         }
         // A phone runs one scene; the request would do nothing there.
