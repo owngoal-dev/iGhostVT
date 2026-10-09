@@ -208,7 +208,8 @@ import SwiftUI
                     .font(.system(size: size * 0.42, weight: .medium))
                     .foregroundColor(.primary)
             } else if case let .symbol(symbol) = key {
-                Text(symbol)
+                // A long key sends all of its text but shows only the start.
+                Text(String(symbol.prefix(4)))
                     .font(.system(size: size * 0.4, weight: .semibold, design: .monospaced))
                     .foregroundColor(.primary)
                     .lineLimit(1)
@@ -231,7 +232,7 @@ import SwiftUI
         }
 
         private var isValid: Bool {
-            !trimmed.isEmpty && trimmed.count <= 3
+            !trimmed.isEmpty
         }
 
         var body: some View {
@@ -245,7 +246,7 @@ import SwiftUI
                             .disableAutocorrection(true)
                             .accessibilityLabel("Custom Key")
                     } footer: {
-                        Text("Up to three characters, sent exactly as typed. A single letter also works with Control.")
+                        Text("Sent exactly as typed; the key shows its first four characters. A single letter also works with Control.")
                             .font(DS.Font.detail)
                     }
                 }

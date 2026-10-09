@@ -27671,6 +27671,89 @@
         }
       }
     },
+    "Sent exactly as typed; the key shows its first four characters. A single letter also works with Control." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُرسل كما كُتبت تماماً، ويعرض المفتاح أول أربعة أحرف منها. ويعمل الحرف الواحد أيضاً مع مفتاح Control."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genau so gesendet, wie eingegeben; die Taste zeigt die ersten vier Zeichen. Ein einzelner Buchstabe funktioniert auch mit Control."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent exactly as typed; the key shows its first four characters. A single letter also works with Control."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se envía tal como se escribe; la tecla muestra los cuatro primeros caracteres. Una sola letra también funciona con Control."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé tel que vous le saisissez ; la touche affiche les quatre premiers caractères. Une seule lettre fonctionne aussi avec Contrôle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inviato esattamente come viene digitato; il tasto mostra i primi quattro caratteri. Una sola lettera funziona anche con Control."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力したとおりに送信され、キーには先頭の 4 文字が表示されます。1 文字なら Control と組み合わせても使えます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력한 그대로 전송되며 키에는 앞의 4자가 표시됩니다. 한 글자는 Control과 함께 사용할 수도 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviado exatamente como você digita; a tecla mostra os quatro primeiros caracteres. Uma única letra também funciona com Control."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправляется в том виде, в каком введено; на клавише видны первые четыре символа. Одна буква работает и с Control."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi đúng như bạn gõ; phím hiển thị bốn ký tự đầu. Một chữ cái đơn cũng dùng được cùng phím Control."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按原样发送，按键上显示前 4 个字符。单个字母也可与 Control 键组合使用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按原樣傳送，按鍵上顯示前 4 個字元。單一字母也可與 Control 鍵組合使用。"
+          }
+        }
+      }
+    },
     "Session" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -37621,89 +37704,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "向上鍵"
-          }
-        }
-      }
-    },
-    "Up to three characters, sent exactly as typed. A single letter also works with Control." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حتى ثلاثة أحرف، تُرسل كما كُتبت تماماً. ويعمل الحرف الواحد أيضاً مع مفتاح Control."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bis zu drei Zeichen, genau so gesendet, wie sie eingegeben werden. Ein einzelner Buchstabe funktioniert auch mit Control."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Up to three characters, sent exactly as typed. A single letter also works with Control."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hasta tres caracteres, enviados tal como se escriben. Una sola letra también funciona con Control."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jusqu’à trois caractères, envoyés tels que vous les saisissez. Une seule lettre fonctionne aussi avec Contrôle."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fino a tre caratteri, inviati esattamente come vengono digitati. Una sola lettera funziona anche con Control."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最大 3 文字。入力したとおりに送信されます。1 文字なら Control と組み合わせても使えます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "최대 3자이며 입력한 그대로 전송됩니다. 한 글자는 Control과 함께 사용할 수도 있습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Até três caracteres, enviados exatamente como você digita. Uma única letra também funciona com Control."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "До трёх символов; они отправляются в том виде, в каком были введены. Одна буква работает и с Control."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tối đa ba ký tự, gửi đúng như bạn gõ. Một chữ cái đơn cũng dùng được cùng phím Control."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最多 3 个字符，按原样发送。单个字母也可与 Control 键组合使用。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最多 3 個字元，按原樣傳送。單一字母也可與 Control 鍵組合使用。"
           }
         }
       }
