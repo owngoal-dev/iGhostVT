@@ -375,6 +375,16 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         return true
     }
 
+    /// Runs on `queue`, when the hello failed or never came back. A tab
+    /// closed meanwhile asked for its session to end, and an attach sent
+    /// behind the hello may have reached the host anyway: the close goes
+    /// over a connection of its own rather than with this one.
+    private func closeDeferredWithoutLink() {
+        guard deferredEnd == .close, let id = lock.locked({ resumeSessionID }) else { return }
+        lock.locked { resumeSessionID = nil }
+        Self.killSession(id, at: endpoint)
+    }
+
     /// One daemon-held session, as `listSessions` reports it. The daemon is
     /// the only book of record — the app deliberately persists nothing.
     struct SessionSummary: Equatable, Sendable {
@@ -649,14 +659,40 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
 
         let hello = Self.makeMessage(.hello)
         isAwaitingHello = true
+        repliesHeldForHello = []
         connection.send(hello) { [weak self] reply in
             guard let self else { return }
             isAwaitingHello = false
+            let held = repliesHeldForHello
+            repliesHeldForHello = nil
             guard Self.replyCode(of: reply) == .success else {
+                closeDeferredWithoutLink()
                 teardown(reason: connectFailureReason(reply))
                 return
             }
+            if let held {
+                // The request went out behind the hello; its answer, if it
+                // is in already, waited for this one.
+                for deliver in held {
+                    deliver()
+                }
+            } else {
+                openOrAttachSession()
+            }
+        }
+        // A remote link costs a round trip per request, so a reattach
+        // leaves right behind the hello instead of after its answer. The
+        // host reads a link's frames in order and checks the hello's proof
+        // before it reads the next one: a hello it refuses closes the link,
+        // and what followed it is never acted on. Here, the answer waits for
+        // the hello's (`sendBehindHello`), and is dropped with a failed one.
+        // Only an attach: it makes nothing, while an open sent ahead of a
+        // hello this side then gives up on would leave the host a shell no
+        // tab knows.
+        if endpoint.isRemote, lock.locked({ self.resumeSessionID }) != nil {
             openOrAttachSession()
+        } else {
+            repliesHeldForHello = nil
         }
         // A missing service answers the hello with an error at once. A
         // daemon launchd has registered but that never picks the message up
@@ -667,6 +703,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                   lock.locked({ self.connection === connection }) else { return }
             isAwaitingHello = false
             AppLog.error(.transport, "no hello reply after \(Int(Self.helloTimeout)) s")
+            closeDeferredWithoutLink()
             teardown(reason: connectFailureReason(nil))
         }
     }
@@ -700,6 +737,39 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     private static let helloTimeout: TimeInterval = 20
     /// Confined to `queue`.
     private var isAwaitingHello = false
+    /// While a remote hello is out with a request sent behind it: what to
+    /// do with that request's answer once the hello's is known. `nil` when
+    /// nothing went out behind the hello — a local link, or once the hello
+    /// is answered. Confined to `queue`.
+    private var repliesHeldForHello: [() -> Void]?
+
+    /// `connection.send`, for a request that may be leaving behind an
+    /// unanswered hello: its answer is handled only after the hello's, and
+    /// only if the hello succeeded.
+    private func sendBehindHello(
+        _ message: xpc_object_t,
+        over connection: DaemonLink,
+        reply handle: @escaping @Sendable (xpc_object_t) -> Void,
+    ) {
+        guard repliesHeldForHello != nil else {
+            connection.send(message, reply: handle)
+            return
+        }
+        connection.send(message) { [weak self] reply in
+            guard let self else { return }
+            let deliver = { [weak self] in
+                // A failed hello tore this connection down, and a link that
+                // is not this transport's any more answers for nobody.
+                guard let self, lock.locked({ self.connection === connection }) else { return }
+                handle(reply)
+            }
+            if repliesHeldForHello != nil {
+                repliesHeldForHello?.append(deliver)
+            } else {
+                deliver()
+            }
+        }
+    }
 
     private var hasLoggedFirstOutput = false
 
@@ -719,7 +789,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             if takesOver {
                 xpc_dictionary_set_bool(message, iGhostVTWireKey.takeover, true)
             }
-            connection.send(message) { [weak self] reply in
+            sendBehindHello(message, over: connection) { [weak self] reply in
                 guard let self else { return }
                 let code = Self.replyCode(of: reply)
                 // A device has it: it stays there, and the tab says so —
@@ -785,6 +855,12 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     // A terminal on another device that is gone ended
                     // there; opening a fresh one would put a tab nobody
                     // asked for in the host's window. The tab closes.
+                    // A reply with no code is the link going down with the
+                    // attach out: it may have reached the host, so a close
+                    // asked for meanwhile goes over a link of its own.
+                    if xpc_dictionary_get_value(reply, iGhostVTWireKey.code) == nil {
+                        closeDeferredWithoutLink()
+                    }
                     if settleDeferredEnd(sessionID: nil) {
                         return
                     }

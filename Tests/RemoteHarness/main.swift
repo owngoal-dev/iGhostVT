@@ -180,6 +180,88 @@ if let server = queue.sync(execute: { serverSide }) {
     check(queue.sync { serverReceived.count } == framesBefore + 1, "with nothing new arrived, no second receipt")
 }
 
+// Frame compression: host to device only, and only to a device that took it.
+print("frame compression")
+if let server = queue.sync(execute: { serverSide }) {
+    let text = Array(String(repeating: "drwxr-xr-x  12 mobile  staff  384 Oct 11 02:19 Library\r\n", count: 8000).utf8)
+    let output = xpc_dictionary_create(nil, nil, 0)
+    xpc_dictionary_set_data(output, "data", text, text.count)
+    let before = (queue.sync { device.0.receivedWireByteCount }, device.2().count)
+    queue.sync {
+        device.0.acceptsCompressedInput = true
+        server.compressesOutput = true
+        _ = server.send(.event, tag: 0, object: output)
+    }
+    check(waitUntil { device.2().count == before.1 + 1 }, "a compressed frame arrives")
+    let arrived = device.2().last!
+    var count = 0
+    let bytes = xpc_dictionary_get_data(arrived, "data", &count)
+    check(count == text.count && bytes.map { Array(UnsafeRawBufferPointer(start: $0, count: count)) == text } == true, "and unpacks to exactly what was sent")
+    let wire = queue.sync { device.0.receivedWireByteCount } - before.0
+    check(wire < UInt64(text.count / 4), "in a fraction of the bytes (\(wire) B for \(text.count) B)")
+    check(
+        waitUntil { queue.sync { device.0.receivedByteCount == server.sentByteCount } },
+        "and both ends count it for the link window as the plain frame it stands for",
+    )
+    check(
+        queue.sync { device.0.receivedByteCount } - queue.sync { device.0.receivedWireByteCount } > UInt64(text.count / 2),
+        "so the window bounds terminal output, not wire bytes",
+    )
+    var plainFrame: [UInt8] = []
+    check(RemoteFrameCompression.frame(kind: .event, tag: 0, payload: [UInt8](repeating: 7, count: 0)) == nil, "an empty payload is not compressed")
+    let random = (0 ..< 64 * 1024).map { _ in UInt8.random(in: 0 ... 255) }
+    check(RemoteFrameCompression.frame(kind: .event, tag: 0, payload: random) == nil, "nor one that does not shrink")
+    if let frame = RemoteFrameCompression.frame(kind: .event, tag: 9, payload: text) {
+        plainFrame = frame
+        let body = frame.withUnsafeBytes { UnsafeRawBufferPointer(rebasing: $0[IOWire.headerByteCount...]) }
+        check(RemoteFrameCompression.decompress(body, limit: text.count) == text, "a body unpacks within its own length")
+        check(RemoteFrameCompression.decompress(body, limit: text.count - 1) == nil, "and one claiming more than the limit is refused before decoding")
+        var lying = Array(frame[IOWire.headerByteCount...])
+        lying.withUnsafeMutableBytes { $0.storeBytes(of: UInt32(text.count - 1).littleEndian, toByteOffset: 0, as: UInt32.self) }
+        check(lying.withUnsafeBytes { RemoteFrameCompression.decompress($0, limit: text.count) } == nil, "as is one that unpacks to more than it says")
+        let cut = Array(frame[IOWire.headerByteCount ..< frame.count - 16])
+        check(cut.withUnsafeBytes { RemoteFrameCompression.decompress($0, limit: text.count) } == nil, "or to less")
+    }
+    // A mixed stream — compressible and not, under and over the thresholds,
+    // split across reads — arrives whole, and both ends count it alike.
+    let mixed: [[UInt8]] = (0 ..< 40).map { index in
+        let size = [10, 900, 1500, 9000, 70000, 1_200_000][index % 6]
+        return index % 3 == 0
+            ? (0 ..< size).map { _ in UInt8.random(in: 0 ... 255) }
+            : Array(text.prefix(size)) + [UInt8](repeating: 0x20, count: max(0, size - text.count))
+    }
+    let mixedStart = device.2().count
+    queue.sync {
+        for bytes in mixed {
+            let event = xpc_dictionary_create(nil, nil, 0)
+            xpc_dictionary_set_data(event, "data", bytes, bytes.count)
+            _ = server.send(.event, tag: 0, object: event)
+        }
+    }
+    check(waitUntil(10) { device.2().count == mixedStart + mixed.count }, "a mixed stream of \(mixed.count) frames arrives")
+    let mixedArrived = Array(device.2()[mixedStart...])
+    check(
+        zip(mixedArrived, mixed).allSatisfy { object, bytes in
+            var count = 0
+            guard let data = xpc_dictionary_get_data(object, "data", &count) else { return bytes.isEmpty }
+            return count == bytes.count && Array(UnsafeRawBufferPointer(start: data, count: count)) == bytes
+        },
+        "every frame byte for byte, in order",
+    )
+    check(
+        waitUntil { queue.sync { device.0.receivedByteCount == server.sentByteCount } },
+        "with both ends counting the same window bytes",
+    )
+
+    // The host never takes a compressed frame: a device that sends one is cut.
+    let pushy = connect(RemoteTLS.Key(identity: Data(deviceID.utf8), secret: deviceKey))
+    check(waitUntil { pushy.1() }, "another device link comes up")
+    if !plainFrame.isEmpty {
+        queue.sync { pushy.0.connection.send(content: Data(plainFrame), completion: .idempotent) }
+        check(waitUntil { pushy.3() != nil }, "a compressed frame to a side that never offered it ends the link")
+    }
+}
+
 let stranger = connect(RemoteTLS.Key(identity: Data("nobody".utf8), secret: Data(count: 32)))
 check(waitUntil { stranger.3() != nil }, "an unknown key does not complete the handshake")
 check(!stranger.1(), "and never reaches ready")
