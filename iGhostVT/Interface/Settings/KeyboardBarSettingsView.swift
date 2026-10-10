@@ -197,13 +197,15 @@ import UniformTypeIdentifiers
             .buttonStyle(.borderless)
         }
 
-        /// A list row's picture of a key. A plain symbol key has none — its
-        /// name already spells what it types — only its place, so the names
-        /// stay in one column.
+        /// A list row's picture of a key. A plain symbol key's circle stays
+        /// empty — its name already spells what it types.
         @ViewBuilder
         private func rowGlyph(_ key: KeyboardBarKey) -> some View {
             if case .symbol = key {
-                Color.clear.frame(width: 28, height: 28)
+                Circle()
+                    .fill(Color(uiColor: .systemGray5).opacity(0.92))
+                    .frame(width: 28, height: 28)
+                    .accessibilityHidden(true)
             } else {
                 KeyboardBarKeyGlyph(key: key, size: 28, maxCharacters: 8)
             }

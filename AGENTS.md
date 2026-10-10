@@ -79,8 +79,8 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   decided: an image dropped on the editor brings up Fill with Image and
   Delete Image, and a saved one is a PNG in Application Support
   (`KeyboardBarPictures`, swept of files no key names on every save)
-  that fills the round button. In the editor's lists a plain symbol key has no glyph — its
-  name spells what it types. iOS only — the
+  that fills the round button. In the editor's lists a plain symbol key's circle is empty —
+  its name spells what it types. iOS only — the
   bar does not exist on Catalyst. 2.2.2026100901 copies without the
   padding a TUI paints around its lines — trailing blanks off every line,
   and at most the selection's start column of indent off every later one
