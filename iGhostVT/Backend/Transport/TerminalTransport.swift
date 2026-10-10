@@ -79,6 +79,10 @@ enum TerminalTransportEvent: Sendable {
     /// The endpoint refused input because the program is not reading it:
     /// what was pasted from that point on is gone. Sent once per paste.
     case inputRefused
+    /// Sent right after `.state(.connected)`: whether the link attached to
+    /// the session it had before (true) or opened a fresh one. A download
+    /// cut by the last link carries on only in the session it ran in.
+    case sessionResumed(Bool)
 }
 
 enum TerminalTransportState: Sendable, Equatable {

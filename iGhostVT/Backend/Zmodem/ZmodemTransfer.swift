@@ -46,6 +46,11 @@ final class ZmodemReceiver {
     private var completedFileCount = 0
     /// The last file ended whole and nothing of another has begun.
     private var isBetweenCompleteFiles = false
+    /// A ZRPOS for `offset` is out: until a ZDATA at that position comes
+    /// back, what arrives is the stream the sender had already queued —
+    /// past a bad subpacket, or past a link that dropped — and is not ours
+    /// to write.
+    private(set) var isResynchronizing = false
 
     init(send: @escaping ([UInt8]) -> Void, writer: ZmodemFileWriter) {
         self.send = send
@@ -71,6 +76,7 @@ final class ZmodemReceiver {
             finish(completed: false)
         case .badCRC:
             if phase == .receivingData {
+                isResynchronizing = true
                 sendPositionHeader(.rpos, offset)
             } else {
                 send(ZmodemEncoder.hexHeader(.nak))
@@ -90,9 +96,25 @@ final class ZmodemReceiver {
             expectingFileInfo = true
             isBetweenCompleteFiles = false
         case .data:
-            offset = UInt64(header.position)
+            guard phase == .receivingData || phase == .awaitingFile, !expectingFileInfo else { break }
+            // Only the position received so far: anything else would leave
+            // a hole in the file or write a stretch twice.
+            guard UInt64(header.position) == offset else {
+                isResynchronizing = true
+                sendPositionHeader(.rpos, offset)
+                break
+            }
+            isResynchronizing = false
             phase = .receivingData
         case .eof:
+            if phase == .receivingData, UInt64(header.position) != offset {
+                // The sender reached the end of a stream that did not all
+                // arrive: ask for the rest.
+                isResynchronizing = true
+                sendPositionHeader(.rpos, offset)
+                break
+            }
+            isResynchronizing = false
             if phase == .receivingData {
                 writer.finishFile()
                 if UInt64(header.position) == offset, size.map({ $0 == offset }) ?? true {
@@ -131,7 +153,7 @@ final class ZmodemReceiver {
             }
             return
         }
-        guard phase == .receivingData else { return }
+        guard phase == .receivingData, !isResynchronizing else { return }
         writer.write(bytes)
         offset += UInt64(bytes.count)
         onProgress(name, offset, size)
@@ -166,6 +188,31 @@ final class ZmodemReceiver {
     /// therefore done, not cancelled; anything else is a stall. Answers
     /// whether it finished; nothing is sent either way, since there is no
     /// sender left to tell and a cancel would land in its shell as ^X.
+    /// The link this transfer ran on dropped and a new one reached the
+    /// same session: the sender is still streaming (or waiting at its
+    /// ZEOF) as if nothing happened, and everything past `offset` went
+    /// nowhere. Ask for it again — sz seeks back and resends — or, between
+    /// files, repeat the ZRINIT it may be waiting for.
+    func resume() {
+        guard !finished else { return }
+        switch phase {
+        case .receivingData:
+            isResynchronizing = true
+            sendPositionHeader(.rpos, offset)
+        case .awaitingFile:
+            if !expectingFileInfo {
+                sendRInit()
+            }
+        case .done:
+            break
+        }
+    }
+
+    /// Ends the transfer with nothing sent: there is no sender left to tell.
+    func abandon() {
+        finish(completed: false)
+    }
+
     var isAwaitingSenderAfterCompleteFiles: Bool {
         !finished && completedFileCount > 0 && isBetweenCompleteFiles
     }

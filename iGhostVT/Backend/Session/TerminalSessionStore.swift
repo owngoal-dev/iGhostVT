@@ -377,11 +377,14 @@ final class TerminalSessionStore: ObservableObject {
         // defeat the transport's deinit, whose job is to cancel an XPC
         // connection its owner dropped without disconnecting.
         let transferCutByLink = transferCutByLink
+        let downloadKeptAcrossLink = downloadKeptAcrossLink
         let session = session
         let outputSignal = outputSignal
         // Per-connection and holds no shared session state, so another client
         // or an older daemon is unaffected.
-        let engine = makeZmodemEngine()
+        // A download the last link dropped is kept for this one: it
+        // resumes if this link reaches the same session (`.sessionResumed`).
+        let engine = downloadKeptAcrossLink.take() ? (zmodemEngine ?? makeZmodemEngine()) : makeZmodemEngine()
         zmodemEngine = engine
         // The last link dropped mid-transfer: the program on the other end
         // is still in it, and its stream must not land on the screen.
@@ -432,11 +435,22 @@ final class TerminalSessionStore: ObservableObject {
             // another device just took, whose bytes now go there.
             switch event {
             case .state(.disconnected), .state(.interrupted):
-                if engine?.abandonForLostLink() == true {
+                switch engine?.suspendForLostLink() {
+                case .suspended:
+                    downloadKeptAcrossLink.set()
+                case .abandoned:
                     transferCutByLink.set()
                     Task { @MainActor [weak self] in
                         self?.finishUpload(.failed(String(localized: "The connection dropped, so the transfer was cancelled.")))
                     }
+                case .idle, nil:
+                    break
+                }
+            case let .sessionResumed(resumed):
+                if resumed {
+                    engine?.resume()
+                } else {
+                    engine?.abandonSuspended()
                 }
             case .state(.heldElsewhere):
                 engine?.reset()
@@ -477,6 +491,7 @@ final class TerminalSessionStore: ObservableObject {
         reconnectGeneration &+= 1
         reconnectAttempt = 0
         zmodemEngine?.reset()
+        _ = downloadKeptAcrossLink.take()
         relay.transport?.disconnect()
         relay.transport = nil
         status = .idle
@@ -493,6 +508,9 @@ final class TerminalSessionStore: ObservableObject {
     /// Set when a link drops mid-transfer, taken by the next connect.
     /// Touched from the transport's queue and the main actor.
     private let transferCutByLink = OnceFlag()
+    /// Set when a link drops mid-download and the engine kept it, taken by
+    /// the next connect, which reuses that engine.
+    private let downloadKeptAcrossLink = OnceFlag()
 
     /// The copy a drop started toward another device, while it runs.
     private var fileUpload: Task<[String?], Never>?
@@ -691,6 +709,9 @@ final class TerminalSessionStore: ObservableObject {
             onSessionAttributes?(attributes, isResumed)
         case .inputRefused:
             notePasteTruncated()
+        case .sessionResumed:
+            // Handled on the transport's queue, ahead of the output.
+            break
         case let .state(state):
             apply(state)
         }
