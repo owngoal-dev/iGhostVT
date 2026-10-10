@@ -1074,6 +1074,13 @@ resigned when the user tapped it away. A tap on the new terminal still
 toggles it. Catalyst always hands focus over — there is no software
 keyboard.
 
+The last tab gives the keyboard up before it goes (`TabManager.releaseKeyboard`,
+from `remove(at:)` and `closeAll`): a first responder taken out of the window
+mid-transition — the last shell exiting under the keyboard — lost it to UIKit
+in pieces, keys first and the accessory bar a frame later, and the empty
+state and the bottom bar re-laid out against each piece, so the screen
+jumped. With a tab left, nothing is released; focus passes to it.
+
 On the Mac only the key window takes first responder. Every window's
 scene is `foregroundActive` at once, and each window hands focus out on
 events of its own — its scene turning active, a tab whose shell exited, a

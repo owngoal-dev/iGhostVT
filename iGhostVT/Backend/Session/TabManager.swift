@@ -503,6 +503,9 @@ final class TabManager: ObservableObject {
     /// its neighbour when it was the active one.
     private func remove(at index: Int) {
         let id = tabs[index].id
+        if tabs.count == 1 {
+            releaseKeyboard(of: [tabs[index]])
+        }
         withAnimation(Self.tabTransition) {
             tabs.remove(at: index)
             if activeTabID == id {
@@ -577,12 +580,29 @@ final class TabManager: ObservableObject {
                 tab.close()
             }
         }
+        releaseKeyboard(of: tabs)
         withAnimation(Self.tabTransition) {
             tabs.removeAll()
             activeTabID = nil
         }
         SessionActivityController.shared.refresh()
         RemoteBackgroundGrace.noteTabsChanged()
+    }
+
+    /// The window is about to lose its last terminal: the one holding first
+    /// responder gives it up *before* it leaves, so the software keyboard
+    /// goes down in one animation beside the tab's fade. Taken out of the
+    /// window while first responder — the last tab's shell exiting under
+    /// the keyboard — it lost the keyboard to UIKit mid-transition instead:
+    /// the keys went first, the accessory bar stood alone at the bottom for
+    /// a frame, and the empty state and the bottom bar re-laid out against
+    /// each step, so the screen jumped. With another tab left nothing is
+    /// released: focus passes to it and the keyboard stays up.
+    private func releaseKeyboard(of leaving: [TerminalTab]) {
+        for tab in leaving {
+            guard let view = tab.terminal.attachedPlatformView, view.isFirstResponder else { continue }
+            _ = view.resignFirstResponder()
+        }
     }
 
     /// Whether closing everything would interrupt a running program — the
