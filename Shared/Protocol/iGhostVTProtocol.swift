@@ -12,7 +12,13 @@ import Darwin
 /// screen or type into it without attaching, so nothing it does disturbs
 /// the tab the app holds.
 enum iGhostVTProtocol {
-    static let version: UInt64 = 1
+    /// Every request and reply carries it, and a mismatch is
+    /// `unsupportedVersion` both ways. 2 since 1.5.0, which made every
+    /// reply field the 1.4 line added (`fgshell`, `attrs`) required and
+    /// dropped the fallbacks for a daemon that sends none; the app, the
+    /// helpers and the CLI ship in one package, so only an install caught
+    /// halfway ever sees a different one.
+    static let version: UInt64 = 2
     static let serviceName = "wiki.qaq.ighostvt.service"
     static let clientEntitlement = "wiki.qaq.ighostvt.client"
 
@@ -113,6 +119,13 @@ enum iGhostVTProtocol {
     static var rotatedDaemonLogPath: String {
         daemonLogPath + ".1"
     }
+
+    /// Posted (`notify_post`) by `ighostvtd-io` once a Mac update is in
+    /// place (`hostUpdate`); the running app relaunches into the new copy.
+    /// Per user, since notify names are system wide.
+    static var updateInstalledNotification: String {
+        "wiki.qaq.ighostvt.update-installed.\(getuid())"
+    }
 }
 
 /// Client-initiated requests. Each one gets exactly one reply.
@@ -175,9 +188,7 @@ enum iGhostVTOperation: UInt64, Sendable {
     /// `maximumSessionAttributeByteCount` bytes, or a value that is not a
     /// string, is `invalidRequest` and changes nothing. Any admitted peer
     /// may set them on any live session, attached or not — the trust of
-    /// `closeSession` — and they die with the session. A daemon older than
-    /// this operation answers `invalidRequest`, which a client takes to
-    /// mean "keep them in memory only".
+    /// `closeSession` — and they die with the session.
     case setSessionAttributes = 14
 
     /// Copies a file onto this device for a shell here to read — a drop on
@@ -198,9 +209,25 @@ enum iGhostVTOperation: UInt64, Sendable {
     /// connection that began it (a weak network drops links mid-file) and is
     /// given up only after a quarter of an hour without a word; one the host
     /// does not know is `unknownSession`. Any admitted peer may upload — it
-    /// could already open a shell that writes anything it likes. A daemon
-    /// older than this answers `invalidRequest` to the first shape.
+    /// could already open a shell that writes anything it likes.
     case uploadFile = 15
+
+    /// The Mac's own update, run by `ighostvtd-io` (`MacUpdater`) so that a
+    /// paired device can ask for it as readily as the menu can. Every reply
+    /// states `updateState`, with `appVersion` (what is installed),
+    /// `updateVersion` and `updateProgress` where they apply, and
+    /// `errorMessage` for `failed` and `unsupported`. `updateCheck` asks
+    /// GitHub again; `updateInstall` puts the version the last check found
+    /// in place (one sent during a check installs what it finds);
+    /// `updateCancel` stops either before the swap. None waits — the
+    /// client asks again (no key) until the state settles. Installing replaces `/Applications/iGhostVT.app` with
+    /// the release's notarized zip only when its signature is valid and
+    /// names the Team ID the installed copy carries, then has the app
+    /// relaunch, which restarts the helper: every session on the Mac ends.
+    /// No new trust — any admitted peer can already run what it likes as
+    /// this user. `unsupported` on a device, and on a Mac copy with no Team
+    /// ID (an ad-hoc build), which is updated by hand.
+    case hostUpdate = 16
 
     // Remote access: the local management of `ighostvtd-remote`. Any
     // admitted local peer may send them except the remote helper itself;
@@ -446,6 +473,43 @@ enum iGhostVTWireKey {
     /// On `beginPairing`: the window also accepts a pairing that comes in
     /// through the relay. Off unless asked for.
     static let relayPairing = "relaypair"
+    /// `hostUpdate`: ask GitHub again / install what it found / stop a
+    /// check or an install that has not reached the swap.
+    static let updateCheck = "updcheck"
+    static let updateInstall = "updinstall"
+    static let updateCancel = "updcancel"
+    /// On a `hostUpdate` reply: `HostUpdateState`, the newest version the
+    /// last check found, and how far a download has come (0…1).
+    static let updateState = "updstate"
+    static let updateVersion = "updver"
+    static let updateProgress = "updprog"
+}
+
+/// Where the Mac's own update stands, as `hostUpdate` reports it.
+enum HostUpdateState: String, Sendable {
+    /// This host cannot update itself: a device, or a Mac copy with no Team
+    /// ID. `errorMessage` says which.
+    case unsupported
+    /// Nothing asked yet since the helper started.
+    case idle
+    case checking
+    case upToDate
+    /// `updateVersion` is newer than what is installed and can be installed.
+    case available
+    case downloading
+    case verifying
+    case installing
+    /// In place; the app is relaunching, and with it the helper.
+    case installed
+    case failed
+
+    /// Still moving: a client keeps asking.
+    var isBusy: Bool {
+        switch self {
+        case .checking, .downloading, .verifying, .installing: true
+        default: false
+        }
+    }
 }
 
 /// The remote helper's state, as `remoteStatus` reports it.

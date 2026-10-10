@@ -318,6 +318,90 @@ func runChannelBacklogTest() {
     close(reader)
 }
 
+/// A peer the proxy dropped while output for it was queued: what had not
+/// begun to leave is thrown away, everything else arrives whole and in
+/// order — the frame half written when the peer went included.
+func runChannelDiscardTest() {
+    print("channel discards a gone peer's queued frames")
+    var pair: [Int32] = [-1, -1]
+    guard socketpair(AF_UNIX, SOCK_STREAM, 0, &pair) == 0 else {
+        check(false, "a socket pair for the channel")
+        return
+    }
+    let channel = IOChannel(descriptor: pair[0], queue: harnessQueue)
+    harnessQueue.sync { channel.activate() }
+    let reader = pair[1]
+    var live = 0
+    channel.onPendingChange = { live = $0 }
+    func frame(_ index: Int) -> xpc_object_t {
+        let message = xpc_dictionary_create(nil, nil, 0)
+        xpc_dictionary_set_uint64(message, "n", UInt64(index))
+        let payload = [UInt8](repeating: UInt8(truncatingIfNeeded: index), count: 48 * 1024)
+        payload.withUnsafeBytes { xpc_dictionary_set_data(message, "d", $0.baseAddress!, $0.count) }
+        return message
+    }
+    // Peers 1 and 2 interleaved, far more than the socket holds, so most
+    // of it is queued and one frame is cut where the socket filled.
+    let (freed, pendingBefore, pendingAfter) = harnessQueue.sync { () -> (Int, Int, Int) in
+        for index in 0 ..< 200 {
+            channel.send(.event, peer: index % 2 == 0 ? 1 : 2, tag: UInt64(index), object: frame(index))
+        }
+        let before = live
+        let freed = channel.discardQueuedFrames(forPeer: 2)
+        return (freed, before, live)
+    }
+    check(freed > 0 && pendingAfter == pendingBefore - freed, "the gone peer's queued bytes are freed (\(freed >> 10) KiB)")
+    // Read everything back and decode it frame by frame.
+    var received: [UInt8] = []
+    var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+    _ = fcntl(reader, F_SETFL, fcntl(reader, F_GETFL, 0) | O_NONBLOCK)
+    let deadline = Date().addingTimeInterval(10)
+    while Date() < deadline {
+        let count = read(reader, &buffer, buffer.count)
+        if count > 0 {
+            received.append(contentsOf: buffer[0 ..< count])
+        } else if harnessQueue.sync(execute: { live }) == 0 {
+            // The channel may have flushed its last bytes between that
+            // read and this check: take what the socket still holds.
+            while case let count = read(reader, &buffer, buffer.count), count > 0 {
+                received.append(contentsOf: buffer[0 ..< count])
+            }
+            break
+        } else {
+            usleep(1000)
+        }
+    }
+    var tags: [UInt64] = []
+    var whole = true
+    received.withUnsafeBytes { bytes in
+        var cursor = 0
+        while cursor < bytes.count {
+            let rest = UnsafeRawBufferPointer(rebasing: bytes[cursor...])
+            guard let header = IOWire.decodeHeader(rest),
+                  rest.count >= IOWire.headerByteCount + header.payloadByteCount,
+                  let message = IOCodec.decode(UnsafeRawBufferPointer(
+                      rebasing: rest[IOWire.headerByteCount ..< IOWire.headerByteCount + header.payloadByteCount],
+                  )),
+                  xpc_dictionary_get_uint64(message, "n") == header.tag
+            else {
+                whole = false
+                return
+            }
+            tags.append(header.tag)
+            cursor += IOWire.headerByteCount + header.payloadByteCount
+        }
+    }
+    check(whole, "every frame that arrives is whole (\(tags.count) frames)")
+    check(tags == tags.sorted(), "and in the order it was sent")
+    check(tags.filter { $0 % 2 == 0 }.count == 100, "the other peer loses nothing")
+    let gone = tags.filter { $0 % 2 == 1 }
+    // Only what had begun to leave when the peer went: here at most the
+    // frame the socket cut, since the buffer is smaller than a frame.
+    check(gone.count <= 1, "the gone peer's queued frames are not sent (\(gone.count) of 100 had begun)")
+    harnessQueue.sync { channel.close() }
+    close(reader)
+}
+
 func runCodecTests() {
     print("wire codec")
     let original = xpc_dictionary_create(nil, nil, 0)
@@ -397,6 +481,7 @@ func runCodecTests() {
 func runProxyLinkTests() {
     runCodecTests()
     runChannelBacklogTest()
+    runChannelDiscardTest()
 
     print("proxy link")
     guard let ioBinary = ProcessInfo.processInfo.environment["IGHOSTVT_IO_BINARY"] else {
@@ -442,6 +527,23 @@ func runProxyLinkTests() {
         }
     }
     check(shellPaths?.contains("/bin/sh") == true, "the daemon lists executable common shells")
+
+    // The Mac's own update: a harness build is not in /Applications, so it
+    // says it cannot update itself — and asking with no key starts nothing.
+    // The state is read while the reply is still held: the string's
+    // pointer belongs to the dictionary.
+    func updateState(_ fill: (xpc_object_t) -> Void = { _ in }) -> String? {
+        guard let reply = request(supervisor, from: peer, .hostUpdate, fill) else { return nil }
+        return withExtendedLifetime(reply) {
+            xpc_dictionary_get_string(reply, iGhostVTWireKey.updateState).map { String(cString: $0) }
+        }
+    }
+    check(updateState() == HostUpdateState.idle.rawValue, "hostUpdate with no key starts nothing (idle)")
+    _ = updateState { xpc_dictionary_set_bool($0, iGhostVTWireKey.updateCheck, true) }
+    check(
+        waitUntil(10) { updateState() == HostUpdateState.unsupported.rawValue },
+        "a copy outside /Applications says it does not update itself",
+    )
 
     let opened = request(supervisor, from: peer, .openSession) { message in
         let command = xpc_array_create(nil, 0)

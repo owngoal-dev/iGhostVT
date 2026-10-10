@@ -33,6 +33,7 @@ final class RemoteClient {
             }
         }
     }
+
     private var daemon: xpc_connection_t?
     private var isDaemonSuspended = false
     private var isClosed = false
@@ -43,8 +44,8 @@ final class RemoteClient {
     /// Ended without letting go of `heldSessions`; the daemon peer is kept
     /// for `RemoteAccess.reconnectGraceSeconds` (`linger`).
     private var isLingering = false
-    /// When the device last sent anything; a relayed one that goes quiet
-    /// past `RemoteAccess.deviceSilenceLimit` is dropped.
+    /// When the device last sent anything; one that goes quiet past
+    /// `RemoteAccess.deviceSilenceLimit` is dropped.
     private var lastHeard = Date()
 
     /// The device output toward which may be held in the daemon instead of
@@ -73,10 +74,19 @@ final class RemoteClient {
     private var deviceReceivedByteCount: UInt64?
 
     /// The operations a paired device may send, all of them the app's own.
+    /// `hostUpdate` too: a device that may run anything here as this user
+    /// may as well ask for the release that is out.
     private static let sessionOperations: Set<iGhostVTOperation> = [
         .hello, .listSessions, .openSession, .attachSession, .detachSession, .write, .resize,
         .closeSession, .goodbye, .snapshotSession, .injectInput, .listShells, .setSessionAttributes,
-        .uploadFile,
+        .uploadFile, .hostUpdate,
+    ]
+
+    /// What counts as a device using this host (`RemoteWakeLock`): input,
+    /// a terminal opened or picked up, a file sent. Lists, pings and
+    /// resizes are what an idle open app does on its own.
+    private static let useOperations: Set<iGhostVTOperation> = [
+        .openSession, .attachSession, .write, .injectInput, .uploadFile,
     ]
 
     var isAuthenticated: Bool {
@@ -261,6 +271,9 @@ final class RemoteClient {
                 reply(.invalidRequest, tag: header.tag)
                 return
             }
+            if Self.useOperations.contains(operation) {
+                RemoteWakeLock.shared.noteInput()
+            }
             forward(stamped(object, operation: operation), tag: header.tag, operation: operation)
         }
     }
@@ -325,11 +338,10 @@ final class RemoteClient {
             name: xpc_dictionary_get_string(hello, iGhostVTWireKey.deviceName).map { String(cString: $0) },
         )
         RemoteLog.log("device \(device.name) (\(deviceID)) connected from \(address)")
-        // Relayed only: an app before 1.4.19 pings no direct link, and every
-        // patch of a line talks to every other.
-        if viaRelay {
-            watchSilence()
-        }
+        // Direct and relayed alike: every app on this line pings a quiet
+        // link, and a phone that slept on the local network leaves a
+        // connection no FIN ever ends.
+        watchSilence()
         xpc_connection_set_event_handler(daemon) { [weak self] event in
             self?.daemonEvent(event)
         }
@@ -429,6 +441,9 @@ final class RemoteClient {
             if isLingering, heldSessions.isEmpty {
                 endLinger()
             }
+        }
+        if kind == iGhostVTEvent.output.rawValue {
+            RemoteWakeLock.shared.noteOutput()
         }
         guard !isClosed else { return }
         frames.send(.event, tag: 0, object: event)

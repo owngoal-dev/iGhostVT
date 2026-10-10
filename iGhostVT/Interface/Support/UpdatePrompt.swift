@@ -8,6 +8,9 @@ import SwiftUI
 final class UpdateNotice: ObservableObject {
     static let shared = UpdateNotice()
     @Published var isPending = false
+    /// The Mac's own update replaced this copy and the app is already on its
+    /// way to the new one (`MacLaunchAgent`): nothing to ask.
+    var isRelaunching = false
 }
 
 extension View {

@@ -216,13 +216,15 @@ final class PeerSession {
             return Outcome(setSessionAttributes(message))
         case .uploadFile:
             return Outcome(uploadFile(message, reply: reply))
+        case .hostUpdate:
+            return Outcome(hostUpdate(message, reply: reply))
         case .goodbye:
             return Outcome(.success, then: .closePeer)
         case .shutdown:
             // Only with nothing held: a session the app did not close is a
             // shell someone is coming back for. Replied to before exiting,
             // so the quitting app hears the outcome.
-            guard registry.isEmpty, host.uploads.isEmpty else { return Outcome(.sessionBusy) }
+            guard registry.isEmpty, host.uploads.isEmpty, !host.updater.isBusy else { return Outcome(.sessionBusy) }
             DaemonFileLog.log("peer \(peerID) shutdown with nothing held")
             return Outcome(.success, then: .exitProcess)
         case .remoteStatus, .setRemoteAccess, .beginPairing, .endPairing, .revokeRemoteDevice, .setHostName,
@@ -449,6 +451,29 @@ final class PeerSession {
         DaemonFileLog.log(
             "peer \(peerID) set session \(id) attributes \(attributes.keys.sorted().map { "\($0)=\(attributes[$0] ?? "")" })",
         )
+        return .success
+    }
+
+    /// Starts what the request asks of the updater, if anything, and states
+    /// where it stands; never waits for it.
+    private func hostUpdate(_ message: xpc_object_t, reply: xpc_object_t?) -> iGhostVTReplyCode {
+        let snapshot = host.updater.request(
+            check: xpc_dictionary_get_bool(message, iGhostVTWireKey.updateCheck),
+            install: xpc_dictionary_get_bool(message, iGhostVTWireKey.updateInstall),
+            cancel: xpc_dictionary_get_bool(message, iGhostVTWireKey.updateCancel),
+        )
+        guard let reply else { return .success }
+        xpc_dictionary_set_string(reply, iGhostVTWireKey.updateState, snapshot.state.rawValue)
+        xpc_dictionary_set_string(reply, iGhostVTWireKey.appVersion, snapshot.installedVersion)
+        if let latest = snapshot.latestVersion {
+            xpc_dictionary_set_string(reply, iGhostVTWireKey.updateVersion, latest)
+        }
+        if let progress = snapshot.progress {
+            xpc_dictionary_set_double(reply, iGhostVTWireKey.updateProgress, progress)
+        }
+        if let message = snapshot.message {
+            xpc_dictionary_set_string(reply, iGhostVTWireKey.errorMessage, message)
+        }
         return .success
     }
 

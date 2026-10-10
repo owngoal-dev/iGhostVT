@@ -70,7 +70,9 @@ final class TerminalSessionStore: ObservableObject {
     /// The tab is the one its window shows (`TabManager`).
     var isFrontTab = false {
         didSet {
-            if isFrontTab != oldValue { claimIfArmed() }
+            if isFrontTab != oldValue {
+                claimIfArmed()
+            }
         }
     }
 
@@ -178,7 +180,11 @@ final class TerminalSessionStore: ObservableObject {
 
     /// The ZMODEM transfer in flight, when `rz`/`sz` detection is on and a
     /// handshake was seen. Drives the progress pill; nil the rest of the time.
-    @Published private(set) var zmodemTransfer: ZmodemTransferInfo?
+    @Published private(set) var zmodemTransfer: ZmodemTransferInfo? {
+        didSet {
+            TransferKeepAwake.update(self, isTransferring: zmodemTransfer?.phase == .active)
+        }
+    }
 
     /// Whether the shell is verifiably sitting at its prompt. Only a
     /// connected session can vouch for that — a detached session's last
@@ -381,7 +387,7 @@ final class TerminalSessionStore: ObservableObject {
         let session = session
         let outputSignal = outputSignal
         // Per-connection and holds no shared session state, so another client
-        // or an older daemon is unaffected.
+        // is unaffected.
         // A download the last link dropped is kept for this one: it
         // resumes if this link reaches the same session (`.sessionResumed`).
         let engine = downloadKeptAcrossLink.take() ? (zmodemEngine ?? makeZmodemEngine()) : makeZmodemEngine()
@@ -492,6 +498,7 @@ final class TerminalSessionStore: ObservableObject {
         reconnectAttempt = 0
         zmodemEngine?.reset()
         _ = downloadKeptAcrossLink.take()
+        TransferKeepAwake.update(self, isTransferring: false)
         relay.transport?.disconnect()
         relay.transport = nil
         status = .idle
@@ -603,7 +610,9 @@ final class TerminalSessionStore: ObservableObject {
     /// is in use elsewhere). Reconnects in between are waited out.
     func waitUntilConnected() async -> Bool {
         for await status in $status.values {
-            if Task.isCancelled { return false }
+            if Task.isCancelled {
+                return false
+            }
             switch status {
             case .connected: return true
             case .failed, .elsewhere: return false

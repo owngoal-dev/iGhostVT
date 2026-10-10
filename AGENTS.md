@@ -19,11 +19,14 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` in the pbxproj silently
   shadows them and ships the wrong build number. `make check` rejects this —
   keep it that way, and watch for Xcode injecting these keys back.
-- **The app never spawns processes.** Only `ighostvtd-io` forks
-  (`forkpty`+`execve`); `ighostvtd` forks exactly one thing — `ighostvtd-io`
-  itself, via `posix_spawn` (`IOSupervisor`). Peer authentication is still
-  the daemon's, gated by the kernel audit token before a byte is forwarded.
-  Keep that boundary; don't add process APIs to the app or to the proxy.
+- **The app never spawns processes.** `ighostvtd-io` forks the shells
+  (`forkpty`+`execve`), and on the Mac the three tools its update needs
+  (`ditto`, `xattr`, `open`; `MacUpdater`); `ighostvtd` spawns only its two
+  children — `ighostvtd-io` (`IOSupervisor`) and, while remote access is
+  on, `ighostvtd-remote` (`RemoteSupervisor`) — via `posix_spawn`. Peer
+  authentication is still the daemon's, gated by the kernel audit token
+  before a byte is forwarded. Keep that boundary; don't add process APIs to
+  the app or to the proxy.
 - **`ighostvtd` must stay small.** It is the launchd job, and launchd caps a
   daemon at 6 MB on the device (jetsam) — a replay buffer or an XPC send
   queue growing there is what this split exists to prevent. Everything with a
@@ -257,8 +260,46 @@ way in is Check for Updates… under About in the application menu, whose
 title is the progress (`AppDelegate.validate`, never a menu rebuild); the
 notarized zip — never the ad-hoc one — lands in Downloads, quarantined as a
 browser would so Gatekeeper's first-open check is the notarization check,
-and is shown in the Finder. Bytes are kept only when they match the SHA-256
-GitHub reports for the asset. It installs nothing and spawns nothing.
+and is shown in the Finder — but only for a copy that cannot update itself
+(below). Bytes are kept only when they match the SHA-256 GitHub reports for
+the asset. The app installs nothing and spawns nothing.
+
+**The Mac updates itself** (`hostUpdate`, op 16), and the work is the
+helper's: `MacUpdater` in `ighostvtd-io`, because it takes processes. The
+menu's Check for Updates… (`HostUpdateFlow` over `.local`), `ighostvt-cli
+update [--check]`, and a paired device's Check for Update (Settings ▸
+Remote Access ▸ the device, or the Mac's Remote pane) all send the same op;
+the app's flow and the CLI poll it, since the op never waits — `updcheck`
+starts a check, `updinstall` installs what it found (one sent during a
+check is kept for it), `updcancel` stops either before the swap, and every
+reply states `updstate` (`HostUpdateState`). An install can finish between
+two polls — a local feed, or a fast download, swaps and restarts the helper
+in under a second — so the poller never takes a lost link or a fresh
+helper's `idle` as the answer: the app asks until the host reports the new
+`appver`, and the CLI reads its own bundle's `Info.plist` off the disk. What goes in is the release's
+notarized zip and nothing else: the GitHub SHA-256, `ditto -x`, `xattr -cr`
+(a quarantine flag left on the bundle translocates the next launch, which
+registers the helper from a mount that is gone by the one after), then a
+`SecStaticCode` check of the bundle *and each helper binary* — valid,
+Developer ID, `notarized`, `wiki.qaq.iGhostVT` at the release's version,
+and the Team ID the installed copy carries. Same team is the whole point:
+BTM's launch constraint and every TCC grant (Documents, Local Network…)
+are keyed on it, so a same-team update keeps them and nothing re-prompts.
+It is copied beside the old one (`/Applications/.iGhostVT.app.update-<pid>`,
+swept at the next start if left), checked again there, and swapped in with
+one `renamex_np(RENAME_SWAP)`; `installed` is said right then, the app is
+told (`iGhostVTProtocol.updateInstalledNotification`, which it believes
+only when its own `Info.plist` on disk changed) or opened with `open -g`,
+and the relaunched app's launch-agent rebind restarts the helper — which
+ends every session on the Mac, the price of any helper update. A copy with
+no Team ID (ad-hoc, a local build), one outside `/Applications`, or one
+this user does not own is `unsupported`, and the menu falls back to the
+download above; `mac-install.sh` therefore hands the bundle to the user.
+`IGHOSTVT_UPDATE_FEED` (an https or file URL, set with `launchctl setenv`
+before the helper starts) points the check at a document shaped like
+GitHub's — the way an unreleased build is tested; every check above still
+applies. A Mac signed with another team (`mac-update-from-github.sh`'s
+local re-sign) never matches the release's team and updates by hand.
 
 ## Ghost Remote
 
@@ -396,6 +437,17 @@ XPC types the protocol uses (a descriptor or mach port is refused, not
 half-forwarded). `tag` 0 means a request that wants no reply, and every
 event. The proxy stamps a unique peer id per connection; io makes a
 `PeerSession` on first sight of one and retires it on `peerGone`.
+When the proxy reports a peer gone, io drops every frame still queued for
+it that has not begun to leave (`IOChannel.discardQueuedFrames`): the proxy
+would only read them to throw them away, and while they sit there the
+backlog keeps every other session's PTY paused. A frame already partly
+written stays, so the stream keeps its framing.
+
+The wire is protocol version 2 (`iGhostVTProtocol.version`) since 1.5.0,
+which made every reply field the 1.4 line added (`fgshell`, `attrs`)
+required and took out each fallback for a daemon that lacks one; the app,
+the helpers and the CLI ship together, so a mismatch is only ever an
+install caught halfway, and says so (`unsupportedVersion`).
 
 Data flow: one `TabManager` per `UIWindowScene` (owned by `SceneDelegate`);
 each `TerminalTab` owns a `TerminalSessionStore`, which drives a
@@ -441,7 +493,7 @@ The CLI compiles `RelayConfiguration.swift` and `RemoteAccess.swift` from
 that folder — a new file there joins the CLI unless it is added to the set.
 `Scripts/mac-install.sh` is the unattended Mac install built on it: root
 copies the notarized bundle into `/Applications` (SHA256SUMS + `spctl`
-checked), and every other step — the open-at-login LaunchAgent
+checked, `xattr -cr`, owned by the user so it can update itself), and every other step — the open-at-login LaunchAgent
 (`wiki.qaq.ighostvt.open-at-login`, plain `open -g -b`), the relay file,
 `remote on`, `remote pair` — runs as the user through `launchctl asuser`.
 What it cannot do is grant Local Network: that is no TCC entry, no MDM
@@ -478,9 +530,7 @@ non-string value, is `invalidRequest` with nothing applied. Same trust as
 `closeSession`: any admitted peer, attached or not, but only on a live
 session (`unknownSession` otherwise). The attributes die with the session,
 and with an io crash, since every session does. The proxy forwards it like
-any other op and did not change. A daemon older than the op answers
-`invalidRequest` and sends no `attrs` in its replies; the app takes either
-as "keep it in memory" and stops sending on that transport. The CLI's `list`
+any other op and did not change. The CLI's `list`
 shows the `lock` key as a LOCK column. The `title` key is the title the tab
 shows (its reported part, at most once a second, newest wins), so a paired
 device's new-tab menu names the terminal word for word as this one does,
@@ -670,9 +720,8 @@ that bit:
   direct or relayed, has an end-to-end heartbeat: the app pings a link
   quiet in either direction for 5 s (`linkPingInterval`; `ping`, op 32,
   answered by the helper itself) and gives it up after 20 s without a byte
-  (`linkReplyLimit`); the helper drops a relayed device silent for 30 s
-  (`deviceSilenceLimit` — relayed only, since a 1.4 app before 1.4.19
-  pings no direct link) and a splice idle for 45 s; the host's control
+  (`linkReplyLimit`); the helper drops a device silent for 30 s, direct
+  or relayed (`deviceSilenceLimit`), and a splice idle for 45 s; the host's control
   connection pings every minute and registers again when no pong comes
   back in 20 s. With 15 s and 45 s a dead link sat on a frozen screen for
   most of a minute unless the person typed — a keystroke's unacknowledged
@@ -706,6 +755,19 @@ that bit:
   devices behind one NAT, must stay under it. The helper sets up at most
   four call backs at once and queues up to 32 more, matching the relay's 32
   pending tickets per host.
+
+**A host stays awake while a device uses it.** `RemoteWakeLock` (in
+`ighostvtd-remote`, IOKit reached by name so the device build links the
+same code) holds `PreventUserIdleSystemSleep` — display sleep, the lid and
+the Apple menu still work — from the first *use* until five minutes after
+the last: input, a terminal opened or taken, a file sent; output counts
+only within thirty minutes of the last input, so an `sz` or a build started
+from a keystroke keeps it, while a tab left on `htop` by a device that
+never sleeps does not keep a Mac up all night. Being connected is not use:
+the links ping every few seconds. A refused assertion is asked for again
+only after five minutes. The client's half is `TransferKeepAwake`: on iOS
+the screen does not auto-lock while a ZMODEM transfer or a drop upload
+runs, since a locked phone is soon a suspended app with its links down.
 
 `make relay-harness` (part of `make test` where Go is installed) spawns the
 real relay and drives the helper's own `RelayLink` against it;

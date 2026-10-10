@@ -19,7 +19,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // A package manager replaces iGhostVT's binary in place; Ghost
         // Remote is installed whole by whatever signed it.
         if !AppEdition.isRemoteOnly {
-            ExecutableWatch.start { UpdateNotice.shared.isPending = true }
+            ExecutableWatch.start {
+                if !UpdateNotice.shared.isRelaunching {
+                    UpdateNotice.shared.isPending = true
+                }
+            }
         }
         // Surface lifecycle and sizing, so a surface that never comes up on
         // device says where it stopped. Input/output categories stay off —
@@ -122,7 +126,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     ///
     /// The daemon's own exit is not asked for: once nothing is connected
     /// and nothing is held it leaves by itself, on both platforms.
-    func applicationWillTerminate(_ application: UIApplication) {
+    func applicationWillTerminate(_: UIApplication) {
         GhosttyAppConfiguration.removeTemporaryFiles()
         RemoteTabLedger.save(ShortcutBridge.tabManagers())
         // Ghost Remote's tabs are other devices' sessions, which outlive

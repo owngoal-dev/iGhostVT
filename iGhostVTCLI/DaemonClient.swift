@@ -18,7 +18,7 @@ enum CLIError: Error {
     case usage(String)
     case daemonUnreachable
     case timedOut
-    case daemonTooOld
+    case versionMismatch
     case refused(iGhostVTReplyCode, String?)
     case sessionLingered(UInt64)
     case runAsRoot
@@ -31,7 +31,7 @@ enum CLIError: Error {
     var exitCode: Int32 {
         switch self {
         case .usage: 64
-        case .daemonUnreachable, .timedOut, .daemonTooOld, .relayUnsupported: 69
+        case .daemonUnreachable, .timedOut, .versionMismatch, .relayUnsupported: 69
         case .runAsRoot: 77
         case .refused, .sessionLingered, .remoteAccessOff, .remoteAccessStuck, .pairingClosed, .relayStoreFailed: 1
         }
@@ -45,8 +45,8 @@ enum CLIError: Error {
             return "The terminal daemon is not running. Open iGhostVT and try again."
         case .timedOut:
             return "The terminal daemon did not respond in time. Try again."
-        case .daemonTooOld:
-            return "The terminal daemon is out of date. Update iGhostVT and try again."
+        case .versionMismatch:
+            return "ighostvt-cli and the terminal daemon are different versions. Quit iGhostVT and open it again, so the daemon restarts from this install."
         case let .refused(code, detail):
             if let detail, !detail.isEmpty {
                 return detail
@@ -185,12 +185,8 @@ final class DaemonClient {
             throw CLIError.daemonUnreachable
         }
         guard code == .success else {
-            // A daemon that predates these operations decodes no operation
-            // at all and says so; say which side is behind.
-            if code == .invalidRequest,
-               operation == .snapshotSession || operation == .injectInput
-            {
-                throw CLIError.daemonTooOld
+            if code == .unsupportedVersion {
+                throw CLIError.versionMismatch
             }
             throw CLIError.refused(code, Self.string(reply, iGhostVTWireKey.errorMessage))
         }
