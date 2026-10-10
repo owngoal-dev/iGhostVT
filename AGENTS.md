@@ -72,8 +72,15 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   `.symbol(text, presentation: .text(label) / .image(…))`. Settings ▸
   Accessory Keys builds on that: a custom key (`KeyboardBarKey.custom`,
   persisted as `custom:` + JSON beside the `sym:` codes) shows a label of
-  its own or an SF Symbol while it sends its text, and tapping a
-  character key on the bar opens it in the key editor. iOS only — the
+  its own while it sends its text, and tapping a character key on the
+  bar opens it in the key editor. The editor's one appearance field is
+  the Nickname; the code also reads an SF Symbol look, which an edit
+  keeps while no nickname is given. Hidden, until a UI for it is
+  decided: an image dropped on the editor brings up Fill with Image and
+  Delete Image, and a saved one is a PNG in Application Support
+  (`KeyboardBarPictures`, swept of files no key names on every save)
+  that fills the round button. In the editor's lists a plain symbol key has no glyph — its
+  name spells what it types. iOS only — the
   bar does not exist on Catalyst. 2.2.2026100901 copies without the
   padding a TUI paints around its lines — trailing blanks off every line,
   and at most the selection's start column of indent off every later one

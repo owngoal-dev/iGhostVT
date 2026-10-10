@@ -5,6 +5,7 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 // The bar it edits is a software-keyboard fixture the library defines only
 // off Catalyst.
@@ -88,7 +89,7 @@ import UIKit
                             // A symbol or custom key opens the key editor.
                             Button(action: { editedEntry = entry }) {
                                 HStack(spacing: DS.Padding.m) {
-                                    KeyboardBarKeyGlyph(key: entry.key, size: 28, maxCharacters: 8)
+                                    rowGlyph(entry.key)
                                     entryLabel(entry.key)
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -101,7 +102,7 @@ import UIKit
                             .foregroundColor(.primary)
                             .accessibilityHint(Text("Edit Key"))
                         } else {
-                            KeyboardBarKeyGlyph(key: entry.key, size: 28, maxCharacters: 8)
+                            rowGlyph(entry.key)
                             Text(entry.key.displayName)
                         }
                     }
@@ -126,7 +127,7 @@ import UIKit
                     HStack(spacing: DS.Padding.m) {
                         addButton { store.add(key) }
                             .accessibilityLabel(Text("Add \(key.displayName)"))
-                        KeyboardBarKeyGlyph(key: key, size: 28, maxCharacters: 8)
+                        rowGlyph(key)
                         Text(key.displayName)
                     }
                 }
@@ -196,6 +197,18 @@ import UIKit
             .buttonStyle(.borderless)
         }
 
+        /// A list row's picture of a key. A plain symbol key has none — its
+        /// name already spells what it types — only its place, so the names
+        /// stay in one column.
+        @ViewBuilder
+        private func rowGlyph(_ key: KeyboardBarKey) -> some View {
+            if case .symbol = key {
+                Color.clear.frame(width: 28, height: 28)
+            } else {
+                KeyboardBarKeyGlyph(key: key, size: 28, maxCharacters: 8)
+            }
+        }
+
         /// A custom key drawn as something other than its text names what it
         /// sends underneath.
         @ViewBuilder
@@ -241,6 +254,15 @@ import UIKit
                         .fill(Color.secondary.opacity(0.28))
                         .frame(width: 6, height: 6)
                         .frame(width: size, height: size)
+                } else if case let .custom(_, .picture(name)) = key,
+                          let picture = KeyboardBarPictures.image(named: name)
+                {
+                    // The bar fills the circle with it, cropped to the edge.
+                    Image(uiImage: picture)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: size, height: size)
+                        .clipShape(Circle())
                 } else if let systemImage = key.systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: size * 0.42, weight: .medium))
@@ -272,43 +294,56 @@ import UIKit
         }
     }
 
-    /// Entry sheet for a free-form key, new or edited: what it types, and how
-    /// the bar draws it. A sheet rather than an alert because alert text
-    /// fields only exist from iOS 16 and this app supports 15.
+    /// Entry sheet for a free-form key, new or edited: what it types, and an
+    /// optional nickname the bar shows instead. A sheet rather than an alert
+    /// because alert text fields only exist from iOS 16 and this app
+    /// supports 15.
+    ///
+    /// Hidden for now: an image dropped on the sheet brings up a switch that
+    /// fills the key with it, and a button that throws it away. Nothing on
+    /// the sheet mentions it until then.
     private struct CustomKeySheet: View {
-        private enum LookKind: Hashable {
-            case text
-            case symbol
-        }
-
         let isEditing: Bool
+        /// A key drawn as an SF Symbol keeps it while no nickname is given;
+        /// the editor itself does not offer symbols.
+        private let symbolLook: KeyboardBarKeyLook?
         let onSave: (KeyboardBarKey) -> Void
         @Environment(\.dismiss) private var dismiss
         @State private var text: String
-        @State private var lookKind: LookKind
-        @State private var label: String
-        @State private var symbolName: String
+        @State private var nickname: String
+        /// The key's saved picture, until a drop replaces it or it is deleted.
+        @State private var pictureName: String?
+        @State private var droppedPicture: UIImage?
+        @State private var fillsWithPicture: Bool
 
         private static let placeholder = "|"
-        private static let symbolPlaceholder = "hammer.fill"
 
         init(editing key: KeyboardBarKey?, onSave: @escaping (KeyboardBarKey) -> Void) {
             isEditing = key != nil
             self.onSave = onSave
             _text = State(initialValue: key?.sentText ?? "")
+            _droppedPicture = State(initialValue: nil)
             switch key?.look {
             case let .label(label):
-                _lookKind = State(initialValue: .text)
-                _label = State(initialValue: label)
-                _symbolName = State(initialValue: "")
-            case let .systemImage(name):
-                _lookKind = State(initialValue: .symbol)
-                _label = State(initialValue: "")
-                _symbolName = State(initialValue: name)
+                _nickname = State(initialValue: label)
+                _pictureName = State(initialValue: nil)
+                _fillsWithPicture = State(initialValue: false)
+                symbolLook = nil
+            case let .picture(name):
+                _nickname = State(initialValue: "")
+                _pictureName = State(initialValue: name)
+                _fillsWithPicture = State(initialValue: true)
+                symbolLook = nil
+            case let look?:
+                _nickname = State(initialValue: "")
+                _pictureName = State(initialValue: nil)
+                _fillsWithPicture = State(initialValue: false)
+                symbolLook = look
             case nil:
-                _lookKind = State(initialValue: .text)
-                _label = State(initialValue: "")
-                _symbolName = State(initialValue: "")
+                _nickname = State(initialValue: "")
+                _pictureName = State(initialValue: nil)
+                _fillsWithPicture = State(initialValue: false)
+                symbolLook = nil
             }
         }
 
@@ -316,31 +351,27 @@ import UIKit
             text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
-        private var trimmedLabel: String {
-            label.trimmingCharacters(in: .whitespacesAndNewlines)
+        private var trimmedNickname: String {
+            nickname.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
-        private var trimmedSymbolName: String {
-            symbolName.trimmingCharacters(in: .whitespacesAndNewlines)
+        private var hasPicture: Bool {
+            droppedPicture != nil || pictureName != nil
         }
 
-        private var symbolExists: Bool {
-            UIImage(systemName: trimmedSymbolName) != nil
-        }
-
-        /// The key as it stands; a key with no label of its own is a plain
-        /// symbol key.
-        private var key: KeyboardBarKey {
-            switch lookKind {
-            case .text:
-                trimmedLabel.isEmpty ? .symbol(trimmed) : .custom(text: trimmed, look: .label(trimmedLabel))
-            case .symbol:
-                .custom(text: trimmed, look: .systemImage(trimmedSymbolName))
+        /// The key as it stands; one with no nickname of its own is a plain
+        /// symbol key. A dropped picture is written only here, on Save.
+        private func makeKey() -> KeyboardBarKey {
+            if fillsWithPicture, let name = droppedPicture.flatMap(KeyboardBarPictures.save) ?? pictureName {
+                return .custom(text: trimmed, look: .picture(name))
             }
-        }
-
-        private var isValid: Bool {
-            !trimmed.isEmpty && (lookKind == .text || symbolExists)
+            if !trimmedNickname.isEmpty {
+                return .custom(text: trimmed, look: .label(trimmedNickname))
+            }
+            if let symbolLook {
+                return .custom(text: trimmed, look: symbolLook)
+            }
+            return .symbol(trimmed)
         }
 
         var body: some View {
@@ -361,50 +392,26 @@ import UIKit
                     }
 
                     Section {
-                        Picker("Appearance", selection: $lookKind) {
-                            Text("Text").tag(LookKind.text)
-                            Text("Symbol").tag(LookKind.symbol)
-                        }
-                        .pickerStyle(.segmented)
-
-                        switch lookKind {
-                        case .text:
-                            TextField(trimmed.isEmpty ? Self.placeholder : trimmed, text: $label)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .accessibilityLabel("Label")
-                        case .symbol:
-                            TextField(Self.symbolPlaceholder, text: $symbolName)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .accessibilityLabel("SF Symbol Name")
-                        }
-
-                        if isValid {
-                            HStack {
-                                Spacer()
-                                KeyboardBarKeyGlyph(key: key)
-                                Spacer()
+                        TextField(trimmed.isEmpty ? Self.placeholder : trimmed, text: $nickname)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .accessibilityLabel("Nickname")
+                        if hasPicture {
+                            Toggle("Fill with Image", isOn: $fillsWithPicture)
+                            Button("Delete Image", role: .destructive) {
+                                droppedPicture = nil
+                                pictureName = nil
+                                fillsWithPicture = false
                             }
                         }
                     } header: {
-                        Text("Appearance")
+                        Text("Nickname")
                     } footer: {
-                        Group {
-                            switch lookKind {
-                            case .text:
-                                Text("The key shows this label instead of what it sends. Leave it empty to show the characters themselves.")
-                            case .symbol:
-                                if !trimmedSymbolName.isEmpty, !symbolExists {
-                                    Text("No SF Symbol has this name.")
-                                } else {
-                                    Text("The key shows this SF Symbol, such as folder or hammer.fill.")
-                                }
-                            }
-                        }
-                        .font(DS.Font.detail)
+                        Text("The key shows this nickname instead of what it sends. Leave it empty to show the characters themselves.")
+                            .font(DS.Font.detail)
                     }
                 }
+                .onDrop(of: [.image], isTargeted: nil, perform: acceptDrop)
                 .navigationTitle(isEditing ? "Edit Key" : "Custom Key")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -413,14 +420,28 @@ import UIKit
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button(isEditing ? "Save" : "Add") {
-                            onSave(key)
+                            onSave(makeKey())
                             dismiss()
                         }
-                        .disabled(!isValid)
+                        .disabled(trimmed.isEmpty)
                     }
                 }
             }
             .navigationViewStyle(.stack)
+        }
+
+        private func acceptDrop(_ providers: [NSItemProvider]) -> Bool {
+            guard let provider = providers.first(where: { $0.canLoadObject(ofClass: UIImage.self) }) else {
+                return false
+            }
+            provider.loadObject(ofClass: UIImage.self) { object, _ in
+                guard let image = object as? UIImage else { return }
+                DispatchQueue.main.async {
+                    droppedPicture = image
+                    fillsWithPicture = true
+                }
+            }
+            return true
         }
     }
 

@@ -8,10 +8,12 @@ import GhosttyTerminal
 import UIKit
 
 /// How a custom key is drawn on the bar, apart from what it sends: a label of
-/// its own, or an SF Symbol.
+/// its own, an SF Symbol, or a picture filling the button (a file in
+/// `KeyboardBarPictures`).
 enum KeyboardBarKeyLook: Hashable {
     case label(String)
     case systemImage(String)
+    case picture(String)
 }
 
 /// One key of the keyboard accessory bar, as the settings editor sees it.
@@ -39,6 +41,7 @@ enum KeyboardBarKey: Hashable {
         var text: String
         var label: String? = nil
         var image: String? = nil
+        var picture: String? = nil
     }
 
     var code: String {
@@ -59,6 +62,8 @@ enum KeyboardBarKey: Hashable {
             "custom:" + Self.encode(CustomCode(text: text, label: label))
         case let .custom(text, .systemImage(name)):
             "custom:" + Self.encode(CustomCode(text: text, image: name))
+        case let .custom(text, .picture(name)):
+            "custom:" + Self.encode(CustomCode(text: text, picture: name))
         }
     }
 
@@ -102,7 +107,9 @@ enum KeyboardBarKey: Hashable {
                 guard let custom = try? JSONDecoder().decode(CustomCode.self, from: data),
                       !custom.text.isEmpty
                 else { return nil }
-                if let image = custom.image, !image.isEmpty {
+                if let picture = custom.picture, !picture.isEmpty {
+                    self = .custom(text: custom.text, look: .picture(picture))
+                } else if let image = custom.image, !image.isEmpty {
                     self = .custom(text: custom.text, look: .systemImage(image))
                 } else if let label = custom.label, !label.isEmpty {
                     self = .custom(text: custom.text, look: .label(label))
@@ -122,6 +129,7 @@ enum KeyboardBarKey: Hashable {
     // library only defines it off Catalyst; the arrangement store above
     // still compiles everywhere so settings stay portable.
     #if !targetEnvironment(macCatalyst)
+        @MainActor
         var accessoryItem: TerminalInputAccessoryItem {
             switch self {
             case .esc: .esc
@@ -146,6 +154,12 @@ enum KeyboardBarKey: Hashable {
                 } else {
                     .symbol(text)
                 }
+            case let .custom(text, .picture(name)):
+                if let image = KeyboardBarPictures.image(named: name) {
+                    .symbol(text, presentation: .image(image))
+                } else {
+                    .symbol(text)
+                }
             }
         }
 
@@ -153,6 +167,7 @@ enum KeyboardBarKey: Hashable {
         /// mapping so the editor can never drift from what the bar renders;
         /// `nil` means the button shows the symbol text itself. A custom key's
         /// own symbol counts, when this system has it.
+        @MainActor
         var systemImage: String? {
             if case let .custom(_, .systemImage(name)) = self {
                 return UIImage(systemName: name) == nil ? nil : name
@@ -174,7 +189,7 @@ enum KeyboardBarKey: Hashable {
         case .arrowRight: String(localized: "Right Arrow")
         case .paste: String(localized: "Paste")
         case .divider: String(localized: "Divider")
-        case let .symbol(symbol), let .custom(_, .label(symbol)), let .custom(symbol, .systemImage):
+        case let .symbol(symbol), let .custom(_, .label(symbol)), let .custom(symbol, .systemImage), let .custom(symbol, .picture):
             String(
                 format: NSLocalizedString("Key “%@”", comment: "A symbol key of the accessory bar"),
                 symbol,
@@ -295,5 +310,8 @@ final class KeyboardBarStore: ObservableObject {
 
     private func persist() {
         UserDefaults.standard.set(entries.map(\.key.code), forKey: Self.defaultsKey)
+        KeyboardBarPictures.removeAll(except: Set(entries.compactMap { entry in
+            if case let .custom(_, .picture(name)) = entry.key { name } else { nil }
+        }))
     }
 }
