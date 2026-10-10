@@ -197,14 +197,20 @@ import UniformTypeIdentifiers
             .buttonStyle(.borderless)
         }
 
-        /// A list row's picture of a key. A plain symbol key's circle stays
-        /// empty — its name already spells what it types.
+        /// A list row's picture of a key. A plain symbol key — one with no
+        /// nickname — shows its first character in the circle; the row's
+        /// name spells the rest.
         @ViewBuilder
         private func rowGlyph(_ key: KeyboardBarKey) -> some View {
-            if case .symbol = key {
-                Circle()
-                    .fill(Color(uiColor: .systemGray5).opacity(0.92))
+            if case let .symbol(text) = key {
+                Text(verbatim: text.first.map(String.init) ?? "")
+                    .font(.system(size: 28 * 0.42, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
                     .frame(width: 28, height: 28)
+                    .background(
+                        Circle().fill(Color(uiColor: .systemGray5).opacity(0.92)),
+                    )
                     .accessibilityHidden(true)
             } else {
                 KeyboardBarKeyGlyph(key: key, size: 28, maxCharacters: 8)

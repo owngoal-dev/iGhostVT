@@ -100,6 +100,7 @@ struct AlertCardView: View {
                 ProgressView()
             case let .fraction(value):
                 ProgressView(value: value)
+                    .animation(.easeOut(duration: 0.3), value: value)
             case nil:
                 EmptyView()
             }

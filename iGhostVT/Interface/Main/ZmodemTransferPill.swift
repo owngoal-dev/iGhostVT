@@ -46,8 +46,12 @@ struct ZmodemTransferPill: View {
                     .font(DS.Font.detail)
                     .foregroundStyle(.secondary)
             } else if let fraction {
+                // Figures arrive at most ten times a second, and in bursts
+                // seconds apart over a slow link: glide between them rather
+                // than jump.
                 ProgressView(value: fraction)
                     .progressViewStyle(.linear)
+                    .animation(.easeOut(duration: 0.3), value: fraction)
             } else {
                 ProgressView()
                     .progressViewStyle(.linear)
