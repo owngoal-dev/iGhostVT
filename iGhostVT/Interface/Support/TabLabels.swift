@@ -25,7 +25,9 @@ struct ObservedTabTitle: View {
         Text(tab.displayTitle)
             .font(font)
             .lineLimit(1)
-            .truncationMode(.middle)
+            // A title reads from its start — "✳ Fix the …" — and cutting the
+            // middle out of it left neither end making sense.
+            .truncationMode(.tail)
             .retitleTransition()
             .animation(tab.animatesRetitle ? DS.Motion.smooth : nil, value: tab.displayTitle)
             .accessibilityValue(tab.isRemote ? (tab.remoteHostName ?? String(localized: "Remote")) : "")
