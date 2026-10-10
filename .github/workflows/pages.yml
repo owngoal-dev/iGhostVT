@@ -48,11 +48,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
       - name: Check out the shared depiction updater
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: owngoal-dev/owngoal-packages
           ref: ef579aeebc7fe0ca1ba1165a1749665237c3a258
@@ -70,9 +70,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 Scripts/update-altstore-source.py --repository owngoal-dev/iGhostVT --source Documents/Web/altstore.json
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: Documents/Web
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

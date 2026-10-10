@@ -445,11 +445,11 @@ jobs:
           echo "image=ghcr.io/$owner/ighostvt-relay" >> "$GITHUB_OUTPUT"
 
       - name: Set up Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to GHCR
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -458,7 +458,7 @@ jobs:
       # The Dockerfile cross-compiles on the build platform, so neither
       # architecture needs QEMU.
       - name: Build and push the image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: Relay
           platforms: linux/amd64,linux/arm64
