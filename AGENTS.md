@@ -703,6 +703,34 @@ that bit:
   chunks to measure the recovery: 8.5 MB and 11.5 s of stale stream
   before, 3.8 MB and 5.3 s after — the rest is the proxy's and io's own
   queues, upstream of the helper.
+- **What a host sends a device is compressed; nothing else is.** A
+  device's hello offers it (`iGhostVTWireKey.compression`), and the host
+  turns it on for that link only once the proof has checked out
+  (`RemoteFrameCompression`, LZFSE per frame, header padding byte 5 as
+  the flag, frames of 1 KiB and up). A reattach's replay is the frame
+  that matters: 256 KiB of scrollback goes over as 30–60 KiB. Each frame
+  is compressed alone, so no frame's size depends on another's contents;
+  within one frame it still can (BREACH) — text someone else chose beside
+  a secret, the same frame sent again and again under someone watching
+  record sizes — which a terminal, resending nothing on its own, does
+  not make practical; that cost is accepted, and it is why the device's
+  input and every small frame stay plain. The link window and its
+  receipts count a compressed frame as the plain one it stands for, the
+  device counting each frame as it decodes it: counted as wire bytes, a
+  window of 16 KiB output events packed into 200 B each let ninety times
+  the output it was there to bound into flight. The reader takes any length up
+  to its frame limit, never the sender's threshold, so a later patch may
+  compress more without cutting off this one. Measured with `remote-lab
+  latency` on a VM over loopback through `netem-proxy.py` (attach of a
+  full replay, median): wifi 265 → 145 ms, cellular 1105 → 540 ms, with
+  the pipelined attach below.
+- **A reattach leaves behind the hello, not after its answer.** On a
+  remote link `XPCDaemonTransport` sends the attach right after the hello
+  and holds its reply until the hello's (`repliesHeldForHello`), dropping
+  it with a failed hello — the host reads a link's frames in order and a
+  refused hello closes the link before the next is acted on, on every
+  host of the line. Only the attach: an open sent ahead of a hello this
+  side then gives up on would leave the host a shell no tab knows.
 - **A relayed connection must never touch `lastAddress`.** The address
   that answered is the relay's; remembered as the host's it sent every later
   direct attempt there. `noteReached(viaRelay:)` records only the time.

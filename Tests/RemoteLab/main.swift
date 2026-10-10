@@ -278,6 +278,10 @@ func tryConnect(_ device: LabDevice, quiet: Bool = false) -> Result<LabLink, Con
         )
         if !quiet { say("connecting through the relay at \(relay.endpointDescription)") }
     }
+    // Offers frame compression, as the app does; `REMOTE_LAB_COMPRESS=0`
+    // behaves as an app before it.
+    let compresses = (ProcessInfo.processInfo.environment["REMOTE_LAB_COMPRESS"] ?? "1") != "0"
+    link.frames.acceptsCompressedInput = compresses
     let opened = Date()
     guard link.open() else { return .failure(ConnectError(reason: "TLS did not come up")) }
     if !quiet { say(String(format: "TLS up in %.2f s", Date().timeIntervalSince(opened))) }
@@ -290,6 +294,9 @@ func tryConnect(_ device: LabDevice, quiet: Bool = false) -> Result<LabLink, Con
     xpc_dictionary_set_string(hello, iGhostVTWireKey.appVersion, wireVersion)
     if ProcessInfo.processInfo.environment["REMOTE_LAB_NO_RECEIPTS"] == nil {
         xpc_dictionary_set_uint64(hello, iGhostVTWireKey.received, 0)
+    }
+    if compresses {
+        RemoteFrameCompression.offer(in: hello)
     }
     setData(
         RemoteDeviceProof.make(key: device.deviceKey, exporterSecret: exporter, deviceID: device.deviceID),
@@ -557,8 +564,10 @@ case "sz":
     exit(receiveSZ())
 case "scenario":
     exit(runScenario(option("name")))
+case "latency":
+    exit(runLatency())
 default:
-    fail("usage: remote-lab pair|sz|scenario …")
+    fail("usage: remote-lab pair|sz|scenario|latency …")
 }
 
 /// Holds a chunk back and lets the next one overtake it, at `count` random

@@ -231,6 +231,9 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         let (path, _) = untried.removeFirst()
         launchGeneration += 1
         let frames = RemoteFrameConnection(connection: makeConnection(path), queue: queue)
+        // The hello offers it (`transmit`); the host compresses nothing
+        // before it has checked the proof that comes with the offer.
+        frames.acceptsCompressedInput = true
         frames.onReady = { [weak self, weak frames] in
             guard let self, let frames else { return }
             won(frames, path: path)
@@ -389,6 +392,7 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
             // This link reports what it receives (`acknowledgeReceived`),
             // so the host may hold it to the window from the start.
             xpc_dictionary_set_uint64(message, iGhostVTWireKey.received, 0)
+            RemoteFrameCompression.offer(in: message)
             proof.withUnsafeBytes { buffer in
                 if let base = buffer.baseAddress {
                     xpc_dictionary_set_data(message, iGhostVTWireKey.confirmation, base, buffer.count)

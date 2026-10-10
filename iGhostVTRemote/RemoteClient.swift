@@ -332,6 +332,9 @@ final class RemoteClient {
             deviceReceivedByteCount = 0
         }
         frames.maximumPayloadByteCount = IOWire.maximumPayloadByteCount
+        // Only past the proof: nothing is compressed for a peer that has
+        // not shown it holds a key.
+        frames.compressesOutput = RemoteFrameCompression.isOffered(in: hello)
         self.daemon = daemon
         service.noteSeen(
             deviceID: deviceID,

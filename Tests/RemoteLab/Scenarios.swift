@@ -273,6 +273,9 @@ func flood(seconds: Double) -> Int32 {
     let verdict = Verdict()
     let code = """
     import os, sys, threading, time
+    # The flood holds the lock for each write, so the ACK line is never
+    # spliced into the middle of one and its stamp stays readable.
+    lock = threading.Lock()
     def reader():
         data = b''
         while True:
@@ -281,15 +284,16 @@ func flood(seconds: Double) -> Int32 {
                 return
             data += chunk
             if b'STOP' in data:
-                os.write(2, b'')
-                print('\\nACK %f' % time.time(), flush=True)
+                stamp = time.time()
+                lock.acquire()
+                os.write(1, b'\\nACK %f\\n' % stamp)
                 os._exit(0)
     import tty; tty.setraw(0)
     threading.Thread(target=reader, daemon=True).start()
-    line = ('x' * 200 + '\\n')
+    line = ('x' * 200 + '\\n').encode()
     while True:
-        sys.stdout.write(line * 50)
-        sys.stdout.flush()
+        with lock:
+            os.write(1, line * 50)
     """
     let session = openOne(loadDevice(), [python, "-u", "-c", code])
     Thread.sleep(forTimeInterval: seconds)

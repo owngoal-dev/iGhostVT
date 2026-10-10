@@ -432,6 +432,10 @@ enum iGhostVTWireKey {
     /// the device's `hello`, 0: it will report, so the window holds from
     /// the first byte.
     static let received = "rcvd"
+    /// On a device's `hello`: the frame compression it reads
+    /// (`RemoteFrameCompression.algorithm`). The host compresses what it
+    /// sends that link from its hello reply on; without it, nothing.
+    static let compression = "cmpr"
     /// `off`, `starting`, `listening` or `failed` (`RemoteAccessState`).
     static let remoteState = "rstate"
     static let hostID = "hostid"
