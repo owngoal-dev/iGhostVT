@@ -204,6 +204,14 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     /// relay for as long as anything connected. And never while Bonjour
     /// sees the host here.
     private static func plan(hostID: String, host: PairedRemoteHost) -> [(path: Path, delay: TimeInterval)] {
+        #if DEBUG
+            // `Scripts/remote-lab`: a simulator shares the Mac's network,
+            // where Bonjour always sees the host, so a bad relay path is
+            // only ever tested with the direct one taken away.
+            if UserDefaults.standard.bool(forKey: "RemoteLab.relayOnly") {
+                return RelayConfigurationStore.current.map { [(.relay($0), 0)] } ?? []
+            }
+        #endif
         let bonjour = RemoteHostDirectory.endpoint(forHostID: hostID)
         var paths: [(path: Path, delay: TimeInterval)] = []
         if let direct = bonjour ?? host.lastEndpoint {
