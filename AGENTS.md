@@ -37,7 +37,10 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   congested for minutes and draining all along, and cutting it after ten
   seconds is what dropped an `sz` mid-file. The helper's own pause band
   (512 → 384 KiB) is narrow for the same reason: while it holds the
-  connection suspended it takes nothing. The
+  connection suspended it takes nothing — so while paused it lets one
+  message through every 3 s (`trickleInterval`, up to 8 MiB held): a relay
+  stalled for ten or twenty seconds still drains, and the lab saw the
+  proxy cut a device with a megabyte in flight before it did. The
   other direction is bounded the same way: when the io socket's write
   backlog passes 1 MiB the proxy `xpc_connection_suspend`s every peer (a
   peer arriving mid-pause is suspended at registration) and resumes them,
@@ -632,12 +635,26 @@ that bit:
   one time in six before the change, never in a dozen after.
 - **TCP keepalive proves a leg, not the path.** A proxy on the way — a
   published container port is one — answers keepalive for a relay that is
-  gone. So a relayed link has an end-to-end heartbeat: the app pings a quiet
-  link (`ping`, op 32, answered by the helper itself) and gives it up after
-  45 s without a byte; the helper drops a relayed device silent for 60 s and
-  a splice idle for 75 s; the host's control connection pings every minute
-  and registers again when no pong comes back in 20 s. The direct path is
-  unchanged.
+  gone, and a NAT forgets a quiet mapping without a word. So every link,
+  direct or relayed, has an end-to-end heartbeat: the app pings a link
+  quiet in either direction for 5 s (`linkPingInterval`; `ping`, op 32,
+  answered by the helper itself) and gives it up after 20 s without a byte
+  (`linkReplyLimit`); the helper drops a relayed device silent for 30 s
+  (`deviceSilenceLimit` — relayed only, since a 1.4 app before 1.4.19
+  pings no direct link) and a splice idle for 45 s; the host's control
+  connection pings every minute and registers again when no pong comes
+  back in 20 s. With 15 s and 45 s a dead link sat on a frozen screen for
+  most of a minute unless the person typed — a keystroke's unacknowledged
+  bytes start TCP's drop timer — which read as output that only came back
+  once input went out.
+- **A window of tabs connects at once, so the helper queues handshakes
+  instead of refusing them.** Each tab is its own link; a launch, a return
+  to the foreground or the network coming back dials them all together,
+  and past four connections still handshaking per path the helper used to
+  refuse the rest ("too many connections still handshaking"), which a tab
+  showed as "Unable to reach the other device". The rest now wait,
+  unstarted, for a slot (`maximumWaitingConnections`, 32 per path, at most
+  `handshakeTimeoutSeconds` each). `lab.sh scenario storm` dials ten.
 - **A remote link is questioned when the network changes, not left to
   TCP.** Keepalive and the drop time notice a dead link in 25 s or more,
   and the tab's back-off used to spend its minute against no network at
@@ -790,13 +807,28 @@ stood on 0) until the next burst. A transfer never reaches the surface
 outside an engine either: the attach replay (which skips the engine, so a
 stale frame cannot start one) has every conversation cut out by
 `ZmodemStreamScanner` — from `rz\r` and the first hex header to the ZFIN
-exchange or a CAN run — and a link that drops mid-transfer leaves the next
-engine discarding (`discardInterruptedTransfer`): it swallows the sender's
-stream, cancels it once it sees ZDLE, and draws again after the sender's
-own CAN run, at once if the first thing back is plain text. A relayed link
-that only receives — a download — must still talk: the helper drops a
-device silent for 60 s, so `DaemonLink` pings when *it* has sent nothing
-for `relayedPingInterval`, not only when it has heard nothing. The pure
+exchange or a CAN run. A link that drops mid-*download* keeps the engine
+(`suspendForLostLink`): the next connect reuses it, and when that link
+reaches the same session (`TerminalTransportEvent.sessionResumed(true)`)
+it starts a fresh parser and sends ZRPOS for what arrived (`resume`,
+repeated every 3 s until a ZDATA at that position comes back), so sz seeks
+back and the file comes out whole; until then, and after any bad
+subpacket, the receiver writes nothing but data at its own offset
+(`isResynchronizing`). A fresh session instead ends it
+(`abandonSuspended`). Anything else that drops mid-transfer — an upload —
+leaves the next engine discarding (`discardInterruptedTransfer`): it
+swallows the sender's stream, cancels it once it sees ZDLE, and draws again
+after the sender's own CAN run, at once if the first thing back is plain
+text. Over a congested relay sz can write the whole file into buffers,
+give up waiting at its ZEOF and exit while the bytes are still arriving: a
+download whose files all ended whole is done when the sender goes quiet
+(10 s after the ZEOF, `senderWentQuiet`), and nothing is sent back into a
+shell. A link that only receives — a download — must still talk: the
+helper drops a device silent for `deviceSilenceLimit`, so `DaemonLink`
+pings when *it* has sent nothing for `linkPingInterval`, not only when it
+has heard nothing. `Scripts/remote-lab/` drives all of this against the
+Mac's own host through a degraded relay path (`lab.sh matrix`,
+`lab.sh scenario sz-drops`). The pure
 core is tested in `Tests/Zmodem` (`make test`), sender and receiver driven
 against each other.
 
