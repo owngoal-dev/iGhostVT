@@ -398,6 +398,13 @@ enum iGhostVTWireKey {
 
     /// Remote access.
     static let enabled = "enabled"
+    /// On a reply-less `ping` from a device: how many bytes of frames it
+    /// has received over this link, every `RemoteAccess.linkReceiptByteCount`
+    /// (`RemoteFrameConnection.acknowledgeReceived`). The host keeps no
+    /// more than `RemoteAccess.linkWindowByteCount` past it in flight. On
+    /// the device's `hello`, 0: it will report, so the window holds from
+    /// the first byte.
+    static let received = "rcvd"
     /// `off`, `starting`, `listening` or `failed` (`RemoteAccessState`).
     static let remoteState = "rstate"
     static let hostID = "hostid"

@@ -67,6 +67,10 @@ final class RemoteClient {
     private static let trickleInterval: DispatchTimeInterval = .seconds(3)
     private static let trickleCeilingByteCount = 8 << 20
     private var trickleGeneration = 0
+    /// What the device last said it received (`iGhostVTWireKey.received`);
+    /// `nil` until it says, as an app before the link window never does,
+    /// and then only `pending` paces it.
+    private var deviceReceivedByteCount: UInt64?
 
     /// The operations a paired device may send, all of them the app's own.
     private static let sessionOperations: Set<iGhostVTOperation> = [
@@ -246,6 +250,10 @@ final class RemoteClient {
             close(reason: paired ? "paired" : "pairing failed")
         case .session:
             if operation == .ping {
+                if xpc_dictionary_get_value(object, iGhostVTWireKey.received) != nil {
+                    deviceReceivedByteCount = xpc_dictionary_get_uint64(object, iGhostVTWireKey.received)
+                    updateDaemonPause(pending: frames.pendingByteCount)
+                }
                 reply(.success, tag: header.tag)
                 return
             }
@@ -304,6 +312,12 @@ final class RemoteClient {
             return
         }
         mode = .session(deviceID: deviceID)
+        // A device that will report what it receives says so in its hello,
+        // so the window holds from the first byte: waiting for its first
+        // receipt let the network stack take 9 MB before the window began.
+        if xpc_dictionary_get_value(hello, iGhostVTWireKey.received) != nil {
+            deviceReceivedByteCount = 0
+        }
         frames.maximumPayloadByteCount = IOWire.maximumPayloadByteCount
         self.daemon = daemon
         service.noteSeen(
@@ -420,13 +434,31 @@ final class RemoteClient {
         frames.send(.event, tag: 0, object: event)
     }
 
+    /// Output the device has not said it received: everything the path
+    /// holds, the TCP buffers on both sides of a relay included, which
+    /// `pending` (what the network stack has not taken yet) cannot see.
+    private var inFlightByteCount: UInt64 {
+        guard let received = deviceReceivedByteCount else { return 0 }
+        // A receipt is never ahead of what was sent; compare, never trust.
+        return frames.sentByteCount > received ? frames.sentByteCount - received : 0
+    }
+
     private func updateDaemonPause(pending: Int) {
-        guard let daemon else { return }
-        if !isDaemonSuspended, pending > Self.pauseAboveByteCount {
+        // Sends still complete after the link closed, and with no receipt
+        // coming any more the window would suspend a lingering peer again
+        // — which then drains nothing, and the proxy cuts it before its
+        // device can come back. `closed` already resumed it.
+        guard !isClosed, let daemon else { return }
+        let inFlight = inFlightByteCount
+        if !isDaemonSuspended,
+           pending > Self.pauseAboveByteCount || inFlight > RemoteAccess.linkWindowByteCount
+        {
             isDaemonSuspended = true
             xpc_connection_suspend(daemon)
             scheduleTrickle()
-        } else if isDaemonSuspended, pending < Self.resumeBelowByteCount {
+        } else if isDaemonSuspended, pending < Self.resumeBelowByteCount,
+                  inFlight < RemoteAccess.linkWindowByteCount - RemoteAccess.linkReceiptByteCount
+        {
             isDaemonSuspended = false
             xpc_connection_resume(daemon)
         }

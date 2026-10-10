@@ -386,6 +386,9 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
             // The name it goes by now, so the host's list follows a rename.
             xpc_dictionary_set_string(message, iGhostVTWireKey.deviceName, RemoteDeviceIdentity.deviceName)
             xpc_dictionary_set_string(message, iGhostVTWireKey.appVersion, RemoteAccess.wireVersion)
+            // This link reports what it receives (`acknowledgeReceived`),
+            // so the host may hold it to the window from the start.
+            xpc_dictionary_set_uint64(message, iGhostVTWireKey.received, 0)
             proof.withUnsafeBytes { buffer in
                 if let base = buffer.baseAddress {
                     xpc_dictionary_set_data(message, iGhostVTWireKey.confirmation, base, buffer.count)
@@ -459,6 +462,7 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
 
     private func received(_ header: IOWire.Header, _ object: xpc_object_t) {
         lastHeard = Date()
+        frames?.acknowledgeReceived()
         switch header.kind {
         case .reply:
             pendingReplies.removeValue(forKey: header.tag)?(object)

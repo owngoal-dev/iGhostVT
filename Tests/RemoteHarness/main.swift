@@ -150,6 +150,36 @@ queue.sync { _ = device.0.send(.request, tag: 7, object: big) }
 check(waitUntil { device.2().count == 1 }, "a 600 KB frame goes over and its reply comes back")
 check(queue.sync { serverReceived.count == 1 && xpc_dictionary_get_count(serverReceived[0]) == 1 }, "the frame arrives whole")
 
+// The link window's arithmetic: both ends count the same frame stream, and
+// a receipt reports exactly what arrived — once per receipt interval.
+if let server = queue.sync(execute: { serverSide }) {
+    let flood = xpc_dictionary_create(nil, nil, 0)
+    let floodBytes = [UInt8](repeating: 0x42, count: 600_000)
+    xpc_dictionary_set_data(flood, "data", floodBytes, floodBytes.count)
+    queue.sync { _ = server.send(.event, tag: 0, object: flood) }
+    let sent = queue.sync { server.sentByteCount }
+    check(
+        waitUntil { queue.sync { device.0.receivedByteCount == sent } },
+        "what the host sent (\(sent) B) is what the device counts received",
+    )
+    let framesBefore = queue.sync { serverReceived.count }
+    queue.sync { device.0.acknowledgeReceived() }
+    check(waitUntil { queue.sync { serverReceived.count == framesBefore + 1 } }, "past the receipt interval the device sends a receipt")
+    let receipt = queue.sync { serverReceived.last! }
+    check(
+        xpc_dictionary_get_uint64(receipt, iGhostVTWireKey.operation) == iGhostVTOperation.ping.rawValue
+            && xpc_dictionary_get_uint64(receipt, iGhostVTWireKey.received) == sent,
+        "a ping naming every byte received",
+    )
+    check(
+        waitUntil { queue.sync { server.receivedByteCount == device.0.sentByteCount } },
+        "and the counts agree the other way too",
+    )
+    queue.sync { device.0.acknowledgeReceived() }
+    Thread.sleep(forTimeInterval: 0.3)
+    check(queue.sync { serverReceived.count } == framesBefore + 1, "with nothing new arrived, no second receipt")
+}
+
 let stranger = connect(RemoteTLS.Key(identity: Data("nobody".utf8), secret: Data(count: 32)))
 check(waitUntil { stranger.3() != nil }, "an unknown key does not complete the handshake")
 check(!stranger.1(), "and never reaches ready")

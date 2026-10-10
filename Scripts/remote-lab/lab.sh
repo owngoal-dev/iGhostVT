@@ -9,6 +9,7 @@
 #   lab.sh pair                   pair it with this Mac (once; kept in $LAB)
 #   lab.sh proxy PROFILE [opts]   (re)start the proxy toward the relay
 #   lab.sh sz PROFILE [MiB] [opts] receive a random file with sz through it
+#                                 (REORDER=N swaps N pairs of output chunks)
 #   lab.sh matrix [MiB]           sz under every profile, one line each
 #   lab.sh scenario NAME PROFILE [SIZE] [opts]
 #                                 trickle idle echo flood paste reattach storm upload
@@ -109,7 +110,8 @@ run_sz() {
     start_proxy "$profile" "$@"
     local status=0
     "$LAB/remote-lab" sz --state "$LAB" --relay "$RELAY_FILE" --via "127.0.0.1:$PROXY_PORT" \
-        --file "$(test_file "$mib")" --sz "$SZ" --version "$VERSION" || status=$?
+        --file "$(test_file "$mib")" --sz "$SZ" --version "$VERSION" \
+        ${REORDER:+--reorder "$REORDER"} || status=$?
     stop_proxy
     return "$status"
 }

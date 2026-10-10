@@ -163,6 +163,19 @@ enum RemoteAccess {
     /// back: data had to go out before any came in.
     static let linkPingInterval: TimeInterval = 5
     static let linkReplyLimit: TimeInterval = 20
+    /// The most output the host keeps in flight toward a device past what
+    /// the device has said it received (`iGhostVTWireKey.received`). The
+    /// path's own buffers — the host's TCP send buffer grows to 4 MiB, the
+    /// relay keeps two more legs — held a whole 8 MiB `sz` ahead of the
+    /// receiver, so any ZRPOS (a bad subpacket, a resumed download) waited
+    /// for all of it to drain first: at a slow link's pace, half a minute
+    /// of nothing and then the transfer took off again. A window bounds
+    /// that whatever the path buffers; 1 MiB is still several MB/s at a
+    /// few hundred ms round trip.
+    static let linkWindowByteCount: UInt64 = 1 << 20
+    /// How often the device reports what it received: a quarter of the
+    /// window, so the host never waits on the report itself.
+    static let linkReceiptByteCount: UInt64 = 256 * 1024
     /// After the device's network changes, the app pings every link and
     /// gives up one the host has not answered on within this long.
     static let pathChangeReplyLimit: TimeInterval = 5

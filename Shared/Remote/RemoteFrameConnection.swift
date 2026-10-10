@@ -28,6 +28,12 @@ final class RemoteFrameConnection: @unchecked Sendable {
     /// Raise it once the other end is trusted with more.
     var maximumPayloadByteCount = IOWire.maximumPayloadByteCount
     private(set) var pendingByteCount = 0
+    /// Frame bytes sent and received over this connection, the two ends
+    /// counting the same stream: what the link window
+    /// (`RemoteAccess.linkWindowByteCount`) is measured in.
+    private(set) var sentByteCount: UInt64 = 0
+    private(set) var receivedByteCount: UInt64 = 0
+    private var acknowledgedByteCount: UInt64 = 0
     private var buffer: [UInt8] = []
     private var isClosed = false
     private var isReady = false
@@ -71,6 +77,7 @@ final class RemoteFrameConnection: @unchecked Sendable {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 256 * 1024) { [weak self] data, _, isComplete, error in
             guard let self, !isClosed else { return }
             if let data, !data.isEmpty {
+                receivedByteCount += UInt64(data.count)
                 buffer.append(contentsOf: data)
                 guard drainFrames() else { return }
             }
@@ -139,6 +146,7 @@ final class RemoteFrameConnection: @unchecked Sendable {
         )
         frame.append(contentsOf: payload)
         let count = frame.count
+        sentByteCount += UInt64(count)
         pendingByteCount += count
         onPendingChange?(pendingByteCount)
         connection.send(content: Data(frame), completion: .contentProcessed { [weak self] error in
@@ -152,6 +160,20 @@ final class RemoteFrameConnection: @unchecked Sendable {
             }
         })
         return true
+    }
+
+    /// The device's half of the link window: once another
+    /// `RemoteAccess.linkReceiptByteCount` has arrived, tells the host how
+    /// much, in a `ping` that wants no reply — a host before the window
+    /// answers such a ping with nothing and reads no field of it.
+    func acknowledgeReceived() {
+        guard receivedByteCount - acknowledgedByteCount >= RemoteAccess.linkReceiptByteCount else { return }
+        acknowledgedByteCount = receivedByteCount
+        let receipt = xpc_dictionary_create(nil, nil, 0)
+        xpc_dictionary_set_uint64(receipt, iGhostVTWireKey.version, iGhostVTProtocol.version)
+        xpc_dictionary_set_uint64(receipt, iGhostVTWireKey.operation, iGhostVTOperation.ping.rawValue)
+        xpc_dictionary_set_uint64(receipt, iGhostVTWireKey.received, receivedByteCount)
+        send(.request, tag: 0, object: receipt)
     }
 
     /// Closes once everything sent so far has left — a cancel would drop

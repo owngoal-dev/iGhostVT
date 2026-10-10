@@ -14,7 +14,11 @@ import Network
 //
 //   remote-lab pair --state DIR --host-id ID --address HOST:PORT --code CODE --version X.Y.Z
 //   remote-lab sz   --state DIR --file PATH [--relay FILE [--via HOST:PORT] | --direct HOST:PORT]
-//                   [--sz PATH] [--timeout S] [--version X.Y.Z]
+//                   [--sz PATH] [--timeout S] [--version X.Y.Z] [--reorder N]
+//
+// `--reorder N` swaps N pairs of neighbouring output chunks, at random
+// points past the transfer's first few, before the engine sees them: how
+// long a receiver takes to recover from one bad subpacket.
 //
 // `Scripts/remote-lab/lab.sh` drives both; see there for the whole loop.
 
@@ -126,6 +130,8 @@ final class LabLink: @unchecked Sendable {
     private(set) var lastSent = Date()
     private(set) var isClosed = false
     let isRelayed: Bool
+    /// `REMOTE_LAB_NO_RECEIPTS`: behave as an app before the link window.
+    private let noReceipts = ProcessInfo.processInfo.environment["REMOTE_LAB_NO_RECEIPTS"] != nil
 
     init(to endpoint: NWEndpoint, hostID: String, key: RemoteTLS.Key, isRelayed: Bool) {
         self.isRelayed = isRelayed
@@ -163,6 +169,9 @@ final class LabLink: @unchecked Sendable {
 
     private func received(_ header: IOWire.Header, _ object: xpc_object_t) {
         lastHeard = Date()
+        if !noReceipts {
+            frames.acknowledgeReceived()
+        }
         switch header.kind {
         case .reply:
             pending.removeValue(forKey: header.tag)?(object)
@@ -279,6 +288,9 @@ func tryConnect(_ device: LabDevice, quiet: Bool = false) -> Result<LabLink, Con
     xpc_dictionary_set_string(hello, iGhostVTWireKey.deviceID, device.deviceID)
     xpc_dictionary_set_string(hello, iGhostVTWireKey.deviceName, "Remote Lab")
     xpc_dictionary_set_string(hello, iGhostVTWireKey.appVersion, wireVersion)
+    if ProcessInfo.processInfo.environment["REMOTE_LAB_NO_RECEIPTS"] == nil {
+        xpc_dictionary_set_uint64(hello, iGhostVTWireKey.received, 0)
+    }
     setData(
         RemoteDeviceProof.make(key: device.deviceKey, exporterSecret: exporter, deviceID: device.deviceID),
         iGhostVTWireKey.confirmation,
@@ -443,6 +455,7 @@ func receiveSZ() -> Int32 {
         },
     )
 
+    let reorderer = ChunkReorderer(count: Int(options["reorder"] ?? "0") ?? 0)
     link.onEvent = { event in
         let kind = xpc_dictionary_get_uint64(event, iGhostVTWireKey.event)
         if kind == iGhostVTEvent.output.rawValue, let bytes = data(iGhostVTWireKey.data, in: event) {
@@ -457,7 +470,9 @@ func receiveSZ() -> Int32 {
                 run.lastOutput = Date()
                 run.outputBytes += bytes.count
             }
-            engine.ingest(bytes)
+            for chunk in reorderer.pass(bytes) {
+                engine.ingest(chunk)
+            }
         } else if kind == iGhostVTEvent.sessionExit.rawValue {
             lock.withLock { run.exitCode = xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode) }
             say("sz exited with \(xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode))")
@@ -544,4 +559,34 @@ case "scenario":
     exit(runScenario(option("name")))
 default:
     fail("usage: remote-lab pair|sz|scenario …")
+}
+
+/// Holds a chunk back and lets the next one overtake it, at `count` random
+/// chunk numbers between the 20th and the 400th.
+final class ChunkReorderer {
+    private var swapAt: Set<Int>
+    private var index = 0
+    private var held: Data?
+
+    init(count: Int) {
+        var picks = Set<Int>()
+        while picks.count < count {
+            picks.insert(Int.random(in: 20 ... 400))
+        }
+        swapAt = picks
+    }
+
+    func pass(_ bytes: Data) -> [Data] {
+        index += 1
+        if let earlier = held {
+            held = nil
+            say("reorder: chunk \(index) (\(bytes.count) B) delivered before chunk \(index - 1) (\(earlier.count) B)")
+            return [bytes, earlier]
+        }
+        if swapAt.contains(index) {
+            held = bytes
+            return []
+        }
+        return [bytes]
+    }
 }

@@ -622,6 +622,22 @@ that bit:
   attempt that failed on its own (a loser closed by the race does not
   count), a direct link clears it, and Bonjour seeing the host overrides it.
   A link already up stays on its path until it reconnects.
+- **The path buffers more than the helper can see, so a link has a
+  window.** The helper's pause band counts what the network stack has not
+  taken, and the stack takes a lot: the host's TCP send buffer grows to
+  4 MiB and the relay holds two more legs, so an `sz` put its whole 8 MiB
+  file on the path within a second and every ZRPOS (a bad subpacket, a
+  resumed download) waited for all of it to drain — half a minute of
+  nothing on a slow link, then the transfer took off. The app reports
+  what it received in a reply-less `ping` every 256 KiB
+  (`iGhostVTWireKey.received`, `RemoteFrameConnection.acknowledgeReceived`)
+  and says in its hello that it will; the helper then keeps at most
+  `RemoteAccess.linkWindowByteCount` (1 MiB) past the last report in
+  flight. A host before this ignores the field; an app before it sends
+  none and is paced as before. `REORDER=N lab.sh sz …` swaps output
+  chunks to measure the recovery: 8.5 MB and 11.5 s of stale stream
+  before, 3.8 MB and 5.3 s after — the rest is the proxy's and io's own
+  queues, upstream of the helper.
 - **A relayed connection must never touch `lastAddress`.** The address
   that answered is the relay's; remembered as the host's it sent every later
   direct attempt there. `noteReached(viaRelay:)` records only the time.
