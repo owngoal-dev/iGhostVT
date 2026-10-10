@@ -5,6 +5,14 @@
 
 import Foundation
 import GhosttyTerminal
+import UIKit
+
+/// How a custom key is drawn on the bar, apart from what it sends: a label of
+/// its own, or an SF Symbol.
+enum KeyboardBarKeyLook: Hashable {
+    case label(String)
+    case systemImage(String)
+}
 
 /// One key of the keyboard accessory bar, as the settings editor sees it.
 /// Mirrors `TerminalInputAccessoryItem` with a stable string code per case so
@@ -22,6 +30,16 @@ enum KeyboardBarKey: Hashable {
     case paste
     case divider
     case symbol(String)
+    /// A key that sends `text` and is drawn as `look`. A custom key with
+    /// neither a label nor a symbol is a plain `symbol`.
+    case custom(text: String, look: KeyboardBarKeyLook)
+
+    /// The persisted shape of a `custom` key, after `custom:` in its code.
+    private struct CustomCode: Codable {
+        var text: String
+        var label: String? = nil
+        var image: String? = nil
+    }
 
     var code: String {
         switch self {
@@ -37,7 +55,32 @@ enum KeyboardBarKey: Hashable {
         case .paste: "paste"
         case .divider: "divider"
         case let .symbol(symbol): "sym:\(symbol)"
+        case let .custom(text, .label(label)):
+            "custom:" + Self.encode(CustomCode(text: text, label: label))
+        case let .custom(text, .systemImage(name)):
+            "custom:" + Self.encode(CustomCode(text: text, image: name))
         }
+    }
+
+    private static func encode(_ custom: CustomCode) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let data = (try? encoder.encode(custom)) ?? Data()
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    /// What the key types, for keys the editor can change; `nil` for the
+    /// standard keys.
+    var sentText: String? {
+        switch self {
+        case let .symbol(symbol): symbol
+        case let .custom(text, _): text
+        default: nil
+        }
+    }
+
+    var look: KeyboardBarKeyLook? {
+        if case let .custom(_, look) = self { look } else { nil }
     }
 
     init?(code: String) {
@@ -54,6 +97,20 @@ enum KeyboardBarKey: Hashable {
         case "paste": self = .paste
         case "divider": self = .divider
         default:
+            if code.hasPrefix("custom:") {
+                let data = Data(code.dropFirst(7).utf8)
+                guard let custom = try? JSONDecoder().decode(CustomCode.self, from: data),
+                      !custom.text.isEmpty
+                else { return nil }
+                if let image = custom.image, !image.isEmpty {
+                    self = .custom(text: custom.text, look: .systemImage(image))
+                } else if let label = custom.label, !label.isEmpty {
+                    self = .custom(text: custom.text, look: .label(label))
+                } else {
+                    self = .symbol(custom.text)
+                }
+                return
+            }
             guard code.hasPrefix("sym:") else { return nil }
             let symbol = String(code.dropFirst(4))
             guard !symbol.isEmpty else { return nil }
@@ -79,14 +136,28 @@ enum KeyboardBarKey: Hashable {
             case .paste: .paste
             case .divider: .divider
             case let .symbol(symbol): .symbol(symbol)
+            case let .custom(text, .label(label)):
+                .symbol(text, presentation: .text(label))
+            case let .custom(text, .systemImage(name)):
+                // A name no SF Symbol answers to (one from a newer system)
+                // shows the text instead of an empty button.
+                if let image = UIImage(systemName: name) {
+                    .symbol(text, presentation: .image(image))
+                } else {
+                    .symbol(text)
+                }
             }
         }
 
         /// SF Symbol shown on the bar button, straight from the library's own
         /// mapping so the editor can never drift from what the bar renders;
-        /// `nil` means the button shows the symbol text itself.
+        /// `nil` means the button shows the symbol text itself. A custom key's
+        /// own symbol counts, when this system has it.
         var systemImage: String? {
-            accessoryItem.systemImage
+            if case let .custom(_, .systemImage(name)) = self {
+                return UIImage(systemName: name) == nil ? nil : name
+            }
+            return accessoryItem.systemImage
         }
     #endif
 
@@ -103,7 +174,7 @@ enum KeyboardBarKey: Hashable {
         case .arrowRight: String(localized: "Right Arrow")
         case .paste: String(localized: "Paste")
         case .divider: String(localized: "Divider")
-        case let .symbol(symbol):
+        case let .symbol(symbol), let .custom(_, .label(symbol)), let .custom(symbol, .systemImage):
             String(
                 format: NSLocalizedString("Key “%@”", comment: "A symbol key of the accessory bar"),
                 symbol,
@@ -204,6 +275,14 @@ final class KeyboardBarStore: ObservableObject {
     func add(_ key: KeyboardBarKey) {
         guard key == .divider || !entries.contains(where: { $0.key == key }) else { return }
         entries.append(Entry(key: key))
+        persist()
+    }
+
+    /// Puts `key` where `entry` is, keeping its place on the bar — the key
+    /// editor's Save.
+    func replace(_ entry: Entry, with key: KeyboardBarKey) {
+        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
+        entries[index] = Entry(key: key)
         persist()
     }
 

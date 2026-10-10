@@ -10251,85 +10251,168 @@
         }
       }
     },
-    "Drag to reorder. Removing a standard key returns it to More Keys; dividers and custom keys are deleted." : {
+    "Drag to reorder, tap a character key to edit it. Removing a standard key returns it to More Keys; dividers and custom keys are deleted." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "اسحب لإعادة الترتيب. إزالة مفتاح قياسي تعيده إلى «مفاتيح أخرى»؛ أما الفواصل والمفاتيح المخصصة فتُحذف."
+            "value" : "اسحب لإعادة الترتيب، واضغط على مفتاح حرف لتعديله. إزالة مفتاح قياسي تعيده إلى المزيد من المفاتيح؛ أما الفواصل والمفاتيح المخصصة فتُحذف."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zum Umsortieren ziehen. Eine entfernte Standardtaste wandert zurück zu „Weitere Tasten“; Trenner und eigene Tasten werden gelöscht."
+            "value" : "Zum Neuordnen ziehen, eine Zeichentaste zum Bearbeiten antippen. Eine entfernte Standardtaste kehrt zu „Weitere Tasten“ zurück; Trenner und eigene Tasten werden gelöscht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag to reorder. Removing a standard key returns it to More Keys; dividers and custom keys are deleted."
+            "value" : "Drag to reorder, tap a character key to edit it. Removing a standard key returns it to More Keys; dividers and custom keys are deleted."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrastre para reordenar. Al quitar una tecla estándar, vuelve a Más teclas; los separadores y las teclas personalizadas se eliminan."
+            "value" : "Arrastra para reordenar y toca una tecla de carácter para editarla. Al quitar una tecla estándar vuelve a Más teclas; los separadores y las teclas personalizadas se eliminan."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Faites glisser pour réorganiser. Une touche standard retirée revient dans Autres touches ; les séparateurs et les touches personnalisées sont supprimés."
+            "value" : "Faites glisser pour réorganiser, touchez une touche de caractère pour la modifier. Une touche standard retirée retourne dans Autres touches ; les séparateurs et les touches personnalisées sont supprimés."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trascina per riordinare. Se rimuovi un tasto standard, torna in Altri tasti; i divisori e i tasti personalizzati vengono eliminati."
+            "value" : "Trascina per riordinare, tocca un tasto carattere per modificarlo. Un tasto standard rimosso torna in Altri tasti; i separatori e i tasti personalizzati vengono eliminati."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ドラッグして並べ替えます。標準キーを削除すると「その他のキー」に戻ります。区切りとカスタムキーは削除されます。"
+            "value" : "ドラッグで並べ替え、文字キーをタップで編集できます。標準キーを取り除くと「その他のキー」に戻り、区切りとカスタムキーは削除されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "끌어서 순서를 바꿉니다. 표준 키를 제거하면 추가 키로 돌아가고, 구분선과 사용자 지정 키는 삭제됩니다."
+            "value" : "드래그하여 순서를 바꾸고, 문자 키를 탭하여 편집합니다. 표준 키를 제거하면 기타 키로 돌아가고, 구분선과 사용자 키는 삭제됩니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arraste para reordenar. Ao remover uma tecla padrão, ela volta para Mais teclas; separadores e teclas personalizadas são excluídos."
+            "value" : "Arraste para reordenar e toque em uma tecla de caractere para editá-la. Ao remover uma tecla padrão, ela volta para Mais teclas; divisores e teclas personalizadas são apagados."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перетащите, чтобы изменить порядок. Удалённая стандартная клавиша возвращается в «Другие клавиши», а разделители и свои клавиши удаляются."
+            "value" : "Перетащите, чтобы изменить порядок; коснитесь клавиши с символом, чтобы изменить её. Убранная стандартная клавиша возвращается в «Другие клавиши», разделители и свои клавиши удаляются."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kéo để sắp xếp lại. Gỡ một phím tiêu chuẩn sẽ đưa nó về mục Phím khác; dấu phân cách và phím tùy chỉnh thì bị xóa."
+            "value" : "Kéo để sắp xếp lại, chạm vào phím ký tự để sửa. Phím chuẩn bị gỡ sẽ trở về Phím khác; dải phân cách và phím tùy chỉnh bị xóa."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拖动可调整顺序。移除标准按键会将其放回“更多按键”；分隔符与自定义按键将被删除。"
+            "value" : "拖移以重新排序，轻点字符按键可编辑。移除的标准按键会回到“更多按键”；分隔符和自定按键会被删除。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拖移可調整順序。移除標準按鍵會將其放回「更多按鍵」；分隔符號與自訂按鍵將被刪除。"
+            "value" : "拖移以重新排序，點一下字元按鍵即可編輯。移除的標準按鍵會回到「更多按鍵」；分隔符號和自訂按鍵會被刪除。"
+          }
+        }
+      }
+    },
+    "Edit Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعديل المفتاح"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taste bearbeiten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar tecla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier la touche"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica tasto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キーを編集"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키 편집"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar tecla"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить клавишу"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sửa phím"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑按键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編輯按鍵"
           }
         }
       }
@@ -15807,6 +15890,89 @@
         }
       }
     },
+    "Label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التسمية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschriftung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiqueta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libellé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etichetta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ラベル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레이블"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rótulo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подпись"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhãn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "標籤"
+          }
+        }
+      }
+    },
     "Last Connected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20027,6 +20193,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "附近沒有已配對的裝置"
+          }
+        }
+      }
+    },
+    "No SF Symbol has this name." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد رمز SF بهذا الاسم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein SF Symbol trägt diesen Namen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No SF Symbol has this name."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún SF Symbol tiene este nombre."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun SF Symbol ne porte ce nom."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun SF Symbol ha questo nome."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この名前のSF Symbolはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 이름의 SF Symbol이 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum SF Symbol tem este nome."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbol с таким именем нет."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có SF Symbol nào mang tên này."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有这个名称的 SF Symbol。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有這個名稱的 SF Symbol。"
           }
         }
       }
@@ -26568,6 +26817,89 @@
         }
       }
     },
+    "Save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حفظ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lưu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存"
+          }
+        }
+      }
+    },
     "Saved" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -27149,6 +27481,172 @@
         }
       }
     },
+    "Sends" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُرسل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信する内容"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보낼 내용"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправляет"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送内容"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳送內容"
+          }
+        }
+      }
+    },
+    "Sends “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُرسل ”%@“"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendet „%@“"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends “%@”"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía «%@»"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoie « %@ »"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia “%@”"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」を送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” 보내기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envia “%@”"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправляет «%@»"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi “%@”"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送“%@”"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳送「%@」"
+          }
+        }
+      }
+    },
     "Sent" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -27232,85 +27730,85 @@
         }
       }
     },
-    "Sent exactly as typed; the key shows its first four characters. A single letter also works with Control." : {
+    "Sent exactly as typed. A single letter also works with Control." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تُرسل كما كُتبت تماماً، ويعرض المفتاح أول أربعة أحرف منها. ويعمل الحرف الواحد أيضاً مع مفتاح Control."
+            "value" : "يُرسل كما كُتب تمامًا. ويعمل الحرف الواحد مع Control أيضًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Genau so gesendet, wie eingegeben; die Taste zeigt die ersten vier Zeichen. Ein einzelner Buchstabe funktioniert auch mit Control."
+            "value" : "Wird genau so gesendet, wie eingegeben. Ein einzelner Buchstabe funktioniert auch mit Control."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sent exactly as typed; the key shows its first four characters. A single letter also works with Control."
+            "value" : "Sent exactly as typed. A single letter also works with Control."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se envía tal como se escribe; la tecla muestra los cuatro primeros caracteres. Una sola letra también funciona con Control."
+            "value" : "Se envía tal como se escribe. Una sola letra también funciona con Control."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Envoyé tel que vous le saisissez ; la touche affiche les quatre premiers caractères. Une seule lettre fonctionne aussi avec Contrôle."
+            "value" : "Envoyé exactement tel que saisi. Une lettre seule fonctionne aussi avec Contrôle."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inviato esattamente come viene digitato; il tasto mostra i primi quattro caratteri. Una sola lettera funziona anche con Control."
+            "value" : "Inviato esattamente come digitato. Una sola lettera funziona anche con Control."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "入力したとおりに送信され、キーには先頭の 4 文字が表示されます。1 文字なら Control と組み合わせても使えます。"
+            "value" : "入力したとおりに送信されます。1文字ならControlとも組み合わせられます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "입력한 그대로 전송되며 키에는 앞의 4자가 표시됩니다. 한 글자는 Control과 함께 사용할 수도 있습니다."
+            "value" : "입력한 그대로 전송됩니다. 한 글자는 Control과 함께 사용할 수도 있습니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enviado exatamente como você digita; a tecla mostra os quatro primeiros caracteres. Uma única letra também funciona com Control."
+            "value" : "Enviado exatamente como digitado. Uma única letra também funciona com Control."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправляется в том виде, в каком введено; на клавише видны первые четыре символа. Одна буква работает и с Control."
+            "value" : "Отправляется в точности как введено. Одна буква работает и с Control."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gửi đúng như bạn gõ; phím hiển thị bốn ký tự đầu. Một chữ cái đơn cũng dùng được cùng phím Control."
+            "value" : "Được gửi đúng như đã nhập. Một chữ cái đơn cũng dùng được với Control."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按原样发送，按键上显示前 4 个字符。单个字母也可与 Control 键组合使用。"
+            "value" : "按输入原样发送。单个字母也可与 Control 组合使用。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按原樣傳送，按鍵上顯示前 4 個字元。單一字母也可與 Control 鍵組合使用。"
+            "value" : "依輸入原樣傳送。單一字母也可與 Control 組合使用。"
           }
         }
       }
@@ -28060,6 +28558,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定…"
+          }
+        }
+      }
+    },
+    "SF Symbol Name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسم رمز SF"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF-Symbol-Name"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbol Name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del SF Symbol"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom du SF Symbol"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome SF Symbol"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbol名"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbol 이름"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome do SF Symbol"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя SF Symbol"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tên SF Symbol"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbol 名称"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbol 名稱"
           }
         }
       }
@@ -29974,6 +30555,89 @@
         }
       }
     },
+    "Symbol" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمز"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbol"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbol"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Símbolo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbole"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simbolo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シンボル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "심볼"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Símbolo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Символ"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biểu tượng"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "符号"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "符號"
+          }
+        }
+      }
+    },
     "Tab" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31795,6 +32459,172 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檔案在拷貝過程中有所變更。"
+          }
+        }
+      }
+    },
+    "The key shows this label instead of what it sends. Leave it empty to show the characters themselves." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض المفتاح هذه التسمية بدلًا مما يرسله. اتركها فارغة لعرض الأحرف نفسها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Taste zeigt diese Beschriftung statt des gesendeten Textes. Leer lassen, um die Zeichen selbst zu zeigen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key shows this label instead of what it sends. Leave it empty to show the characters themselves."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tecla muestra esta etiqueta en lugar de lo que envía. Déjala vacía para mostrar los propios caracteres."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La touche affiche ce libellé au lieu de ce qu’elle envoie. Laissez-le vide pour afficher les caractères eux-mêmes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tasto mostra questa etichetta invece di ciò che invia. Lasciala vuota per mostrare i caratteri stessi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キーには送信内容の代わりにこのラベルが表示されます。空のままにすると文字そのものが表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키에 보낼 내용 대신 이 레이블이 표시됩니다. 비워 두면 문자 자체가 표시됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tecla mostra este rótulo em vez do que envia. Deixe vazio para mostrar os próprios caracteres."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клавиша показывает эту подпись вместо отправляемого текста. Оставьте поле пустым, чтобы показывать сами символы."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phím hiển thị nhãn này thay cho nội dung nó gửi. Để trống để hiển thị chính các ký tự."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按键显示这个标签，而不是发送的内容。留空则显示字符本身。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按鍵顯示這個標籤，而非傳送的內容。留空則顯示字元本身。"
+          }
+        }
+      }
+    },
+    "The key shows this SF Symbol, such as folder or hammer.fill." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض المفتاح رمز SF هذا، مثل folder أو hammer.fill."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Taste zeigt dieses SF Symbol, etwa folder oder hammer.fill."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key shows this SF Symbol, such as folder or hammer.fill."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tecla muestra este SF Symbol, como folder o hammer.fill."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La touche affiche ce SF Symbol, par exemple folder ou hammer.fill."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tasto mostra questo SF Symbol, ad esempio folder o hammer.fill."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キーにはこのSF Symbol（folderやhammer.fillなど）が表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키에 이 SF Symbol(예: folder, hammer.fill)이 표시됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tecla mostra este SF Symbol, como folder ou hammer.fill."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клавиша показывает этот SF Symbol, например folder или hammer.fill."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phím hiển thị SF Symbol này, chẳng hạn folder hoặc hammer.fill."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按键显示这个 SF Symbol，例如 folder 或 hammer.fill。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按鍵顯示這個 SF Symbol，例如 folder 或 hammer.fill。"
           }
         }
       }
