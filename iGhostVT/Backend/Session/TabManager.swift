@@ -529,6 +529,14 @@ final class TabManager: ObservableObject {
             detach(tab)
             return
         }
+        // Nor does one whose link failed (a version mismatch, an
+        // unreachable host): nothing here is attached to end, so closing
+        // it only lets go and the shell, if any, keeps running there.
+        if tab.isRemote, case .failed = tab.store.status {
+            AppLog.info(.tabs, "close of tab \(tab.id) (\(origin.rawValue)) failed to connect: detaching")
+            detach(tab)
+            return
+        }
         // A remote tab otherwise asks: leave the shell running on its host,
         // or end it.
         if tab.hasRunningProgram || tab.isRemote {
