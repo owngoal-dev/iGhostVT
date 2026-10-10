@@ -50,7 +50,7 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026101001, Ghostty 35a81a98 on Zig 0.16). 2.x
+  (`upToNextMajor` from 2.2.2026101003, Ghostty 35a81a98 on Zig 0.16). 2.x
   selects text inline on iOS — a long press puts handles and the edit menu
   on the terminal itself — and removed the long-press hand-off
   (`onTextSelectionRequest`) the app's own selection sheet hung off, so the
@@ -68,7 +68,22 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   switching light and dark) no longer snaps an open tab to the config's
   `font-size` — which, after Settings ▸ Text Size changed, resized tabs
   that should keep theirs — and reports the size back
-  (`TerminalViewState.fontSize`). 2.2.2026101001 draws a symbol key of
+  (`TerminalViewState.fontSize`). 2.2.2026101002 hands a press the
+  surface declined (Caps Lock, a bare modifier, a language key, a key
+  loaned to the input method) straight to `UIApplication`, where the text
+  input system takes it, instead of `super`: on iPadOS 26.0 the walk up
+  the responder chain passed SwiftUI's `UIKitKeyPressResponder`, whose
+  forward lands back on the hosting view below it, and the press circled
+  until the main thread's stack overflowed — 1.4.24 crashed on such a key
+  (`EXC_BAD_ACCESS`, "Thread stack size exceeded due to excessive
+  recursion"). **Nothing in this app may pass a press up with `super`
+  from a view inside SwiftUI either**: the alert card's `ClaimView` hands
+  every press but Return to `UIApplication` for the same reason, and
+  `TerminalWindow`, above the hosting view, is the only place a
+  `super.presses…` is safe. 2.2.2026101003 puts the viewport back where
+  a touch selection began — the bottom, when it began there — once the
+  selection goes, if a drag past the edge scrolled it into history and
+  the user has not scrolled since. 2.2.2026101001 draws a symbol key of
   the accessory bar as all of its text on one line, in a capsule that
   widens to fit (`TerminalInputAccessoryItem.buttonTitle`, which the
   app's key editor reads too), and takes a presentation for it:

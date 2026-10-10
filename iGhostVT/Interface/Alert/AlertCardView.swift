@@ -276,18 +276,33 @@ private struct AlertFirstResponder: UIViewRepresentable {
             return resigned
         }
 
+        // Every other press goes to the application, the end of the
+        // responder chain, where the text input system and the menu's key
+        // commands take an unhandled press — never `super`: that walks the
+        // chain through SwiftUI's key-press responder, whose forward on
+        // iPadOS 26.0 lands back on this view's hosting view, and the press
+        // circles until the main thread's stack overflows. The terminal's
+        // view forwards the same way (libghostty-spm 2.2.2026101002).
         override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
             if consumeReturn(presses) {
                 return
             }
-            super.pressesBegan(presses, with: event)
+            UIApplication.shared.pressesBegan(presses, with: event)
         }
 
         override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
             if isUnmodifiedReturn(presses) {
                 return
             }
-            super.pressesEnded(presses, with: event)
+            UIApplication.shared.pressesEnded(presses, with: event)
+        }
+
+        override func pressesChanged(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+            UIApplication.shared.pressesChanged(presses, with: event)
+        }
+
+        override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+            UIApplication.shared.pressesCancelled(presses, with: event)
         }
 
         @objc private func performDefaultAction() {
