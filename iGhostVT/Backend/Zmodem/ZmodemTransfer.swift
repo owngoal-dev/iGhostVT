@@ -42,6 +42,10 @@ final class ZmodemReceiver {
     private var name = ""
     private var size: UInt64?
     private var finished = false
+    /// Files whose ZEOF named the length received, every byte of it.
+    private var completedFileCount = 0
+    /// The last file ended whole and nothing of another has begun.
+    private var isBetweenCompleteFiles = false
 
     init(send: @escaping ([UInt8]) -> Void, writer: ZmodemFileWriter) {
         self.send = send
@@ -84,12 +88,17 @@ final class ZmodemReceiver {
             expectingSinitAck = true
         case .file:
             expectingFileInfo = true
+            isBetweenCompleteFiles = false
         case .data:
             offset = UInt64(header.position)
             phase = .receivingData
         case .eof:
             if phase == .receivingData {
                 writer.finishFile()
+                if UInt64(header.position) == offset, size.map({ $0 == offset }) ?? true {
+                    completedFileCount += 1
+                    isBetweenCompleteFiles = true
+                }
             }
             phase = .awaitingFile
             offset = 0
@@ -148,6 +157,23 @@ final class ZmodemReceiver {
         guard !finished else { return }
         send(ZmodemEncoder.cancelSequence())
         finish(completed: false)
+    }
+
+    /// The sender went quiet. Over a congested link `sz` can write a whole
+    /// file into buffers that take minutes to drain, then give up waiting
+    /// for the ZRINIT that answers its ZEOF and exit — while every byte is
+    /// still on its way here. A transfer whose files all ended whole is
+    /// therefore done, not cancelled; anything else is a stall. Answers
+    /// whether it finished; nothing is sent either way, since there is no
+    /// sender left to tell and a cancel would land in its shell as ^X.
+    var isAwaitingSenderAfterCompleteFiles: Bool {
+        !finished && completedFileCount > 0 && isBetweenCompleteFiles
+    }
+
+    func senderWentQuiet() -> Bool {
+        guard isAwaitingSenderAfterCompleteFiles else { return false }
+        finish(completed: true)
+        return true
     }
 
     static func parseFileInfo(_ bytes: [UInt8]) -> (name: String, size: UInt64?) {
