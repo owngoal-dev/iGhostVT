@@ -153,7 +153,7 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     /// and the question asked when the network changes.
     private var lastHeard = Date()
     /// When this side last sent anything. The host drops a relayed device
-    /// it has not heard from in `RemoteAccess.relayedSilenceLimit`, and a
+    /// it has not heard from in `RemoteAccess.deviceSilenceLimit`, and a
     /// download — `sz`, a long `cat` — is all host to device: the app hears
     /// plenty and says nothing, so the quiet it has to break is its own.
     private var lastSent = Date()
@@ -280,9 +280,7 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         AppLog.info(.transport, "remote link to \(host.name) \(path.isRelay ? "through the relay" : "direct")")
         ready()
         lastHeard = Date()
-        if path.isRelay {
-            heartbeat()
-        }
+        heartbeat()
         pathObserver = NotificationCenter.default.addObserver(
             forName: NetworkPathWatcher.pathDidChange,
             object: nil,
@@ -398,24 +396,24 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         }
     }
 
-    /// A relayed link is alive only if the host answers across it: every
-    /// box on the way may keep its own TCP leg up for a peer that is gone.
-    /// A quiet link is pinged; one the host has not answered on for
-    /// `RemoteAccess.relayedReplyLimit` is given up, and its owner
+    /// A link is alive only if the host answers across it: every box on
+    /// the way — a relay, a NAT — may keep its own TCP leg up for a peer
+    /// that is gone. A quiet link is pinged; one the host has not answered
+    /// on for `RemoteAccess.linkReplyLimit` is given up, and its owner
     /// reconnects as after any other loss. Quiet in *either* direction:
     /// the host judges the device by what it sends, so a link that only
     /// receives is pinged as well.
     private func heartbeat() {
-        queue.asyncAfter(deadline: .now() + RemoteAccess.relayedPingInterval / 3) { [weak self] in
+        queue.asyncAfter(deadline: .now() + RemoteAccess.linkPingInterval / 3) { [weak self] in
             guard let self, !isFinished, let frames else { return }
             let quiet = Date().timeIntervalSince(lastHeard)
-            if quiet > RemoteAccess.relayedReplyLimit {
-                AppLog.info(.transport, "remote link to \(host.name): nothing through the relay in \(Int(quiet)) s")
+            if quiet > RemoteAccess.linkReplyLimit {
+                AppLog.info(.transport, "remote link to \(host.name): nothing from the host in \(Int(quiet)) s")
                 finish(lost: true)
                 return
             }
             let silent = Date().timeIntervalSince(lastSent)
-            if quiet > RemoteAccess.relayedPingInterval || silent > RemoteAccess.relayedPingInterval, isReady {
+            if quiet > RemoteAccess.linkPingInterval || silent > RemoteAccess.linkPingInterval, isReady {
                 ping(over: frames)
             }
             heartbeat()

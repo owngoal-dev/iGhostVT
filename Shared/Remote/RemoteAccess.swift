@@ -134,8 +134,14 @@ enum RemoteAccess {
 
     /// A client that has not finished its first frame by then is dropped.
     static let handshakeTimeoutSeconds: TimeInterval = 10
-    /// Connections not yet past their first frame, at once.
+    /// Connections not yet past their first frame, at once, per path.
     static let maximumUnauthenticatedConnections = 4
+    /// Connections past that, held unstarted until a handshake ends: a
+    /// window of tabs comes back all at once — a launch, the app returning
+    /// to the foreground, the network coming back — and refusing all but
+    /// four of them left the rest showing "Unable to reach the other
+    /// device". Each waits at most `handshakeTimeoutSeconds`.
+    static let maximumWaitingConnections = 32
     /// The largest frame a connection may send before it has proved a
     /// device key. `hello`, `pairStart` and `pairFinish` are a few hundred
     /// bytes; the pairing key is public, so anyone on the network gets this
@@ -148,18 +154,23 @@ enum RemoteAccess {
     /// without the host noticing, short enough that a device that left
     /// hands them back soon.
     static let reconnectGraceSeconds: TimeInterval = 30
-    /// A link through a relay is pinged after this much quiet
-    /// (`iGhostVTOperation.ping`), and given up by the app after
-    /// `relayedReplyLimit` without a byte from the host.
-    static let relayedPingInterval: TimeInterval = 15
-    static let relayedReplyLimit: TimeInterval = 45
+    /// Every link, direct or relayed, is pinged by the app after this much
+    /// quiet in either direction (`iGhostVTOperation.ping`), and given up
+    /// after `linkReplyLimit` without a byte from the host. A link that
+    /// died without a word — a NAT that forgot it, a relay leg gone — used
+    /// to sit for up to 45 s with nothing typed, and only a keystroke (whose
+    /// unacknowledged bytes start TCP's drop timer) brought the output
+    /// back: data had to go out before any came in.
+    static let linkPingInterval: TimeInterval = 5
+    static let linkReplyLimit: TimeInterval = 20
     /// After the device's network changes, the app pings every link and
     /// gives up one the host has not answered on within this long.
     static let pathChangeReplyLimit: TimeInterval = 5
     /// The host drops a relayed device it has heard nothing from for this
     /// long — a phone that went to sleep is one, and reattaches when it
-    /// wakes.
-    static let relayedSilenceLimit: TimeInterval = 60
+    /// wakes. Six of this app's pings; still twice the 15 s interval the
+    /// 1.4 apps before 1.4.19 ping at, which talk to this host too.
+    static let deviceSilenceLimit: TimeInterval = 30
     static let maximumDeviceCount = 32
     static let maximumNameByteCount = 64
 

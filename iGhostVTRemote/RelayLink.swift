@@ -384,11 +384,11 @@ final class RelaySplice {
     private var lastActivity = Date()
 
     private static let chunkByteCount = 64 * 1024
-    /// A device pings a quiet relayed link every
-    /// `RemoteAccess.relayedPingInterval`, so a splice that carried nothing
-    /// for this long is dead end to end, whatever TCP says — a proxy on the
-    /// way keeps answering keepalive for a relay that is gone.
-    static let idleLimit = RemoteAccess.relayedSilenceLimit + 15
+    /// A device pings a quiet link every `RemoteAccess.linkPingInterval`,
+    /// so a splice that carried nothing for this long is dead end to end,
+    /// whatever TCP says — a proxy on the way keeps answering keepalive
+    /// for a relay that is gone.
+    static let idleLimit = RemoteAccess.deviceSilenceLimit + 15
 
     /// `first` is already started (on `queue`); `second` is not.
     init(_ first: NWConnection, _ second: NWConnection, queue: DispatchQueue) {

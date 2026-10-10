@@ -50,6 +50,8 @@ final class RemoteService: RelayLinkHost {
     /// Device connections that ended still holding terminals, kept for
     /// `RemoteAccess.reconnectGraceSeconds` (`RemoteClient.linger`).
     private var lingering: [ObjectIdentifier: RemoteClient] = [:]
+    /// Accepted past the handshake limit, not started yet, oldest first.
+    private var waiting: [(connection: NWConnection, address: String, viaRelay: Bool, since: Date)] = []
     private var anchor: xpc_connection_t?
 
     /// An open pairing window: one code, a few attempts, and the failed
@@ -345,15 +347,47 @@ final class RemoteService: RelayLinkHost {
                 return
             }
         }
-        let unauthenticated = clients.values.filter { !$0.isAuthenticated && $0.viaRelay == viaRelay }.count
-        guard unauthenticated < RemoteAccess.maximumUnauthenticatedConnections else {
-            RemoteLog.log("refused \(address): too many connections still handshaking")
-            connection.cancel()
+        guard hasHandshakeSlot(viaRelay: viaRelay) else {
+            guard waiting.filter({ $0.viaRelay == viaRelay }).count < RemoteAccess.maximumWaitingConnections else {
+                RemoteLog.log("refused \(address): too many connections still handshaking")
+                connection.cancel()
+                return
+            }
+            waiting.append((connection, address, viaRelay, Date()))
+            queue.asyncAfter(deadline: .now() + RemoteAccess.handshakeTimeoutSeconds) { [weak self] in
+                guard let self, let index = waiting.firstIndex(where: { $0.connection === connection }) else { return }
+                waiting.remove(at: index)
+                RemoteLog.log("refused \(address): waited \(Int(RemoteAccess.handshakeTimeoutSeconds)) s for a handshake slot")
+                connection.cancel()
+            }
             return
         }
+        start(connection, address: address, viaRelay: viaRelay)
+    }
+
+    private func hasHandshakeSlot(viaRelay: Bool) -> Bool {
+        clients.values.filter { !$0.isAuthenticated && $0.viaRelay == viaRelay }.count
+            < RemoteAccess.maximumUnauthenticatedConnections
+    }
+
+    private func start(_ connection: NWConnection, address: String, viaRelay: Bool) {
         let client = RemoteClient(connection: connection, address: address, viaRelay: viaRelay, service: self)
         clients[ObjectIdentifier(client)] = client
         client.start()
+    }
+
+    /// A handshake slot came free: a client proved itself, or left.
+    func handshakeEnded() {
+        var index = 0
+        while index < waiting.count {
+            let next = waiting[index]
+            guard hasHandshakeSlot(viaRelay: next.viaRelay) else {
+                index += 1
+                continue
+            }
+            waiting.remove(at: index)
+            start(next.connection, address: next.address, viaRelay: next.viaRelay)
+        }
     }
 
     /// The connection of `deviceID`, other than `client`, that holds
@@ -375,6 +409,7 @@ final class RemoteService: RelayLinkHost {
 
     func clientClosed(_ client: RemoteClient) {
         clients.removeValue(forKey: ObjectIdentifier(client))
+        handshakeEnded()
         if pairing?.activeClient == ObjectIdentifier(client) {
             // Started and never finished: a guess was spent all the same.
             recordPairingFailure(address: client.address, reason: "abandoned")
