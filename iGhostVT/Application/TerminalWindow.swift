@@ -24,6 +24,7 @@ final class WindowInterfaceState: ObservableObject {
 
     /// Settings, opened on Remote Access: where Ghost Remote sends a new
     /// tab with no paired device to open on.
+    @MainActor
     func showRemoteAccess() {
         SettingsSheet.remoteAccessRequest.send(true)
         showsSettingsSheet = true

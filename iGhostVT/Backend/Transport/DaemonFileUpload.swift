@@ -100,7 +100,7 @@ final class DaemonFileUpload: @unchecked Sendable {
     // MARK: - Stages
 
     private func begin() async throws -> String {
-        var lastProgress = Date()
+        let lastProgress = Date()
         var attempt = 0
         while true {
             try Task.checkCancellation()

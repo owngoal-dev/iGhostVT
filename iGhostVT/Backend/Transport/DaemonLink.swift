@@ -287,7 +287,8 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
             queue: nil,
         ) { [weak self] note in
             let isSatisfied = note.userInfo?[NetworkPathWatcher.isSatisfiedKey] as? Bool ?? true
-            self?.queue.async { self?.networkChanged(isSatisfied: isSatisfied) }
+            guard let link = self else { return }
+            link.queue.async { [weak link] in link?.networkChanged(isSatisfied: isSatisfied) }
         }
     }
 
