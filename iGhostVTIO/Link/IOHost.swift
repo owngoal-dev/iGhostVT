@@ -23,6 +23,8 @@ final class IOHost {
     private lazy var registry = SessionRegistry(queue: queue)
     /// Not any peer's: a link that drops mid-file resumes as another.
     private(set) lazy var uploads = FileUploadStore(queue: queue)
+    /// The Mac's own update, whichever peer asked for it.
+    let updater = MacUpdater()
     private var peers: [UInt64: PeerSession] = [:]
     private var isOutputPaused = false
 
@@ -91,6 +93,12 @@ final class IOHost {
             peer.handle(message, tag: header.tag)
         case .peerGone:
             removePeer(header.peer)
+            // What is still queued for it would only be read and dropped
+            // by the proxy, and holds every other session paused meanwhile.
+            let freed = channel.discardQueuedFrames(forPeer: header.peer)
+            if freed > 0 {
+                DaemonFileLog.log("peer \(header.peer) gone, \(freed) queued bytes for it dropped")
+            }
         case .reply, .event:
             DaemonFileLog.log("proxy sent a \(header.kind) frame, ignored")
         }

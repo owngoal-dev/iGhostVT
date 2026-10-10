@@ -5,7 +5,8 @@
 #   sudo mac-install.sh [--user NAME] [--tag vX.Y.Z | --zip PATH]
 #                       [--relay FILE.vtrpsc] [--pair] [--no-open-at-login]
 #
-# Root is used for one thing: putting the bundle in /Applications. Every
+# Root is used for one thing: putting the bundle in /Applications, owned by
+# the user so later updates install themselves (`ighostvt-cli update`). Every
 # other step runs as the user iGhostVT is for, through the same doors the
 # app and `ighostvt-cli` use — the helper is that user's own LaunchAgent and
 # admits nobody else, and the relay file is that user's, so nothing here
@@ -79,6 +80,7 @@ case "$user" in
 root | "" | loginwindow | _*) die "name the user iGhostVT is for with --user" ;;
 esac
 uid="$(id -u "$user" 2>/dev/null)" || die "no user named $user"
+gid="$(id -g "$user")"
 home="$(dscl . -read "/Users/$user" NFSHomeDirectory 2>/dev/null | sed -n 's/^NFSHomeDirectory: //p')"
 [[ -d "$home" ]] || die "$user has no home directory"
 
@@ -147,6 +149,11 @@ installed_version=""
 
 if [[ "$installed_version" == "$new_version" ]]; then
     echo "==> $new_version is already installed"
+    # A copy an earlier run left root's could never update itself.
+    if [[ "$(stat -f %u "$dest")" != "$uid" ]]; then
+        echo "==> handing $dest to $user, so it can update itself"
+        chown -R "$uid:$gid" "$dest"
+    fi
 else
     if [[ -n "$installed_version" ]]; then
         # The same sequence as mac-update-from-github.sh: the app quits,
@@ -171,7 +178,14 @@ else
     echo "==> installing $new_version at $dest"
     rm -rf "$dest"
     ditto --norsrc --noextattr --noqtn "$app" "$dest"
-    chown -R root:wheel "$dest"
+    # Nothing the download or the unpack left may ride along: a quarantine
+    # flag has Gatekeeper translocate the first launch, which registers the
+    # helper from a mount that is gone by the next.
+    xattr -cr "$dest"
+    # The user's, as a copy dragged into Applications is: the app updates
+    # itself (`hostUpdate`, from its menu, `ighostvt-cli update` or a paired
+    # device) as that user, and could not replace a bundle root owns.
+    chown -R "$uid:$gid" "$dest"
     lsregister="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
     [[ ! -x "$lsregister" ]] || as_user "$lsregister" -f "$dest" || true
 fi

@@ -179,10 +179,9 @@ enum RemoteAccess {
     /// After the device's network changes, the app pings every link and
     /// gives up one the host has not answered on within this long.
     static let pathChangeReplyLimit: TimeInterval = 5
-    /// The host drops a relayed device it has heard nothing from for this
-    /// long — a phone that went to sleep is one, and reattaches when it
-    /// wakes. Six of this app's pings; still twice the 15 s interval the
-    /// 1.4 apps before 1.4.19 ping at, which talk to this host too.
+    /// The host drops a device it has heard nothing from for this long,
+    /// direct or relayed — a phone that went to sleep is one, and
+    /// reattaches when it wakes. Six of this app's pings.
     static let deviceSilenceLimit: TimeInterval = 30
     static let maximumDeviceCount = 32
     static let maximumNameByteCount = 64

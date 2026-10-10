@@ -87,6 +87,421 @@
         }
       }
     },
+    "%@ did not answer. Check that it is on and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يستجب %@. تأكد من أنه قيد التشغيل وحاول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ hat nicht geantwortet. Prüfe, ob es eingeschaltet ist, und versuche es erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ did not answer. Check that it is on and try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no respondió. Comprueba que esté encendido e inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’a pas répondu. Vérifiez qu’il est allumé et réessayez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ non ha risposto. Controlla che sia acceso e riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@が応答しませんでした。電源が入っていることを確認して、もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@이(가) 응답하지 않았습니다. 켜져 있는지 확인하고 다시 시도하세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não respondeu. Verifique se está ligado e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ не отвечает. Убедитесь, что устройство включено, и повторите попытку."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ không phản hồi. Hãy kiểm tra thiết bị đang bật rồi thử lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 没有响应。请确认它已开机，然后重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 沒有回應。請確認它已開機，然後再試一次。"
+          }
+        }
+      }
+    },
+    "%@ is restarting iGhostVT. Its terminals ended; open new ones once it is back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعيد %@ تشغيل iGhostVT. انتهت طرفياته؛ افتح طرفيات جديدة عندما يعود."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ startet iGhostVT neu. Seine Terminals wurden beendet; öffne neue, sobald es wieder da ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is restarting iGhostVT. Its terminals ended; open new ones once it is back."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está reiniciando iGhostVT. Sus terminales se cerraron; abre otros nuevos cuando vuelva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ relance iGhostVT. Ses terminaux ont été fermés ; ouvrez-en de nouveaux une fois qu’il est de retour."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sta riavviando iGhostVT. I suoi terminali sono stati chiusi; aprine di nuovi quando torna disponibile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@はiGhostVTを再起動しています。ターミナルは終了したため、戻ったら新しく開いてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@이(가) iGhostVT를 다시 시작하는 중입니다. 터미널이 종료되었으니 다시 연결되면 새로 여세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está reiniciando o iGhostVT. Os terminais dele foram encerrados; abra novos quando ele voltar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ перезапускает iGhostVT. Его терминалы закрыты; откройте новые, когда устройство снова станет доступно."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ đang khởi động lại iGhostVT. Các terminal của nó đã kết thúc; hãy mở terminal mới khi thiết bị trở lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 正在重新启动 iGhostVT。它的终端已结束，等它恢复后再打开新的终端。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 正在重新啟動 iGhostVT。它的終端機已結束，等它恢復後再開啟新的終端機。"
+          }
+        }
+      }
+    },
+    "%@ runs iGhostVT %@, the latest version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعمل %1$@ بالإصدار %2$@ من iGhostVT، وهو أحدث إصدار."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ verwendet iGhostVT %2$@, die neueste Version."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ runs iGhostVT %@, the latest version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ tiene iGhostVT %2$@, la versión más reciente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ utilise iGhostVT %2$@, la dernière version."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usa iGhostVT %2$@, la versione più recente."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@はiGhostVT %2$@（最新バージョン）です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@은(는) 최신 버전인 iGhostVT %2$@을(를) 사용 중입니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usa o iGhostVT %2$@, a versão mais recente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На %1$@ установлена iGhostVT %2$@ — последняя версия."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ đang chạy iGhostVT %2$@, phiên bản mới nhất."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 运行的是 iGhostVT %2$@，已是最新版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 執行的是 iGhostVT %2$@，已是最新版本。"
+          }
+        }
+      }
+    },
+    "%@ runs iGhostVT %@. It downloads the notarized update, installs it only if it is signed by the same team, and relaunches iGhostVT. Every terminal on %@ ends." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعمل %1$@ بالإصدار %2$@ من iGhostVT. سيُنزّل التحديث الموثّق، ويثبّته فقط إذا كان موقّعًا من الفريق نفسه، ثم يعيد فتح iGhostVT. ستنتهي كل الطرفيات على %3$@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ verwendet iGhostVT %2$@. Es lädt das notarisierte Update, installiert es nur, wenn es vom selben Team signiert ist, und startet iGhostVT neu. Alle Terminals auf %3$@ werden beendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ runs iGhostVT %@. It downloads the notarized update, installs it only if it is signed by the same team, and relaunches iGhostVT. Every terminal on %@ ends."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ tiene iGhostVT %2$@. Descarga la actualización notarizada, solo la instala si está firmada por el mismo equipo y vuelve a abrir iGhostVT. Todos los terminales de %3$@ se cerrarán."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ utilise iGhostVT %2$@. Il télécharge la mise à jour notarisée, ne l’installe que si elle est signée par la même équipe, puis relance iGhostVT. Tous les terminaux de %3$@ se fermeront."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usa iGhostVT %2$@. Scarica l’aggiornamento autenticato, lo installa solo se è firmato dallo stesso team e riapre iGhostVT. Tutti i terminali su %3$@ verranno chiusi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@はiGhostVT %2$@です。公証済みのアップデートをダウンロードし、同じチームの署名がある場合にのみインストールして、iGhostVTを再起動します。%3$@のターミナルはすべて終了します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@은(는) iGhostVT %2$@을(를) 사용 중입니다. 공증된 업데이트를 다운로드하고, 같은 팀이 서명한 경우에만 설치한 다음 iGhostVT를 다시 엽니다. %3$@의 모든 터미널이 종료됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usa o iGhostVT %2$@. Ele baixa a atualização notarizada, só a instala se estiver assinada pela mesma equipe e reabre o iGhostVT. Todos os terminais em %3$@ serão encerrados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На %1$@ установлена iGhostVT %2$@. Устройство загрузит нотариально заверенное обновление, установит его, только если оно подписано той же командой, и перезапустит iGhostVT. Все терминалы на %3$@ будут закрыты."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ đang chạy iGhostVT %2$@. Thiết bị sẽ tải bản cập nhật đã công chứng, chỉ cài nếu được ký bởi cùng một nhóm, rồi mở lại iGhostVT. Mọi terminal trên %3$@ sẽ kết thúc."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 运行的是 iGhostVT %2$@。它会下载经过公证的更新，仅在签名来自同一团队时安装，然后重新打开 iGhostVT。%3$@ 上的所有终端都会结束。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 執行的是 iGhostVT %2$@。它會下載經過公證的更新，僅在簽名來自同一團隊時安裝，然後重新開啟 iGhostVT。%3$@ 上的所有終端機都會結束。"
+          }
+        }
+      }
+    },
+    "%@ stopped answering while it installed iGhostVT %@. It is most likely restarting iGhostVT; open new terminals once it is back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "توقف %1$@ عن الاستجابة أثناء تثبيت iGhostVT %2$@. على الأرجح يعيد تشغيل iGhostVT؛ افتح طرفيات جديدة عندما يعود."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ antwortet nicht mehr, während es iGhostVT %2$@ installiert. Wahrscheinlich startet es iGhostVT neu; öffne neue Terminals, sobald es wieder da ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ stopped answering while it installed iGhostVT %@. It is most likely restarting iGhostVT; open new terminals once it is back."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ dejó de responder mientras instalaba iGhostVT %2$@. Lo más probable es que esté reiniciando iGhostVT; abre terminales nuevos cuando vuelva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ne répond plus pendant l’installation d’iGhostVT %2$@. Il relance probablement iGhostVT ; ouvrez de nouveaux terminaux une fois qu’il est de retour."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ha smesso di rispondere durante l’installazione di iGhostVT %2$@. Probabilmente sta riavviando iGhostVT; apri nuovi terminali quando torna disponibile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@はiGhostVT %2$@のインストール中に応答しなくなりました。iGhostVTを再起動している可能性が高いため、戻ったら新しいターミナルを開いてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@이(가) iGhostVT %2$@을(를) 설치하는 동안 응답을 멈췄습니다. iGhostVT를 다시 시작하는 중일 가능성이 높습니다. 다시 연결되면 새 터미널을 여세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ parou de responder enquanto instalava o iGhostVT %2$@. Provavelmente está reiniciando o iGhostVT; abra novos terminais quando ele voltar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ перестало отвечать во время установки iGhostVT %2$@. Скорее всего, iGhostVT перезапускается; откройте новые терминалы, когда устройство снова станет доступно."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ngừng phản hồi khi đang cài iGhostVT %2$@. Nhiều khả năng thiết bị đang khởi động lại iGhostVT; hãy mở terminal mới khi thiết bị trở lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 在安装 iGhostVT %2$@ 时停止了响应，很可能正在重新启动 iGhostVT。等它恢复后再打开新的终端。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 在安裝 iGhostVT %2$@ 時停止了回應，很可能正在重新啟動 iGhostVT。等它恢復後再開啟新的終端機。"
+          }
+        }
+      }
+    },
     "%lld" : {
       "localizations" : {
         "de" : {
@@ -1300,6 +1715,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自訂按鍵將輸入所設定的字元，並結合目前啟用的修飾鍵。"
+          }
+        }
+      }
+    },
+    "A Mac installs the latest iGhostVT on its own and restarts it, which ends its terminals. A jailbroken device updates through its package manager." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يثبّت جهاز Mac أحدث إصدار من iGhostVT بنفسه ويعيد تشغيله، ما يُنهي طرفياته. أما الجهاز المكسور الحماية فيُحدَّث عبر مدير الحزم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Mac installiert das neueste iGhostVT selbst und startet es neu, wodurch seine Terminals beendet werden. Ein Gerät mit Jailbreak wird über seinen Paketmanager aktualisiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Mac installs the latest iGhostVT on its own and restarts it, which ends its terminals. A jailbroken device updates through its package manager."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Mac instala por sí mismo la versión más reciente de iGhostVT y la reinicia, lo que cierra sus terminales. Un dispositivo con jailbreak se actualiza con su gestor de paquetes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Mac installe lui-même la dernière version d’iGhostVT et la relance, ce qui ferme ses terminaux. Un appareil jailbreaké se met à jour avec son gestionnaire de paquets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Mac installa da sé l’ultima versione di iGhostVT e la riavvia, chiudendo i suoi terminali. Un dispositivo con jailbreak si aggiorna tramite il suo gestore di pacchetti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macは最新のiGhostVTを自分でインストールして再起動するため、そのMacのターミナルは終了します。脱獄済みデバイスはパッケージマネージャでアップデートします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac은 최신 iGhostVT를 직접 설치하고 다시 시작하며, 이때 터미널이 종료됩니다. 탈옥된 기기는 패키지 관리자로 업데이트합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um Mac instala sozinho a versão mais recente do iGhostVT e a reinicia, o que encerra os terminais dele. Um dispositivo com jailbreak é atualizado pelo gerenciador de pacotes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac сам устанавливает последнюю версию iGhostVT и перезапускает её, при этом его терминалы закрываются. Устройство с джейлбрейком обновляется через менеджер пакетов."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy Mac tự cài iGhostVT mới nhất và khởi động lại, khiến các terminal của nó kết thúc. Thiết bị đã jailbreak được cập nhật qua trình quản lý gói."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 会自行安装最新的 iGhostVT 并重新启动，它上面的终端会因此结束。越狱设备通过包管理器更新。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 會自行安裝最新的 iGhostVT 並重新啟動，它上面的終端機會因此結束。越獄裝置透過套件管理器更新。"
           }
         }
       }
@@ -4533,6 +5031,89 @@
         }
       }
     },
+    "Check for Update" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث عن تحديث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Update suchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Update"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar actualización"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher une mise à jour"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca aggiornamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 확인"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar atualização"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить обновление"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiểm tra cập nhật"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查更新"
+          }
+        }
+      }
+    },
     "Check for Updates" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4779,6 +5360,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在檢查更新項目…"
+          }
+        }
+      }
+    },
+    "Checking the Signature" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ التحقق من التوقيع"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signatur wird geprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking the Signature"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando la firma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification de la signature"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica della firma"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "署名を確認しています"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서명 확인 중"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando a assinatura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка подписи"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang kiểm tra chữ ký"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查签名"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在檢查簽名"
           }
         }
       }
@@ -13655,6 +14319,172 @@
         }
       }
     },
+    "iGhostVT %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@"
+          }
+        }
+      }
+    },
+    "iGhostVT %@ Installed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تثبيت iGhostVT %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ installiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ Installed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ instalado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ installé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ installato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@をインストールしました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ 설치됨"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ instalado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ установлена"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã cài iGhostVT %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装 iGhostVT %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安裝 iGhostVT %@"
+          }
+        }
+      }
+    },
     "iGhostVT %@ is out, but it has no package for this jailbreak." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14065,6 +14895,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iGhostVT 無法開啟視窗。請再試一次。"
+          }
+        }
+      }
+    },
+    "iGhostVT downloads the notarized update, installs it only if it is signed by the same team, and relaunches. Every terminal on this Mac ends." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيُنزّل iGhostVT التحديث الموثّق، ويثبّته فقط إذا كان موقّعًا من الفريق نفسه، ثم يعيد فتح نفسه. ستنتهي كل الطرفيات على هذا الـ Mac."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT lädt das notarisierte Update, installiert es nur, wenn es vom selben Team signiert ist, und startet neu. Alle Terminals auf diesem Mac werden beendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT downloads the notarized update, installs it only if it is signed by the same team, and relaunches. Every terminal on this Mac ends."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT descarga la actualización notarizada, solo la instala si está firmada por el mismo equipo y se vuelve a abrir. Todos los terminales de este Mac se cerrarán."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT télécharge la mise à jour notarisée, ne l’installe que si elle est signée par la même équipe, puis se relance. Tous les terminaux de ce Mac se fermeront."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT scarica l’aggiornamento autenticato, lo installa solo se è firmato dallo stesso team e si riapre. Tutti i terminali su questo Mac verranno chiusi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVTは公証済みのアップデートをダウンロードし、同じチームの署名がある場合にのみインストールして再起動します。このMacのターミナルはすべて終了します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT가 공증된 업데이트를 다운로드하고, 같은 팀이 서명한 경우에만 설치한 다음 다시 열립니다. 이 Mac의 모든 터미널이 종료됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O iGhostVT baixa a atualização notarizada, só a instala se estiver assinada pela mesma equipe e reabre. Todos os terminais deste Mac serão encerrados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT загрузит нотариально заверенное обновление, установит его, только если оно подписано той же командой, и перезапустится. Все терминалы на этом Mac будут закрыты."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT sẽ tải bản cập nhật đã công chứng, chỉ cài nếu được ký bởi cùng một nhóm, rồi mở lại. Mọi terminal trên máy Mac này sẽ kết thúc."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT 会下载经过公证的更新，仅在签名来自同一团队时安装，然后重新打开。这台 Mac 上的所有终端都会结束。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT 會下載經過公證的更新，僅在簽名來自同一團隊時安裝，然後重新開啟。這台 Mac 上的所有終端機都會結束。"
           }
         }
       }
@@ -14890,6 +15803,338 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸入"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝"
+          }
+        }
+      }
+    },
+    "Install iGhostVT %@ on %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد تثبيت iGhostVT %1$@ على %2$@؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %1$@ auf %2$@ installieren?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install iGhostVT %@ on %@?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Instalar iGhostVT %1$@ en %2$@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer iGhostVT %1$@ sur %2$@ ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installare iGhostVT %1$@ su %2$@?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@にiGhostVT %1$@をインストールしますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@에 iGhostVT %1$@을(를) 설치하겠습니까?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar o iGhostVT %1$@ em %2$@?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить iGhostVT %1$@ на %2$@?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài iGhostVT %1$@ trên %2$@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要在 %2$@ 上安装 iGhostVT %1$@ 吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要在 %2$@ 上安裝 iGhostVT %1$@ 嗎？"
+          }
+        }
+      }
+    },
+    "Install iGhostVT %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد تثبيت iGhostVT %@؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ installieren?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install iGhostVT %@?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Instalar iGhostVT %@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer iGhostVT %@ ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installare iGhostVT %@?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@をインストールしますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@을(를) 설치하겠습니까?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar o iGhostVT %@?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить iGhostVT %@?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài iGhostVT %@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要安装 iGhostVT %@ 吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要安裝 iGhostVT %@ 嗎？"
+          }
+        }
+      }
+    },
+    "Installing iGhostVT %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تثبيت iGhostVT %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ wird installiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing iGhostVT %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalando iGhostVT %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation d’iGhostVT %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installazione di iGhostVT %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@をインストールしています"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT %@ 설치 중"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalando o iGhostVT %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установка iGhostVT %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang cài iGhostVT %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安装 iGhostVT %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安裝 iGhostVT %@"
           }
         }
       }
@@ -24413,6 +25658,89 @@
         }
       }
     },
+    "Quit iGhostVT and open it again to use the new version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنهِ iGhostVT ثم افتحه مرة أخرى لاستخدام الإصدار الجديد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beende iGhostVT und öffne es erneut, um die neue Version zu verwenden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit iGhostVT and open it again to use the new version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierra iGhostVT y vuelve a abrirlo para usar la nueva versión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quittez iGhostVT puis rouvrez-le pour utiliser la nouvelle version."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esci da iGhostVT e riaprilo per usare la nuova versione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいバージョンを使うには、iGhostVTを終了してからもう一度開いてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 버전을 사용하려면 iGhostVT를 종료한 다음 다시 여세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerre o iGhostVT e abra-o novamente para usar a nova versão."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закройте iGhostVT и откройте снова, чтобы использовать новую версию."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thoát iGhostVT rồi mở lại để dùng phiên bản mới."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 iGhostVT 并重新打开以使用新版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束 iGhostVT 並重新開啟以使用新版本。"
+          }
+        }
+      }
+    },
     "Recent" : {
       "comment" : "Menu section: directories sessions have been in before",
       "localizations" : {
@@ -25817,6 +27145,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "調整側邊欄大小"
+          }
+        }
+      }
+    },
+    "Restarting iGhostVT…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ إعادة تشغيل iGhostVT…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT wird neu gestartet …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restarting iGhostVT…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciando iGhostVT…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relance d’iGhostVT…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvio di iGhostVT…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVTを再起動しています…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iGhostVT 다시 시작 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciando o iGhostVT…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапуск iGhostVT…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang khởi động lại iGhostVT…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重新启动 iGhostVT…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重新啟動 iGhostVT…"
           }
         }
       }
@@ -32463,6 +33874,89 @@
         }
       }
     },
+    "the other device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجهاز الآخر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "das andere Gerät"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the other device"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el otro dispositivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l’autre appareil"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l’altro dispositivo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一方のデバイス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다른 기기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "o outro dispositivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "другое устройство"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "thiết bị kia"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一台设备"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一台裝置"
+          }
+        }
+      }
+    },
     "The other device could not take the file." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32876,89 +34370,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "另一部裝置沒有回應。"
-          }
-        }
-      }
-    },
-    "The other device's iGhostVT is too old to receive files. Update it there." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إصدار iGhostVT على الجهاز الآخر قديم جدًا لاستلام الملفات. حدّثه هناك."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT auf dem anderen Gerät ist zu alt, um Dateien zu empfangen. Aktualisiere es dort."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The other device's iGhostVT is too old to receive files. Update it there."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La versión de iGhostVT del otro dispositivo es demasiado antigua para recibir archivos. Actualízala allí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT sur l’autre appareil est trop ancien pour recevoir des fichiers. Mettez-le à jour sur cet appareil."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT sull’altro dispositivo è troppo vecchio per ricevere file. Aggiornalo lì."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "相手のデバイスの iGhostVT が古いため、ファイルを受信できません。そちらでアップデートしてください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "상대 기기의 iGhostVT가 오래되어 파일을 받을 수 없습니다. 해당 기기에서 업데이트하세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O iGhostVT do outro dispositivo é antigo demais para receber arquivos. Atualize-o lá."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT на другом устройстве слишком старый для приёма файлов. Обновите его там."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iGhostVT trên thiết bị kia quá cũ để nhận tệp. Hãy cập nhật trên thiết bị đó."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "另一台设备上的 iGhostVT 版本过旧，无法接收文件。请在该设备上更新。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "另一部裝置上的 iGhostVT 版本過舊，無法接收檔案。請在該裝置上更新。"
           }
         }
       }
@@ -34121,6 +35532,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "終端機未能連線。"
+          }
+        }
+      }
+    },
+    "The terminal helper did not answer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يستجب مساعد الطرفية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Terminal-Helfer hat nicht geantwortet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The terminal helper did not answer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El asistente del terminal no respondió."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’assistant du terminal n’a pas répondu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’helper del terminale non ha risposto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ターミナルヘルパーが応答しませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "터미널 도우미가 응답하지 않았습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O auxiliar do terminal não respondeu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помощник терминала не отвечает."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trình trợ giúp terminal không phản hồi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终端助手没有响应。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終端機輔助程式沒有回應。"
           }
         }
       }
@@ -36772,6 +38266,89 @@
         }
       }
     },
+    "Unable to Install the Update" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تثبيت التحديث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update konnte nicht installiert werden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Install the Update"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo instalar la actualización"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’installer la mise à jour"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile installare l’aggiornamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートをインストールできません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트를 설치할 수 없음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível instalar a atualização"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось установить обновление"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể cài bản cập nhật"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法安装更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法安裝更新"
+          }
+        }
+      }
+    },
     "Unable to move iGhostVT to Applications. Move it there in Finder, then open it again." : {
       "comment" : "Mac agent error when moving the app bundle fails",
       "localizations" : {
@@ -38016,6 +39593,89 @@
         }
       }
     },
+    "Update Sent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أُرسل التحديث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update gesendet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Sent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualización enviada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour envoyée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento inviato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを送信しました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 전송됨"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualização enviada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление отправлено"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã gửi cập nhật"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已发送更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已傳送更新"
+          }
+        }
+      }
+    },
     "Update the Relay “%@”?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -38178,6 +39838,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新"
+          }
+        }
+      }
+    },
+    "Updates Not Available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحديثات غير متاحة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates nicht verfügbar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates Not Available"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizaciones no disponibles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour indisponibles"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti non disponibili"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを利用できません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트를 사용할 수 없음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizações indisponíveis"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновления недоступны"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có cập nhật"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法更新"
           }
         }
       }

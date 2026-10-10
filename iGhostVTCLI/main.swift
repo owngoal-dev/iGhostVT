@@ -19,6 +19,7 @@ usage: ighostvt-cli list
        ighostvt-cli remote revoke <device-id>
        ighostvt-cli remote name <name>
        ighostvt-cli remote relay (<file.vtrpsc> | --remove)
+       ighostvt-cli update [--check]
 
   list          show the daemon's sessions: id, foreground process, size,
                 whether it is attached, the tab's lock, and the shell's
@@ -43,6 +44,10 @@ usage: ighostvt-cli list
                 the device's own
     relay       use this relay configuration (Mac only), as importing it in
                 iGhostVT does; --remove stops using a relay
+  update        install the latest release over this copy (Mac only): the
+                notarized download, only when its signature names this
+                copy's team. iGhostVT relaunches and every session on the
+                Mac ends. --check only says whether there is one
 
 On the Mac, run it as the user iGhostVT runs for, never as root.
 """
@@ -55,6 +60,7 @@ enum Command {
     case new(command: [String])
     case kill(sessionID: UInt64)
     case remote(RemoteCommand)
+    case update(checkOnly: Bool)
 }
 
 func parseSessionID(_ text: String?, _ what: String) throws -> UInt64 {
@@ -121,6 +127,12 @@ func parse(_ arguments: [String]) throws -> Command {
         return try .kill(sessionID: parseSessionID(rest.first, "kill"))
     case "remote":
         return try .remote(parseRemote(rest))
+    case "update":
+        switch rest {
+        case []: return .update(checkOnly: false)
+        case ["--check"]: return .update(checkOnly: true)
+        default: throw CLIError.usage("The update command takes an optional --check.")
+        }
     case "-h", "--help", "help":
         return .help
     default:
@@ -202,6 +214,8 @@ do {
         try Commands.kill(sessionID: sessionID)
     case let .remote(command):
         try RemoteCommands.run(command)
+    case let .update(checkOnly):
+        try UpdateCommand.run(checkOnly: checkOnly)
     }
     exit(0)
 } catch {

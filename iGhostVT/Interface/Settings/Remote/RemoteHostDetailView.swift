@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// One paired device: name it, or forget it.
+/// One paired device: name it, update a Mac, or forget it.
 struct RemoteHostDetailView: View {
     let hostID: String
     @ObservedObject private var directory = RemoteHostDirectory.shared
@@ -39,6 +39,14 @@ struct RemoteHostDetailView: View {
                             SettingsValueText(title: "Address", value: address)
                         }
                     }
+                }
+                Section {
+                    Button("Check for Update") {
+                        HostUpdateFlow.run(endpoint: .remote(hostID: hostID), in: window)
+                    }
+                } footer: {
+                    Text("A Mac installs the latest iGhostVT on its own and restarts it, which ends its terminals. A jailbroken device updates through its package manager.")
+                        .font(DS.Font.detail)
                 }
                 Section {
                     Button("Forget This Device", role: .destructive, action: confirmForget)

@@ -119,7 +119,7 @@ final class DaemonFileUpload: @unchecked Sendable {
             }
             let code = Self.code(of: reply)
             guard code == .success, let path = xpc_dictionary_get_string(reply, iGhostVTWireKey.path) else {
-                throw Failure(message: Self.reason(reply, code: code, isBegin: true))
+                throw Failure(message: Self.reason(reply, code: code))
             }
             AppLog.info(.drop, "upload \(name): \(size) byte(s) to \(String(cString: path))")
             return String(cString: path)
@@ -148,7 +148,7 @@ final class DaemonFileUpload: @unchecked Sendable {
                 }
                 let code = Self.code(of: reply)
                 guard code == .success else {
-                    throw Failure(message: Self.reason(reply, code: code, isBegin: false))
+                    throw Failure(message: Self.reason(reply, code: code))
                 }
                 held = xpc_dictionary_get_uint64(reply, iGhostVTWireKey.offset)
                 mustAsk = false
@@ -253,7 +253,7 @@ final class DaemonFileUpload: @unchecked Sendable {
                         case .invalidRequest where xpc_dictionary_get_value(reply, iGhostVTWireKey.offset) != nil:
                             return .misaligned
                         default:
-                            return .refused(Self.reason(reply, code: code, isBegin: false))
+                            return .refused(Self.reason(reply, code: code))
                         }
                     }
                     inFlight += 1
@@ -429,16 +429,13 @@ final class DaemonFileUpload: @unchecked Sendable {
         iGhostVTReplyCode(rawValue: xpc_dictionary_get_int64(reply, iGhostVTWireKey.code)) ?? .operationFailed
     }
 
-    private static func reason(_ reply: xpc_object_t, code: iGhostVTReplyCode, isBegin: Bool) -> String {
+    private static func reason(_ reply: xpc_object_t, code: iGhostVTReplyCode) -> String {
         if let message = xpc_dictionary_get_string(reply, iGhostVTWireKey.errorMessage) {
             return String(cString: message)
         }
         switch code {
         case .unknownSession:
             return String(localized: "The other device gave up on the file.")
-        case .invalidRequest where isBegin:
-            // A daemon that has never heard of the operation says only this.
-            return String(localized: "The other device's iGhostVT is too old to receive files. Update it there.")
         default:
             return String(localized: "The other device could not take the file.")
         }

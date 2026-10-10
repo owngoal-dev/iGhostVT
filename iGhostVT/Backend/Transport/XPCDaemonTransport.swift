@@ -69,12 +69,6 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// ending passes through.
     private var retainedForDeferredEnd: XPCDaemonTransport?
 
-    /// The daemon predates session attributes: its replies carry none, or
-    /// it refused the request as one it does not know. Nothing more is sent
-    /// on this transport, and the tab's lock lives in memory alone. Confined
-    /// to `queue`.
-    private var isAttributeStoreMissing = false
-
     /// Absolute path of the shell to run, or `nil` to let the daemon pick.
     /// The daemon validates it (absolute, existing, executable) and rejects
     /// anything else — the app cannot talk it into running arbitrary bytes.
@@ -284,12 +278,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     }
 
     /// One `setSessionAttributes` over the link, answered on `queue`. The
-    /// app only ever sends the lock, which is well inside the limits, so an
-    /// `invalidRequest` means the daemon does not know the operation — an
-    /// older one — and the transport stops asking.
+    /// app only ever sends the lock and the title, well inside the limits.
     func setSessionAttributes(_ attributes: [String: String]) {
         queue.async {
-            guard !self.isAttributeStoreMissing else { return }
             guard let link = self.attachedLink() else {
                 AppLog.warning(.transport, "session attributes not sent: no attached session")
                 return
@@ -300,13 +291,10 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                 xpc_dictionary_set_string(dictionary, key, value)
             }
             xpc_dictionary_set_value(message, iGhostVTWireKey.attributes, dictionary)
-            link.connection.send(message) { [weak self] reply in
+            link.connection.send(message) { reply in
                 switch Self.replyCode(of: reply) {
                 case .success:
                     break
-                case .invalidRequest:
-                    self?.isAttributeStoreMissing = true
-                    AppLog.info(.transport, "the daemon keeps no session attributes; the lock stays in memory")
                 case let code:
                     AppLog.error(
                         .transport,
@@ -469,8 +457,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         let finished = FinishOnce<Value?>(completion)
         guard !AppEdition.isRemoteOnly,
               let rawConnection = iGhostVTProtocol.serviceName.withCString({
-            ighostvtCreateMachServiceConnection($0, queue, 0)
-        }) else {
+                  ighostvtCreateMachServiceConnection($0, queue, 0)
+              })
+        else {
             finished.finish(nil)
             return
         }
@@ -586,8 +575,8 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         let queue = DispatchQueue(label: "wiki.qaq.ighostvt.client.quit", qos: .userInitiated)
         guard !AppEdition.isRemoteOnly,
               let connection = iGhostVTProtocol.serviceName.withCString({
-            ighostvtCreateMachServiceConnection($0, queue, 0)
-        }) else { return }
+                  ighostvtCreateMachServiceConnection($0, queue, 0)
+              }) else { return }
         xpc_connection_set_event_handler(connection) { _ in }
         xpc_connection_activate(connection)
         let done = DispatchGroup()
@@ -987,7 +976,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
 
     // MARK: - Wire helpers
 
-    private static func makeMessage(_ operation: iGhostVTOperation) -> xpc_object_t {
+    static func makeMessage(_ operation: iGhostVTOperation) -> xpc_object_t {
         let message = xpc_dictionary_create(nil, nil, 0)
         xpc_dictionary_set_uint64(message, iGhostVTWireKey.version, iGhostVTProtocol.version)
         xpc_dictionary_set_uint64(message, iGhostVTWireKey.operation, operation.rawValue)
@@ -1000,7 +989,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         return message
     }
 
-    private static func replyCode(of reply: xpc_object_t) -> iGhostVTReplyCode {
+    static func replyCode(of reply: xpc_object_t) -> iGhostVTReplyCode {
         guard xpc_get_type(reply) == iGhostVTXPC.typeDictionary,
               xpc_dictionary_get_uint64(reply, iGhostVTWireKey.version) == iGhostVTProtocol.version,
               let code = iGhostVTReplyCode(
@@ -1015,10 +1004,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     }
 
     /// What a reply or event 102 says the session is doing: the foreground
-    /// process, and where its shell is. An older daemon sends no shell flag;
-    /// `get_bool` reads false for the missing key, which the app treats as
-    /// "something may be running" — the safe side. One that sends no
-    /// directory simply never moves the tab's.
+    /// process, and where its shell is. The directory is absent until the
+    /// daemon has read one (and from a session whose shell cannot be
+    /// read), which leaves the tab's where it was.
     private func emitSessionState(in dictionary: xpc_object_t) {
         if let name = Self.string(iGhostVTWireKey.processName, in: dictionary) {
             let isShell = xpc_dictionary_get_bool(dictionary, iGhostVTWireKey.foregroundIsShell)
@@ -1033,13 +1021,13 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     }
 
     /// What an open or attach reply says the daemon keeps on the session.
-    /// A reply without the key comes from a daemon older than the
-    /// attributes: nothing is emitted, and nothing will be sent to it.
+    /// Every reply on this protocol version carries the key; one without
+    /// it is a fault, logged, and changes nothing the tab holds.
     private func emitSessionAttributes(in reply: xpc_object_t, isResumed: Bool) {
         guard let dictionary = xpc_dictionary_get_value(reply, iGhostVTWireKey.attributes),
               xpc_get_type(dictionary) == iGhostVTXPC.typeDictionary
         else {
-            isAttributeStoreMissing = true
+            AppLog.error(.transport, "an open or attach reply carried no session attributes")
             return
         }
         var attributes: [String: String] = [:]

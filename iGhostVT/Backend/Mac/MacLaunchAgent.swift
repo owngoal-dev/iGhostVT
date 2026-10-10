@@ -6,6 +6,7 @@
 import Combine
 import CryptoKit
 import Foundation
+import notify
 
 #if targetEnvironment(macCatalyst)
     import ServiceManagement
@@ -89,6 +90,7 @@ final class MacLaunchAgent: ObservableObject {
             if status == .enabled || status == .notRegistered {
                 activate()
             }
+            watchForInstalledUpdate()
         #else
             status = .notApplicable
         #endif
@@ -439,6 +441,42 @@ final class MacLaunchAgent: ObservableObject {
             open(workspace, selector, url as NSURL, configuration, unsafeBitCast(completion, to: AnyObject.self))
             // In case LaunchServices never calls back.
             DispatchQueue.main.asyncAfter(deadline: .now() + 5) { exit(0) }
+        }
+
+        private var updateToken: Int32 = 0
+
+        /// The helper put an update in place (`hostUpdate`, from the menu or
+        /// a paired device): this copy's files are gone from under it, so it
+        /// relaunches into the new one, whose launch rebinds the helper —
+        /// the digest changed — which restarts it from the new bundle.
+        private func watchForInstalledUpdate() {
+            notify_register_dispatch(iGhostVTProtocol.updateInstalledNotification, &updateToken, .main) { _ in
+                MainActor.assumeIsolated {
+                    // Anyone can post a notify name: relaunch only when the
+                    // copy on disk really is another build than this one.
+                    guard Self.isInApplications, Self.bundleOnDiskIsAnotherBuild else { return }
+                    AppLog.info(.app, "an update is in place; relaunching into it")
+                    UpdateNotice.shared.isRelaunching = true
+                    // What `applicationWillTerminate` would have kept, since
+                    // the relaunch exits without it: the remote tabs for the
+                    // new copy to reopen. The local sessions end with the
+                    // helper's restart either way, and the new copy sweeps
+                    // the temporary files as it starts.
+                    RemoteTabLedger.save(ShortcutBridge.tabManagers())
+                    Self.relaunch(from: Bundle.main.bundleURL)
+                }
+            }
+        }
+
+        /// Whether the bundle's `Info.plist` on disk names another version
+        /// or build than the one this process loaded.
+        private static var bundleOnDiskIsAnotherBuild: Bool {
+            let plist = Bundle.main.bundleURL.appendingPathComponent("Contents/Info.plist")
+            guard let onDisk = NSDictionary(contentsOf: plist) else { return false }
+            let keys = ["CFBundleShortVersionString", "CFBundleVersion"]
+            return keys.contains { key in
+                (onDisk[key] as? String) != (Bundle.main.object(forInfoDictionaryKey: key) as? String)
+            }
         }
 
         /// SHA-256 of the helper binary in this bundle, or nil when there is

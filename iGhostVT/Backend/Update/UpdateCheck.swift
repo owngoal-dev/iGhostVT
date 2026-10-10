@@ -12,11 +12,10 @@ import UIKit
 /// install. On a device that is the deb for this bootstrap — Settings ▸
 /// Advanced, an alert with the progress and Cancel while it runs, then the
 /// share sheet, which hands the package to a package manager before the APT
-/// repository serves it. On the Mac it is the notarized zip — the
-/// application menu's item, whose title is the progress, then the zip in
-/// Downloads shown in the Finder. Any other answer is an alert. Nothing is
-/// installed here and nothing is spawned; putting the new copy in place
-/// stays the person's step.
+/// repository serves it. On the Mac the helper installs the update itself
+/// (`HostUpdateFlow`, `MacUpdater`); only a copy that cannot update itself
+/// gets the notarized zip in Downloads, shown in the Finder. Any other
+/// answer is an alert. Nothing is installed or spawned by the app.
 ///
 /// Files are found by their release asset names, the ones `Scripts/release.sh`
 /// checks, and kept only when their bytes match the SHA-256 GitHub reports
@@ -67,7 +66,38 @@ final class UpdateCheck: ObservableObject {
 
     /// Runs a check. `window` is where its alerts go; the Mac's menu item
     /// has none and uses the key window.
+    ///
+    /// On the Mac the helper does it (`HostUpdateFlow`): it checks, and on
+    /// the person's word installs the notarized copy over this one and has
+    /// the app relaunch. A copy that cannot update itself — ad-hoc signed,
+    /// installed by an administrator — or a helper that does not answer
+    /// falls back to the download below.
     func check(in window: UIWindow? = nil) {
+        guard work == nil else { return }
+        #if targetEnvironment(macCatalyst)
+            guard !HostUpdateFlow.isRunning(.local) else { return }
+            phase = .checking
+            HostUpdateFlow.run(
+                endpoint: .local,
+                in: window ?? Self.keyWindow,
+                unsupported: { [weak self] reason in
+                    AppLog.info(.app, "update check: the helper does not install here (\(reason ?? "no answer")); downloading instead")
+                    self?.download(in: window)
+                },
+                finished: { [weak self] in
+                    if self?.work == nil {
+                        self?.phase = .idle
+                    }
+                },
+            )
+        #else
+            download(in: window)
+        #endif
+    }
+
+    /// The download: the deb for this bootstrap on a device, the notarized
+    /// zip in Downloads on a Mac that does not update itself.
+    private func download(in window: UIWindow?) {
         guard work == nil else { return }
         #if !targetEnvironment(macCatalyst)
             let content = AlertViewController.Content(
@@ -271,7 +301,9 @@ final class UpdateCheck: ObservableObject {
             // The file at `location` is removed once this returns, so it is
             // checked and moved here.
             completion(Result {
-                if let error { throw error }
+                if let error {
+                    throw error
+                }
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                 guard let location, status == 200 else { throw UpdateCheckError.unexpectedResponse(status) }
                 guard try checksum(of: location) == sha256 else { throw UpdateCheckError.checksumMismatch }
@@ -515,4 +547,3 @@ private enum UpdateCheckError: LocalizedError {
         }
     }
 }
-

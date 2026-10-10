@@ -35,6 +35,10 @@ final class IOChannel {
     private var inbound: [UInt8] = []
     private var outbound: [UInt8] = []
     private var outboundOffset = 0
+    /// A frame boundary at or past `outboundOffset`: every frame from here
+    /// on is whole and none of it has been written. Moved forward lazily
+    /// (`advanceUnstartedBoundary`) — only `discardQueuedFrames` needs it.
+    private var unstartedBoundary = 0
 
     /// Past this a drained accumulator is handed back to the allocator
     /// rather than kept for the next frame — for both directions.
@@ -95,7 +99,63 @@ final class IOChannel {
         }
         outbound.removeAll()
         outboundOffset = 0
+        unstartedBoundary = 0
         updatePending()
+    }
+
+    /// Drops every queued frame for `peer` that has not begun to leave —
+    /// the proxy said the peer is gone, and would only read them to throw
+    /// them away, while the backlog they make keeps every other session's
+    /// PTY paused (`IOHost.pauseAboveByteCount`). A frame already partly
+    /// written stays, or the stream would lose its framing; the others
+    /// keep their order. Returns the bytes freed.
+    @discardableResult
+    func discardQueuedFrames(forPeer peer: UInt64) -> Int {
+        guard !isClosed, outboundOffset < outbound.count else { return 0 }
+        advanceUnstartedBoundary()
+        guard unstartedBoundary < outbound.count else { return 0 }
+        var kept: [UInt8] = []
+        var freed = 0
+        outbound.withUnsafeBytes { bytes in
+            var cursor = unstartedBoundary
+            while cursor < bytes.count {
+                let rest = UnsafeRawBufferPointer(rebasing: bytes[cursor...])
+                guard let header = IOWire.decodeHeader(rest) else {
+                    // Never written by this side; keep the rest untouched.
+                    kept.append(contentsOf: rest)
+                    return
+                }
+                let frameCount = IOWire.headerByteCount + header.payloadByteCount
+                if header.peer == peer {
+                    freed += frameCount
+                } else {
+                    kept.append(contentsOf: rest[..<frameCount])
+                }
+                cursor += frameCount
+            }
+        }
+        guard freed > 0 else { return 0 }
+        outbound.replaceSubrange(unstartedBoundary..., with: kept)
+        if outboundOffset == outbound.count {
+            outbound.removeAll(keepingCapacity: outbound.capacity <= Self.retainedCapacity)
+            outboundOffset = 0
+            unstartedBoundary = 0
+            disarmWriteSource()
+        }
+        updatePending()
+        return freed
+    }
+
+    /// Walks frame headers from the last known boundary to the first one
+    /// at or past what has been written.
+    private func advanceUnstartedBoundary() {
+        outbound.withUnsafeBytes { bytes in
+            while unstartedBoundary < outboundOffset {
+                let rest = UnsafeRawBufferPointer(rebasing: bytes[unstartedBoundary...])
+                guard let header = IOWire.decodeHeader(rest) else { return }
+                unstartedBoundary += IOWire.headerByteCount + header.payloadByteCount
+            }
+        }
     }
 
     private func flushOutbound() {
@@ -122,6 +182,7 @@ final class IOChannel {
         }
         outbound.removeAll(keepingCapacity: outbound.capacity <= Self.retainedCapacity)
         outboundOffset = 0
+        unstartedBoundary = 0
         disarmWriteSource()
         updatePending()
     }
@@ -134,7 +195,9 @@ final class IOChannel {
     /// at the halfway mark keeps it within twice the live bytes.
     private func compactOutbound() {
         guard outboundOffset > outbound.count - outboundOffset else { return }
+        advanceUnstartedBoundary()
         outbound.removeFirst(outboundOffset)
+        unstartedBoundary -= outboundOffset
         outboundOffset = 0
     }
 
@@ -288,6 +351,7 @@ final class IOChannel {
         descriptor = -1
         outbound.removeAll()
         outboundOffset = 0
+        unstartedBoundary = 0
         inbound.removeAll()
         pendingByteCount = 0
         onClosed?()

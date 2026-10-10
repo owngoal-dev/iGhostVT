@@ -118,7 +118,7 @@ import SwiftUI
                 }
             } details: {
                 let status = RelayStatusText.describe(model.status, directory: directory)
-                Text(verbatim: [relay.endpointDescription, status?.text].compactMap { $0 }.joined(separator: " · "))
+                Text(verbatim: [relay.endpointDescription, status?.text].compactMap(\.self).joined(separator: " · "))
                     .font(DS.Font.detail)
                     .foregroundColor(status?.isProblem == true ? .red : .secondary)
                     .lineLimit(2)
@@ -137,58 +137,58 @@ import SwiftUI
         /// one more, the selected row's trash takes one away.
         private var allowedDevices: some View {
             MacTableFrame {
-                    VStack(spacing: 0) {
-                        ScrollView {
-                            LazyVStack(spacing: 0) {
-                                ForEach(Array(model.status.devices.enumerated()), id: \.element.id) { index, device in
-                                    MacDeviceRow(
-                                        name: device.name,
-                                        address: nil,
-                                        detail: RemoteAccessView.lastSeenText(device),
-                                        index: index,
-                                        isSelected: device.id == selectedAllowedID,
-                                        select: { selectedAllowedID = device.id },
-                                    ) {
-                                        MacRowIconButton(symbol: "trash", label: "Remove") {
-                                            model.revoke(device)
-                                            selectedAllowedID = nil
-                                        }
-                                    }
-                                    .contextMenu {
-                                        Button("Remove", role: .destructive) { model.revoke(device) }
+                VStack(spacing: 0) {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(Array(model.status.devices.enumerated()), id: \.element.id) { index, device in
+                                MacDeviceRow(
+                                    name: device.name,
+                                    address: nil,
+                                    detail: RemoteAccessView.lastSeenText(device),
+                                    index: index,
+                                    isSelected: device.id == selectedAllowedID,
+                                    select: { selectedAllowedID = device.id },
+                                ) {
+                                    MacRowIconButton(symbol: "trash", label: "Remove") {
+                                        model.revoke(device)
+                                        selectedAllowedID = nil
                                     }
                                 }
-                            }
-                        }
-                        .frame(maxHeight: .infinity)
-                        .overlay {
-                            if model.status.devices.isEmpty {
-                                Text("Pair a device to let it open terminals here.")
-                                    .font(DS.Font.detail)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        Divider()
-                        MacTableBar {
-                            Button {
-                                Task {
-                                    await model.beginPairing()
-                                    isShowingPairingCode = true
+                                .contextMenu {
+                                    Button("Remove", role: .destructive) { model.revoke(device) }
                                 }
-                            } label: {
-                                Image(systemName: "plus")
-                                    .frame(width: 22, height: 18)
-                                    .contentShape(Rectangle())
-                            }
-                            .accessibilityLabel("Pair New Device…")
-                            .disabled(model.status.state != .listening)
-                            .popover(isPresented: $isShowingPairingCode, arrowEdge: .bottom) {
-                                RemotePairingCodeView(model: model, isPopover: true)
-                                .keepsPopover()
                             }
                         }
                     }
+                    .frame(maxHeight: .infinity)
+                    .overlay {
+                        if model.status.devices.isEmpty {
+                            Text("Pair a device to let it open terminals here.")
+                                .font(DS.Font.detail)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Divider()
+                    MacTableBar {
+                        Button {
+                            Task {
+                                await model.beginPairing()
+                                isShowingPairingCode = true
+                            }
+                        } label: {
+                            Image(systemName: "plus")
+                                .frame(width: 22, height: 18)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("Pair New Device…")
+                        .disabled(model.status.state != .listening)
+                        .popover(isPresented: $isShowingPairingCode, arrowEdge: .bottom) {
+                            RemotePairingCodeView(model: model, isPopover: true)
+                                .keepsPopover()
+                        }
+                    }
                 }
+            }
         }
 
         // MARK: - The other devices
@@ -199,37 +199,37 @@ import SwiftUI
         private var yourDevices: some View {
             let entries = accessibleEntries
             return MacTableFrame {
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            // One list, keyed by device: a device keeps its
-                            // row as it pairs, and the row moves up into the
-                            // paired ones with Pair turned into Forget.
-                            ForEach(entries) { entry in
-                                switch entry {
-                                case .otherDevicesTitle:
-                                    MacTableSectionHeader(title: "Other Devices")
-                                case let .device(device):
-                                    accessibleRow(device)
-                                }
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        // One list, keyed by device: a device keeps its
+                        // row as it pairs, and the row moves up into the
+                        // paired ones with Pair turned into Forget.
+                        ForEach(entries) { entry in
+                            switch entry {
+                            case .otherDevicesTitle:
+                                MacTableSectionHeader(title: "Other Devices")
+                            case let .device(device):
+                                accessibleRow(device)
                             }
-                        }
-                    }
-                    .overlay {
-                        if entries.isEmpty {
-                            Group {
-                                if directory.relay == nil {
-                                    Text("Devices on this network with remote access on appear here.")
-                                } else {
-                                    Text("Devices on this network or at the relay with remote access on appear here.")
-                                }
-                            }
-                            .font(DS.Font.detail)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(DS.Padding.m)
                         }
                     }
                 }
+                .overlay {
+                    if entries.isEmpty {
+                        Group {
+                            if directory.relay == nil {
+                                Text("Devices on this network with remote access on appear here.")
+                            } else {
+                                Text("Devices on this network or at the relay with remote access on appear here.")
+                            }
+                        }
+                        .font(DS.Font.detail)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(DS.Padding.m)
+                    }
+                }
+            }
         }
 
         /// The paired devices, then — under a title of their own, as
@@ -274,8 +274,13 @@ import SwiftUI
             ) {
                 switch device.action {
                 case let .forget(host):
-                    MacRowIconButton(symbol: "trash", label: "Forget") {
-                        confirmForget(host)
+                    HStack(spacing: DS.Padding.xs) {
+                        MacRowIconButton(symbol: "arrow.down.circle", label: "Check for Update") {
+                            HostUpdateFlow.run(endpoint: .remote(hostID: host.id), in: window)
+                        }
+                        MacRowIconButton(symbol: "trash", label: "Forget") {
+                            confirmForget(host)
+                        }
                     }
                 case let .pair(host):
                     Button {
