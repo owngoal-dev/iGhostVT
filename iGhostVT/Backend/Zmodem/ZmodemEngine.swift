@@ -52,6 +52,7 @@ final class ZmodemEngine: @unchecked Sendable {
 
     private var watchdog: DispatchSourceTimer?
     private static let stallTimeout = 30
+    private static let quietSenderTimeout = 10
     // Invalidates a scheduled confirmation-fade when a new transfer starts.
     private var dismissGeneration: UInt64 = 0
     private static let confirmationLinger = 3.0
@@ -248,7 +249,13 @@ final class ZmodemEngine: @unchecked Sendable {
         case .noise: break
         }
         switch direction {
-        case .download: receiver?.handle(event)
+        case .download:
+            receiver?.handle(event)
+            // The sender answers a ZEOF's ZRINIT at once if it is still
+            // there; one that went quiet is not worth the full stall.
+            if receiver?.isAwaitingSenderAfterCompleteFiles == true {
+                watchdog?.schedule(deadline: .now() + .seconds(Self.quietSenderTimeout))
+            }
         case .upload: sender?.handle(event)
         }
     }
@@ -363,9 +370,17 @@ final class ZmodemEngine: @unchecked Sendable {
         cancelWatchdog()
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + .seconds(Self.stallTimeout))
-        timer.setEventHandler { [weak self] in self?.abort() }
+        timer.setEventHandler { [weak self] in self?.stalled() }
         watchdog = timer
         timer.resume()
+    }
+
+    private func stalled() {
+        if direction == .download, let receiver, receiver.senderWentQuiet() {
+            AppLog.info(.zmodem, "sender went quiet after its last file arrived whole; done")
+            return
+        }
+        abort()
     }
 
     private func petWatchdog() {

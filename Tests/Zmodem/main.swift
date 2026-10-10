@@ -474,6 +474,36 @@ do {
     check(sent.with { $0 }.isEmpty, "and sent nothing")
 }
 
+// A congested link holds a whole file in its buffers; `sz` gives up waiting
+// for the ZRINIT that answers its ZEOF and exits before the file is through.
+print("zmodem: a sender that leaves after its last ZEOF")
+do {
+    let payload = randomBytes(40000)
+    let conversation = szOutput(payload)
+    let zfin: [UInt8] = [0x2A, 0x2A, 0x18, 0x42, 0x30, 0x38]
+    var finAt = conversation.count
+    for index in 0 ... (conversation.count - zfin.count) where Array(conversation[index ..< index + zfin.count]) == zfin {
+        finAt = index
+        break
+    }
+    func receive(_ bytes: ArraySlice<UInt8>) -> (ZmodemReceiver, MemoryWriter) {
+        let writer = MemoryWriter()
+        let receiver = ZmodemReceiver(send: { _ in }, writer: writer)
+        let parser = ZmodemParser()
+        parser.onEvent = { receiver.handle($0) }
+        receiver.begin()
+        parser.feed(Array(bytes))
+        return (receiver, writer)
+    }
+    let (whole, wholeWriter) = receive(conversation[..<finAt])
+    check(whole.isAwaitingSenderAfterCompleteFiles, "a file that ended whole waits for the sender's ZFIN")
+    check(whole.senderWentQuiet(), "a sender gone after it is a finished transfer")
+    check(wholeWriter.completed == true && wholeWriter.files.first?.data == payload, "with the file kept, every byte")
+    let (cut, cutWriter) = receive(conversation[..<(finAt / 2)])
+    check(!cut.senderWentQuiet(), "a sender gone mid-file is a stall")
+    check(cutWriter.completed == nil, "and keeps nothing")
+}
+
 // MARK: Result
 
 if failures.isEmpty {
