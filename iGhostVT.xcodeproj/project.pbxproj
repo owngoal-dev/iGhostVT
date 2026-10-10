@@ -10,8 +10,8 @@
 		AA0000000000000000000101 /* GhosttyTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000201 /* GhosttyTerminal */; };
 		AA0000000000000000000102 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000202 /* GhosttyTheme */; };
 		AA0000000000000000000103 /* Dog in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000203 /* Dog */; };
-		AA0000000000000000000105 /* SPIndicator in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000204 /* SPIndicator */; };
 		AA0000000000000000000104 /* iGhostVTWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000307 /* iGhostVTWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA0000000000000000000105 /* SPIndicator in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000204 /* SPIndicator */; };
 		AA0000000000000000000106 /* GhosttyTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000205 /* GhosttyTerminal */; };
 		AA0000000000000000000107 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000206 /* GhosttyTheme */; };
 		AA0000000000000000000108 /* Dog in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000207 /* Dog */; };
@@ -108,13 +108,6 @@
 			);
 			target = AA0000000000000000000603 /* iGhostVTWidgets */;
 		};
-		AA0000000000000000000406 /* Exceptions for "iGhostVTWidgets" folder in "GhostRemoteWidgets" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Resources/Info.plist,
-			);
-			target = AA0000000000000000000608 /* GhostRemoteWidgets */;
-		};
 		AA0000000000000000000403 /* Exceptions for "iGhostVT" folder in "GhostRemote" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -146,6 +139,13 @@
 			);
 			target = AA0000000000000000000605 /* ighostvt-cli */;
 		};
+		AA0000000000000000000406 /* Exceptions for "iGhostVTWidgets" folder in "GhostRemoteWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = AA0000000000000000000608 /* GhostRemoteWidgets */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -161,14 +161,6 @@
 				AA0000000000000000000403 /* Exceptions for "iGhostVT" folder in "GhostRemote" target */,
 			);
 			path = iGhostVT;
-			sourceTree = "<group>";
-		};
-		AA000000000000000000050D /* GhostRemote */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				AA0000000000000000000404 /* Exceptions for "GhostRemote" folder in "GhostRemote" target */,
-			);
-			path = GhostRemote;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000502 /* Shared/Protocol */ = {
@@ -231,6 +223,14 @@
 				AA0000000000000000000405 /* Exceptions for "Shared/Remote" folder in "ighostvt-cli" target */,
 			);
 			path = Shared/Remote;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000050D /* GhostRemote */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AA0000000000000000000404 /* Exceptions for "GhostRemote" folder in "GhostRemote" target */,
+			);
+			path = GhostRemote;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -319,9 +319,9 @@
 				AA0000000000000000000501 /* iGhostVT */,
 				AA0000000000000000000502 /* Shared/Protocol */,
 				AA0000000000000000000505 /* Shared/Activity */,
-				AA000000000000000000050C /* Shared/Remote */,
 				AA0000000000000000000509 /* Shared/Screen */,
 				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050C /* Shared/Remote */,
 			);
 			name = iGhostVT;
 			packageProductDependencies = (
@@ -349,9 +349,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000502 /* Shared/Protocol */,
-				AA000000000000000000050B /* Shared/Wire */,
 				AA0000000000000000000503 /* iGhostVTDaemon */,
 				AA0000000000000000000506 /* iGhostVTDaemonShared */,
+				AA000000000000000000050B /* Shared/Wire */,
 			);
 			name = ighostvtd;
 			packageProductDependencies = (
@@ -394,9 +394,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000502 /* Shared/Protocol */,
-				AA000000000000000000050B /* Shared/Wire */,
 				AA0000000000000000000506 /* iGhostVTDaemonShared */,
 				AA0000000000000000000507 /* iGhostVTIO */,
+				AA000000000000000000050B /* Shared/Wire */,
 			);
 			name = "ighostvtd-io";
 			packageProductDependencies = (
@@ -417,9 +417,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000502 /* Shared/Protocol */,
-				AA000000000000000000050C /* Shared/Remote */,
 				AA0000000000000000000508 /* iGhostVTCLI */,
 				AA0000000000000000000509 /* Shared/Screen */,
+				AA000000000000000000050C /* Shared/Remote */,
 			);
 			name = "ighostvt-cli";
 			packageProductDependencies = (
@@ -440,10 +440,10 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000502 /* Shared/Protocol */,
-				AA000000000000000000050C /* Shared/Remote */,
-				AA000000000000000000050B /* Shared/Wire */,
 				AA0000000000000000000506 /* iGhostVTDaemonShared */,
 				AA000000000000000000050A /* iGhostVTRemote */,
+				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050C /* Shared/Remote */,
 			);
 			name = "ighostvtd-remote";
 			packageProductDependencies = (
@@ -468,13 +468,13 @@
 				AA0000000000000000000D05 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				AA000000000000000000050D /* GhostRemote */,
 				AA0000000000000000000501 /* iGhostVT */,
 				AA0000000000000000000502 /* Shared/Protocol */,
 				AA0000000000000000000505 /* Shared/Activity */,
-				AA000000000000000000050C /* Shared/Remote */,
 				AA0000000000000000000509 /* Shared/Screen */,
 				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050C /* Shared/Remote */,
+				AA000000000000000000050D /* GhostRemote */,
 			);
 			name = GhostRemote;
 			packageProductDependencies = (
@@ -959,7 +959,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
-				WIDGETS_DISPLAY_NAME = iGhostVT;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -973,6 +972,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WIDGETS_DISPLAY_NAME = iGhostVT;
 			};
 			name = Debug;
 		};
@@ -983,7 +983,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
-				WIDGETS_DISPLAY_NAME = iGhostVT;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -997,6 +996,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WIDGETS_DISPLAY_NAME = iGhostVT;
 			};
 			name = Release;
 		};
@@ -1137,7 +1137,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
-				WIDGETS_DISPLAY_NAME = "Ghost Remote";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1147,11 +1146,12 @@
 				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.GhostRemote.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WIDGETS_DISPLAY_NAME = "Ghost Remote";
 			};
 			name = Debug;
 		};
@@ -1162,7 +1162,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iGhostVTWidgets/Resources/Info.plist;
-				WIDGETS_DISPLAY_NAME = "Ghost Remote";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1172,11 +1171,12 @@
 				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.GhostRemote.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WIDGETS_DISPLAY_NAME = "Ghost Remote";
 			};
 			name = Release;
 		};
