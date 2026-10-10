@@ -38,6 +38,23 @@ struct TerminalDirectory: Hashable, Codable, Sendable {
         display
     }
 
+    /// The directory's own name, which a recent row leads with — the
+    /// whole spelling (`label`) goes under it as the subtitle. Taken off
+    /// the display spelling, so `~`, `@jb` and `/` name themselves.
+    var name: String {
+        let trimmed = label.hasSuffix("/") && label.count > 1 ? String(label.dropLast()) : label
+        guard let slash = trimmed.lastIndex(of: "/"), slash != trimmed.index(before: trimmed.endIndex) else {
+            return trimmed
+        }
+        return String(trimmed[trimmed.index(after: slash)...])
+    }
+
+    /// What goes under `name`: the whole spelling, unless it says nothing
+    /// more (`/`, `@jb`).
+    var nameSubtitle: String? {
+        name == label ? nil : label
+    }
+
     /// Whether this is the session user's home. The new-tab menu's first
     /// row already opens there, so no other row should offer it again, and
     /// the daemon spelling it `~` is the whole test.

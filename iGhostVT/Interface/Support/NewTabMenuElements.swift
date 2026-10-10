@@ -81,6 +81,19 @@ enum NewTabMenuElements {
         }
     }
 
+    /// A recent directory's row: its folder's name, the whole spelling
+    /// under it. iOS 15 has no subtitle, so there the title is the whole
+    /// spelling, as it always was.
+    private static func recentRow(_ directory: TerminalDirectory, _ action: UIAction) -> UIAction {
+        if #available(iOS 16.0, *) {
+            action.title = directory.name
+            action.subtitle = directory.nameSubtitle
+        } else {
+            action.title = directory.label
+        }
+        return action
+    }
+
     /// The rows `NewTabMenuContent` lists, in the same order and groups.
     static func elements(tabManager: TabManager, onOpen: @escaping () -> Void) -> [UIMenuElement] {
         let choices = NewTabDirectoryChoices(
@@ -121,7 +134,9 @@ enum NewTabMenuElements {
             elements.append(UIMenu(
                 title: String(localized: "Recent"),
                 options: .displayInline,
-                children: choices.recents.map { row($0.label, "clock", .directory($0)) },
+                children: choices.recents.map { directory in
+                    recentRow(directory, row("", "clock", .directory(directory)))
+                },
             ))
         }
         let hosts = remoteHostElements(
@@ -175,9 +190,9 @@ enum NewTabMenuElements {
                 image: UIImage(systemName: "plus"),
             ) { _ in openFresh(host.id, nil) }
             let recents = RecentDirectoryStore.shared.menuDirectories(onHost: host.id).map { directory in
-                UIAction(title: directory.label, image: UIImage(systemName: "clock")) { _ in
+                recentRow(directory, UIAction(title: "", image: UIImage(systemName: "clock")) { _ in
                     openFresh(host.id, directory)
-                }
+                })
             }
             // The same order as this device's own rows: what is open
             // before where one was.
