@@ -155,7 +155,7 @@ final class LabLink: @unchecked Sendable {
         }
         queue.async { self.frames.start() }
         _ = ready.wait(timeout: .now() + timeout)
-        if isReady, isRelayed {
+        if isReady {
             queue.async { self.heartbeat() }
         }
         return isReady
@@ -207,15 +207,15 @@ final class LabLink: @unchecked Sendable {
 
     /// The app's relayed heartbeat (`RemoteDaemonLink.heartbeat`).
     private func heartbeat() {
-        queue.asyncAfter(deadline: .now() + RemoteAccess.relayedPingInterval / 3) { [weak self] in
+        queue.asyncAfter(deadline: .now() + RemoteAccess.linkPingInterval / 3) { [weak self] in
             guard let self, !isClosed else { return }
             let quiet = Date().timeIntervalSince(lastHeard)
-            if quiet > RemoteAccess.relayedReplyLimit {
-                say("link: nothing through the relay in \(Int(quiet)) s, giving up as the app would")
+            if quiet > RemoteAccess.linkReplyLimit {
+                say("link: nothing from the host in \(Int(quiet)) s, giving up as the app would")
                 frames.close(reason: "relayed reply limit")
                 return
             }
-            if quiet > RemoteAccess.relayedPingInterval || Date().timeIntervalSince(lastSent) > RemoteAccess.relayedPingInterval {
+            if quiet > RemoteAccess.linkPingInterval || Date().timeIntervalSince(lastSent) > RemoteAccess.linkPingInterval {
                 let ping = message(.ping)
                 let tag = nextTag
                 nextTag += 1
@@ -376,6 +376,21 @@ final class HashingWriter: ZmodemFileWriter, @unchecked Sendable {
     }
 }
 
+/// What `receiveSZ` keeps across the link's queue, the engine's and its own;
+/// every field is touched under `lock`, except `lastCount`, the ticker's.
+final class SZRun: @unchecked Sendable {
+    var sessionID: UInt64 = 0
+    var held: [[UInt8]] = []
+    var exitCode: Int64?
+    var linkLost: String?
+    var lastOutput = Date()
+    var longestGap: TimeInterval = 0
+    var outputBytes = 0
+    var engineState: ZmodemTransferInfo?
+    var engineFinished = false
+    var lastCount: UInt64 = 0
+}
+
 func receiveSZ() -> Int32 {
     let device = loadDevice()
     let file = option("file")
@@ -388,20 +403,12 @@ func receiveSZ() -> Int32 {
 
     let link = connect(device)
     let lock = NSLock()
-    var sessionID: UInt64 = 0
-    var held: [[UInt8]] = []
-    var exitCode: Int64?
-    var linkLost: String?
-    var lastOutput = Date()
-    var longestGap: TimeInterval = 0
-    var outputBytes = 0
-    var engineState: ZmodemTransferInfo?
-    var engineFinished = false
+    let run = SZRun()
     let finished = DispatchSemaphore(value: 0)
 
-    func write(_ bytes: [UInt8]) {
+    @Sendable func write(_ bytes: [UInt8]) {
         let message = message(.write)
-        xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, sessionID)
+        xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, run.sessionID)
         setData(Data(bytes), iGhostVTWireKey.data, in: message)
         link.send(message)
     }
@@ -410,8 +417,8 @@ func receiveSZ() -> Int32 {
     let engine = ZmodemEngine(
         sink: { bytes in
             lock.withLock {
-                if sessionID == 0 {
-                    held.append(bytes)
+                if run.sessionID == 0 {
+                    run.held.append(bytes)
                 } else {
                     write(bytes)
                 }
@@ -427,11 +434,11 @@ func receiveSZ() -> Int32 {
         requestSource: { $0(nil) },
         onState: { info in
             lock.withLock {
-                if engineState != nil, info == nil || info?.phase != .active {
-                    engineFinished = true
+                if run.engineState != nil, info == nil || info?.phase != .active {
+                    run.engineFinished = true
                     finished.signal()
                 }
-                engineState = info
+                run.engineState = info
             }
         },
     )
@@ -440,25 +447,25 @@ func receiveSZ() -> Int32 {
         let kind = xpc_dictionary_get_uint64(event, iGhostVTWireKey.event)
         if kind == iGhostVTEvent.output.rawValue, let bytes = data(iGhostVTWireKey.data, in: event) {
             lock.withLock {
-                let gap = Date().timeIntervalSince(lastOutput)
-                if outputBytes > 0, gap > longestGap {
-                    longestGap = gap
+                let gap = Date().timeIntervalSince(run.lastOutput)
+                if run.outputBytes > 0, gap > run.longestGap {
+                    run.longestGap = gap
                 }
-                if outputBytes > 0, gap > 3 {
+                if run.outputBytes > 0, gap > 3 {
                     say(String(format: "output resumed after a %.1f s gap", gap))
                 }
-                lastOutput = Date()
-                outputBytes += bytes.count
+                run.lastOutput = Date()
+                run.outputBytes += bytes.count
             }
             engine.ingest(bytes)
         } else if kind == iGhostVTEvent.sessionExit.rawValue {
-            lock.withLock { exitCode = xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode) }
+            lock.withLock { run.exitCode = xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode) }
             say("sz exited with \(xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode))")
             finished.signal()
         }
     }
     link.onClosed = { reason in
-        lock.withLock { linkLost = reason }
+        lock.withLock { run.linkLost = reason }
         say("link closed: \(reason)")
         finished.signal()
     }
@@ -474,22 +481,21 @@ func receiveSZ() -> Int32 {
     guard let reply = link.request(open), code(of: reply) == .success else { fail("openSession refused") }
     let transferStarted = Date()
     lock.withLock {
-        sessionID = xpc_dictionary_get_uint64(reply, iGhostVTWireKey.sessionID)
-        for bytes in held {
+        run.sessionID = xpc_dictionary_get_uint64(reply, iGhostVTWireKey.sessionID)
+        for bytes in run.held {
             write(bytes)
         }
-        held.removeAll()
+        run.held.removeAll()
     }
-    say("session \(sessionID): \(sz) \(file) (\(size) bytes)")
+    say("session \(run.sessionID): \(sz) \(file) (\(size) bytes)")
 
     // Progress once a second until the transfer, the program or the link ends.
     let ticker = DispatchSource.makeTimerSource(queue: .global())
-    var lastCount: UInt64 = 0
     ticker.schedule(deadline: .now() + 1, repeating: 1)
     ticker.setEventHandler {
         let count = writer.received
-        let rate = Double(count - lastCount) / 1024
-        lastCount = count
+        let rate = Double(count - run.lastCount) / 1024
+        run.lastCount = count
         let percent = size > 0 ? Double(count) * 100 / Double(size) : 0
         say(String(format: "%6.1f%%  %llu B  %7.1f KiB/s  host heard %.1f s ago", percent, count, rate, Date().timeIntervalSince(link.lastHeard)))
     }
@@ -498,7 +504,7 @@ func receiveSZ() -> Int32 {
     let deadline = Date().addingTimeInterval(timeout)
     while Date() < deadline {
         _ = finished.wait(timeout: .now() + 1)
-        let done = lock.withLock { engineFinished || linkLost != nil || (exitCode != nil && engineState == nil) }
+        let done = lock.withLock { run.engineFinished || run.linkLost != nil || (run.exitCode != nil && run.engineState == nil) }
         if done {
             break
         }
@@ -508,7 +514,7 @@ func receiveSZ() -> Int32 {
     Thread.sleep(forTimeInterval: 1.5)
     let elapsed = Date().timeIntervalSince(transferStarted)
 
-    let (lost, exit, gap) = lock.withLock { (linkLost, exitCode, longestGap) }
+    let (lost, exit, gap) = lock.withLock { (run.linkLost, run.exitCode, run.longestGap) }
     let good = writer.completed == true && writer.digest == expected && writer.received == size
     print("")
     print("RESULT \(good ? "ok" : "FAILED")")
@@ -521,7 +527,7 @@ func receiveSZ() -> Int32 {
     if lost == nil {
         if exit == nil {
             let kill = message(.closeSession)
-            xpc_dictionary_set_uint64(kill, iGhostVTWireKey.sessionID, sessionID)
+            xpc_dictionary_set_uint64(kill, iGhostVTWireKey.sessionID, run.sessionID)
             _ = link.request(kill, timeout: 10)
         }
         link.close()

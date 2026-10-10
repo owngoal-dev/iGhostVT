@@ -248,7 +248,7 @@ enum iGhostVTOperation: UInt64, Sendable {
     /// for a peer that is long gone; this crosses the whole path. The app
     /// sends it on a quiet relayed link and gives the link up when nothing
     /// comes back; the helper drops a relayed device that has sent nothing
-    /// for `RemoteAccess.relayedSilenceLimit`.
+    /// for `RemoteAccess.deviceSilenceLimit`.
     case ping = 32
 }
 

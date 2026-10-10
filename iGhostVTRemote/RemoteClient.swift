@@ -26,7 +26,13 @@ final class RemoteClient {
         case session(deviceID: String)
     }
 
-    private var mode = Mode.handshaking
+    private var mode = Mode.handshaking {
+        didSet {
+            if case .handshaking = oldValue, isAuthenticated {
+                service.handshakeEnded()
+            }
+        }
+    }
     private var daemon: xpc_connection_t?
     private var isDaemonSuspended = false
     private var isClosed = false
@@ -38,7 +44,7 @@ final class RemoteClient {
     /// for `RemoteAccess.reconnectGraceSeconds` (`linger`).
     private var isLingering = false
     /// When the device last sent anything; a relayed one that goes quiet
-    /// past `RemoteAccess.relayedSilenceLimit` is dropped.
+    /// past `RemoteAccess.deviceSilenceLimit` is dropped.
     private var lastHeard = Date()
 
     /// The device output toward which may be held in the daemon instead of
@@ -50,6 +56,17 @@ final class RemoteClient {
     /// was more than ten seconds over a slow relay, and an `sz` died there.
     private static let pauseAboveByteCount = 512 * 1024
     private static let resumeBelowByteCount = 384 * 1024
+    /// While paused, the connection is let go for one message this often,
+    /// so a link that is slow but draining — a relay at a few dozen KiB/s,
+    /// a stall of ten seconds or twenty — never reads to the proxy as a
+    /// peer that took nothing for its grace: it cut such a device with a
+    /// megabyte in flight, and an `sz` or a flood's tail went with it. The
+    /// buffer can only grow by a message per interval, and not past
+    /// `trickleCeilingByteCount`; a device that drains nothing at all is
+    /// still cut.
+    private static let trickleInterval: DispatchTimeInterval = .seconds(3)
+    private static let trickleCeilingByteCount = 8 << 20
+    private var trickleGeneration = 0
 
     /// The operations a paired device may send, all of them the app's own.
     private static let sessionOperations: Set<iGhostVTOperation> = [
@@ -163,14 +180,15 @@ final class RemoteClient {
         self.daemon = nil
     }
 
-    /// A relayed link can look alive at every TCP hop and be dead end to
-    /// end; the device pings a quiet link, so silence means it is gone.
+    /// A link can look alive at every TCP hop and be dead end to end — a
+    /// relay leg, a NAT, a phone gone to sleep; the device pings a quiet
+    /// link, so silence means it is gone.
     private func watchSilence() {
-        let interval = RemoteAccess.relayedSilenceLimit / 3
+        let interval = RemoteAccess.deviceSilenceLimit / 3
         service.queue.asyncAfter(deadline: .now() + interval) { [weak self] in
             guard let self, !isClosed else { return }
-            if Date().timeIntervalSince(lastHeard) > RemoteAccess.relayedSilenceLimit {
-                close(reason: "nothing from the device in \(Int(RemoteAccess.relayedSilenceLimit)) s")
+            if Date().timeIntervalSince(lastHeard) > RemoteAccess.deviceSilenceLimit {
+                close(reason: "nothing from the device in \(Int(RemoteAccess.deviceSilenceLimit)) s")
             } else {
                 watchSilence()
             }
@@ -293,6 +311,8 @@ final class RemoteClient {
             name: xpc_dictionary_get_string(hello, iGhostVTWireKey.deviceName).map { String(cString: $0) },
         )
         RemoteLog.log("device \(device.name) (\(deviceID)) connected from \(address)")
+        // Relayed only: an app before 1.4.19 pings no direct link, and every
+        // patch of a line talks to every other.
         if viaRelay {
             watchSilence()
         }
@@ -405,7 +425,22 @@ final class RemoteClient {
         if !isDaemonSuspended, pending > Self.pauseAboveByteCount {
             isDaemonSuspended = true
             xpc_connection_suspend(daemon)
+            scheduleTrickle()
         } else if isDaemonSuspended, pending < Self.resumeBelowByteCount {
+            isDaemonSuspended = false
+            xpc_connection_resume(daemon)
+        }
+    }
+
+    private func scheduleTrickle() {
+        trickleGeneration += 1
+        let generation = trickleGeneration
+        service.queue.asyncAfter(deadline: .now() + Self.trickleInterval) { [weak self] in
+            guard let self, generation == trickleGeneration, !isClosed, isDaemonSuspended, let daemon,
+                  frames.pendingByteCount < Self.trickleCeilingByteCount
+            else { return }
+            // The next message raises `pending` past the band again, and
+            // `updateDaemonPause` suspends — and schedules this — anew.
             isDaemonSuspended = false
             xpc_connection_resume(daemon)
         }

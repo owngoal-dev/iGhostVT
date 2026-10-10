@@ -770,6 +770,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     let rows = Int(xpc_dictionary_get_uint64(reply, iGhostVTWireKey.rows))
                     appliedViewport = columns > 0 && rows > 0 ? (columns, rows) : nil
                     emit(.state(.connected))
+                    emit(.sessionResumed(true))
                     emitSessionState(in: reply)
                     emitSessionAttributes(in: reply, isResumed: true)
                     // Replayed scrollback so the surface rebuilds its screen.
@@ -860,6 +861,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
             }
             appliedViewport = (Int(columns), Int(rows))
             emit(.state(.connected))
+            emit(.sessionResumed(false))
             emitSessionState(in: reply)
             emitSessionAttributes(in: reply, isResumed: false)
         }

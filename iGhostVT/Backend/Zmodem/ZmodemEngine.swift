@@ -41,7 +41,9 @@ final class ZmodemEngine: @unchecked Sendable {
     private let requestSource: @Sendable (@escaping @Sendable (ZmodemFileSource?) -> Void) -> Void
     private let onState: @Sendable (ZmodemTransferInfo?) -> Void
 
-    private enum Mode { case idle, awaitingSource, active, discarding }
+    /// `suspended`: a download whose link dropped, kept for the next link
+    /// to the same session (`suspendForLostLink`, `resume`).
+    private enum Mode { case idle, awaitingSource, active, discarding, suspended }
     private var mode: Mode = .idle
     private var direction: ZmodemDirection = .download
     private var detector = ZmodemDetector()
@@ -92,14 +94,101 @@ final class ZmodemEngine: @unchecked Sendable {
     /// without a word: the caller says what happened, since this engine is
     /// about to be thrown away with whatever it scheduled.
     func abandonForLostLink() -> Bool {
-        queue.sync {
-            let wasRunning = mode != .idle && mode != .discarding
-            if wasRunning {
-                AppLog.warning(.zmodem, "link lost mid-transfer direction=\(direction)")
-            }
-            teardown(notify: false)
-            return wasRunning
+        queue.sync { abandonLocked() }
+    }
+
+    private func abandonLocked() -> Bool {
+        let wasRunning = mode != .idle && mode != .discarding
+        if wasRunning {
+            AppLog.warning(.zmodem, "link lost mid-transfer direction=\(direction)")
         }
+        teardown(notify: false)
+        return wasRunning
+    }
+
+    /// What happened to a transfer when its link dropped.
+    enum LinkLoss {
+        /// Nothing was under way.
+        case idle
+        /// A download, kept: the next link to the same session resumes it
+        /// (`resume`), any other ends it (`abandonSuspended`).
+        case suspended
+        /// Ended here; the other end is still in it, and the next link
+        /// must clean up after it (`discardInterruptedTransfer`).
+        case abandoned
+    }
+
+    /// The link dropped. A download is kept — the receiver knows how much
+    /// arrived, and ZMODEM can ask the sender to go back to it — for the
+    /// next link to pick up; an upload, or anything else, ends as
+    /// `abandonForLostLink` ends it.
+    func suspendForLostLink() -> LinkLoss {
+        queue.sync {
+            guard mode == .active || mode == .suspended, direction == .download, receiver != nil else {
+                return abandonLocked() ? .abandoned : .idle
+            }
+            if mode == .active {
+                AppLog.warning(.zmodem, "link lost mid-download; keeping it for the next link")
+            }
+            mode = .suspended
+            parser = nil
+            cancelWatchdog()
+            cancelNudge()
+            return .suspended
+        }
+    }
+
+    /// The next link attached to the session a suspended download ran in:
+    /// a fresh parser (the stream picks up mid-subpacket), and the sender
+    /// asked to go back to what arrived. The ask is repeated every few
+    /// seconds until the sender answers: sz reads it between subpackets
+    /// or at its ZEOF, whichever it reaches first.
+    func resume() {
+        queue.async { [weak self] in
+            guard let self, mode == .suspended, let receiver else { return }
+            AppLog.info(.zmodem, "resuming the download on the new link")
+            let parser = ZmodemParser()
+            parser.onEvent = { [weak self] event in self?.dispatch(event) }
+            self.parser = parser
+            mode = .active
+            armWatchdog()
+            receiver.resume()
+            scheduleNudge()
+        }
+    }
+
+    /// A suspended download whose session did not come back (a fresh shell
+    /// opened instead): it is over, and nothing is sent anywhere.
+    func abandonSuspended() {
+        queue.async { [weak self] in
+            guard let self, mode == .suspended else { return }
+            AppLog.warning(.zmodem, "the session of a suspended download did not come back")
+            // Ends through `finished(false)`, which says so on the pill.
+            receiver?.abandon()
+        }
+    }
+
+    private var nudge: DispatchSourceTimer?
+    private static let nudgeInterval = 3
+
+    private func scheduleNudge() {
+        cancelNudge()
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + .seconds(Self.nudgeInterval), repeating: .seconds(Self.nudgeInterval))
+        timer.setEventHandler { [weak self] in
+            guard let self, mode == .active, let receiver, receiver.isResynchronizing else {
+                self?.cancelNudge()
+                return
+            }
+            receiver.resume()
+        }
+        nudge = timer
+        timer.resume()
+    }
+
+    private func cancelNudge() {
+        nudge?.cancel()
+        nudge = nil
     }
 
     /// The link came back to a transfer the last one dropped. The program
@@ -179,6 +268,10 @@ final class ZmodemEngine: @unchecked Sendable {
             parser?.feed(bytes)
         case .discarding:
             discard(bytes)
+        case .suspended:
+            // Live output before the next link said which session it
+            // reached; `resume` or `abandonSuspended` follows at once.
+            break
         }
     }
 
@@ -352,6 +445,7 @@ final class ZmodemEngine: @unchecked Sendable {
 
     private func teardown(notify: Bool) {
         cancelWatchdog()
+        cancelNudge()
         dismissGeneration &+= 1
         mode = .idle
         parser = nil

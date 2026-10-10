@@ -298,6 +298,10 @@ func flood(seconds: Double) -> Int32 {
     session.write("STOP")
     let exited = session.waitForExit(timeout: 120)
     let total = Date().timeIntervalSince(sent)
+    // The exit can overtake the program's last output on its way here.
+    if session.wait(for: "ACK ", timeout: 0) == nil, session.wait(for: "ACK ", timeout: 10) != nil {
+        verdict.note("the ACK arrived after the exit event")
+    }
     var inputDelay: Double?
     if let range = session.text.range(of: "ACK ") {
         let stamp = session.text[range.upperBound...].prefix { $0 != "\r" && $0 != "\n" }
@@ -506,6 +510,10 @@ func upload(byteCount: Int) -> Int32 {
     for _ in 0 ..< 8 {
         window.wait()
     }
+    // A semaphore freed below its starting value traps.
+    for _ in 0 ..< 8 {
+        window.signal()
+    }
     let took = Date().timeIntervalSince(started)
     let landed = FileManager.default.contents(atPath: path)
     verdict.check(refused == 0, "every part accepted (\(refused) refused)")
@@ -513,6 +521,117 @@ func upload(byteCount: Int) -> Int32 {
     verdict.note(String(format: "%.1f s, %.0f KiB/s", took, Double(byteCount) / 1024 / took))
     try? FileManager.default.removeItem(atPath: (path as NSString).deletingLastPathComponent)
     link.close()
+    return verdict.finish()
+}
+
+/// sz with the link dropped `drops` times mid-file, as a phone changing
+/// networks does: each time the engine keeps the download
+/// (`suspendForLostLink`), a new link attaches to the session after
+/// `outage` seconds, and the engine asks sz to go back to what arrived
+/// (`resume`). The file must come out whole.
+func szAcrossDrops(megabytes: Int, drops: Int, outage: Double) -> Int32 {
+    let verdict = Verdict()
+    let device = loadDevice()
+    let path = (option("state") as NSString).appendingPathComponent("payload-\(megabytes)m.bin")
+    if !FileManager.default.fileExists(atPath: path) {
+        var bytes = [UInt8](repeating: 0, count: megabytes << 20)
+        arc4random_buf(&bytes, bytes.count)
+        FileManager.default.createFile(atPath: path, contents: Data(bytes))
+    }
+    let expected = SHA256.hash(data: FileManager.default.contents(atPath: path)!).map { String(format: "%02x", $0) }.joined()
+    let size = UInt64(megabytes << 20)
+    let writer = HashingWriter()
+    let lock = NSLock()
+    final class State: @unchecked Sendable {
+        var current: LabSession?
+        var finishedOK: Bool?
+    }
+    let state = State()
+    let engine = ZmodemEngine(
+        sink: { bytes in lock.withLock { state.current }?.write(Data(bytes)) },
+        passthrough: { bytes in
+            let text = String(decoding: bytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !text.isEmpty { say("terminal: \(text.debugDescription.prefix(120))") }
+        },
+        makeWriter: { writer },
+        requestSource: { $0(nil) },
+        onState: { info in
+            if let info, info.phase != .active {
+                lock.withLock { state.finishedOK = info.phase == .done }
+            } else if info == nil, writer.completed != nil {
+                lock.withLock { state.finishedOK = writer.completed }
+            }
+        },
+    )
+    func hook(_ session: LabSession) {
+        // One session per link; its id is not known until the open answers,
+        // and sz speaks first.
+        session.link.onEvent = { event in
+            switch xpc_dictionary_get_uint64(event, iGhostVTWireKey.event) {
+            case iGhostVTEvent.output.rawValue:
+                if let bytes = data(iGhostVTWireKey.data, in: event) { engine.ingest(bytes) }
+            case iGhostVTEvent.sessionExit.rawValue:
+                session.exited(xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode))
+                say("sz exited with \(xpc_dictionary_get_int64(event, iGhostVTWireKey.exitCode))")
+            default: break
+            }
+        }
+    }
+    let first = LabSession(link: connect(device))
+    lock.withLock { state.current = first }
+    hook(first)
+    guard first.open([options["sz"] ?? "/opt/homebrew/bin/sz", path]) else { fail("openSession refused") }
+    let sessionID = first.id
+    let started = Date()
+    var session = first
+    for drop in 0 ..< drops {
+        let at = size * UInt64(drop + 1) / UInt64(drops + 1)
+        while writer.received < at, Date().timeIntervalSince(started) < 600, lock.withLock({ state.finishedOK }) == nil,
+              session.waitForExit(timeout: 0) == nil
+        {
+            usleep(20000)
+        }
+        guard lock.withLock({ state.finishedOK }) == nil, session.waitForExit(timeout: 0) == nil else { break }
+        say("drop \(drop): link gone at \(writer.received) bytes, back in \(outage) s")
+        session.link.onEvent = nil
+        session.link.frames.connection.forceCancel()
+        let loss = engine.suspendForLostLink()
+        verdict.check(loss == .suspended, "drop \(drop): the download was kept (\(loss))")
+        Thread.sleep(forTimeInterval: outage)
+        var next: LabSession?
+        let retryStarted = Date()
+        while next == nil, Date().timeIntervalSince(retryStarted) < 40 {
+            if case let .success(link) = tryConnect(device, quiet: true) {
+                let candidate = LabSession(link: link)
+                if candidate.attach(sessionID) == .success {
+                    next = candidate
+                } else {
+                    link.close()
+                }
+            }
+            if next == nil { usleep(500_000) }
+        }
+        guard let next else {
+            verdict.check(false, "drop \(drop): reattached")
+            return verdict.finish()
+        }
+        lock.withLock { state.current = next }
+        hook(next)
+        engine.resume()
+        session = next
+    }
+    let deadline = Date().addingTimeInterval(600)
+    while Date() < deadline, lock.withLock({ state.finishedOK }) == nil {
+        usleep(50000)
+    }
+    Thread.sleep(forTimeInterval: 1)
+    verdict.check(lock.withLock({ state.finishedOK }) == true, "the transfer finished")
+    verdict.check(writer.digest == expected && writer.received == size, "the file is whole (\(writer.received) of \(size) bytes, checksum \(writer.digest == expected ? "matches" : "differs"))")
+    verdict.note(String(format: "%.1f s with %d drop(s) of %.0f s", Date().timeIntervalSince(started), drops, outage))
+    if session.waitForExit(timeout: 0) == nil {
+        session.close()
+    }
+    session.link.close()
     return verdict.finish()
 }
 
@@ -527,6 +646,8 @@ func runScenario(_ name: String) -> Int32 {
     case "reattach": return reattach(cycles: 3)
     case "storm": return storm(count: size > 0 ? size : 10)
     case "upload": return upload(byteCount: size > 0 ? size : 4 << 20)
+    case "sz-drops": return szAcrossDrops(megabytes: size > 0 ? size : 16, drops: 3, outage: 3)
+    case "sz-long-drop": return szAcrossDrops(megabytes: size > 0 ? size : 16, drops: 1, outage: 15)
     default: fail("no scenario \(name)")
     }
 }
