@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// What a terminal starts with and what the app keeps of it: the size a
-/// new surface opens at, whether a launch opens one, whether sessions
-/// outlive the app, and the new-tab menu's remembered directories. The
+/// new surface opens at, whether a launch opens one, and the new-tab
+/// menu's remembered directories. The
 /// interface's own text size is the system's here — Dynamic Type — and
 /// only the Mac, where Catalyst ignores it, has a stepper for it.
 struct TerminalSettingsSection: View {
@@ -15,8 +15,6 @@ struct TerminalSettingsSection: View {
     @AppStorage(TerminalFontSize.key) private var terminalFontSize = TerminalFontSize.default
     /// Read by the scene delegate as a window opens; see `SessionLaunch`.
     @AppStorage(SessionLaunch.key) private var opensNewSession = true
-    /// Read by AppDelegate when the app quits; see `SessionKeepAlive`.
-    @AppStorage(SessionKeepAlive.key) private var keepAlive = true
     @ObservedObject private var recents = RecentDirectoryStore.shared
 
     var body: some View {
@@ -27,11 +25,6 @@ struct TerminalSettingsSection: View {
             .accessibilityLabel("Text Size")
             .accessibilityValue(fontSizeDescription)
             Toggle("New Session at Launch", isOn: $opensNewSession)
-            // Ghost Remote's sessions live on other devices, which keep
-            // them whatever this app does.
-            if !AppEdition.isRemoteOnly {
-                Toggle("Keep Sessions Running", isOn: $keepAlive)
-            }
             Toggle("Remember Directories", isOn: $recents.isEnabled)
         } header: {
             Text("Terminal")
@@ -50,15 +43,6 @@ struct TerminalSettingsSection: View {
                     with nothing to resume. With it off, the app opens with no tabs.
                     """,
                 )
-                if !AppEdition.isRemoteOnly {
-                    Text(
-                        """
-                        Keep Sessions Running keeps every session going after the app \
-                        quits, and the next launch brings them all back as tabs. With \
-                        it off, every session closes when the app quits.
-                        """,
-                    )
-                }
                 Text(
                     """
                     Remember Directories lets New Tab offer the directories your \

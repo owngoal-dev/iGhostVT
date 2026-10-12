@@ -82,7 +82,6 @@ import SwiftUI
         }
 
         @AppStorage(SessionLaunch.key) private var opensNewSession = true
-        @AppStorage(SessionKeepAlive.key) private var keepAlive = true
         @ObservedObject private var agent = MacLaunchAgent.shared
         @ObservedObject private var recents = RecentDirectoryStore.shared
 
@@ -97,15 +96,6 @@ import SwiftUI
                         """
                         New Session at Launch opens a session when the app starts \
                         with nothing to resume. With it off, the app opens with no tabs.
-                        """,
-                    )
-                    MacCheckbox(String(localized: "Keep Sessions Running"), isOn: $keepAlive)
-                        .padding(.top, DS.Padding.s)
-                    MacSettingsNote(
-                        """
-                        Sessions keep going after the app quits, and the next launch \
-                        brings them all back as tabs. Turn this off to close every \
-                        session when the app quits.
                         """,
                     )
                 }

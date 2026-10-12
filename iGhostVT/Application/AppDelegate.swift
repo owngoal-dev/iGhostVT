@@ -116,42 +116,22 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     /// is still running (a suspended app gets no notice, and its shells stay
     /// in the daemon either way).
     ///
-    /// With Keep Alive on every session stays in the daemon, and the next
-    /// launch brings every one back as a tab, the remote tabs too
+    /// Every session stays in the daemon, idle shells included, and the
+    /// next launch brings every one back as a tab, the remote tabs too
     /// (`RemoteTabLedger`, written here as well, since a Mac quit need not
-    /// send a window to the background first). With Keep Alive off every session the daemon
-    /// holds — attached to a window or not — dies, and the files the
-    /// terminal staged for pastes and drops go with the last shell that
-    /// could refer to them.
+    /// send a window to the background first). A shell surviving the app is
+    /// the point of the daemon, so there is no switch to end them here; a
+    /// tab's own Close, or `ighostvt-cli kill`, is how a session ends.
     ///
     /// The daemon's own exit is not asked for: once nothing is connected
     /// and nothing is held it leaves by itself, on both platforms.
     func applicationWillTerminate(_: UIApplication) {
         GhosttyAppConfiguration.removeTemporaryFiles()
         RemoteTabLedger.save(ShortcutBridge.tabManagers())
-        // Ghost Remote's tabs are other devices' sessions, which outlive
-        // it whatever this switch says; each tab's link simply drops.
+        // Ghost Remote's tabs are other devices' sessions; each tab's link
+        // simply drops.
         guard !AppEdition.isRemoteOnly else { return }
-        if SessionKeepAlive.isEnabled {
-            // Every session stays, idle shells included: the next launch
-            // brings them all back as tabs.
-            AppLog.info(.tabs, "quitting, keeping every session for the next launch to restore")
-        } else {
-            AppLog.info(.tabs, "quitting with Keep Alive off, killing every session")
-            XPCDaemonTransport.closeSessionsForQuit(nil)
-            TerminalFileStaging.removeAllFiles()
-        }
-    }
-}
-
-/// Whether daemon sessions outlive the app. On by default: a shell surviving
-/// the app is the point of the daemon. Off is for a Mac (or a user) that
-/// wants ⌘Q to mean what it means in Terminal.
-enum SessionKeepAlive {
-    static let key = "Session.keepAlive"
-
-    static var isEnabled: Bool {
-        UserDefaults.standard.object(forKey: key) as? Bool ?? true
+        AppLog.info(.tabs, "quitting, keeping every session for the next launch to restore")
     }
 }
 

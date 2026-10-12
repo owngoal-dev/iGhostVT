@@ -220,8 +220,7 @@ left alone.
 
 Settings is a sheet on iPhone and iPad and a window of its own on the
 Mac. The sheet keeps to what people change: its Terminal section holds the
-text size, New Session at Launch, Keep Sessions Running and Remember
-Directories, Default Shell sits under Advanced, and there is no Interface
+text size, New Session at Launch and Remember Directories, Default Shell sits under Advanced, and there is no Interface
 stepper — on iOS the chrome follows Dynamic Type, and a step stored by an
 older build is ignored there (`InterfaceTextSizeModifier`); the Mac keeps
 the stepper because Catalyst ignores Dynamic Type. The Mac's window
@@ -321,8 +320,8 @@ cut from one tag.
 - **One switch, `AppEdition.isRemoteOnly`** (`GHOST_REMOTE` in the target's
   `SWIFT_ACTIVE_COMPILATION_CONDITIONS`). Code reads the constant rather
   than `#if`, so both apps compile every branch. The local daemon is closed
-  at its three doors — `XPCDaemonLink.init`, `oneShotRequest`,
-  `closeSessionsForQuit` — and everything built on them fails soft.
+  at its doors — `XPCDaemonLink.init` and `oneShotRequest` — and
+  everything built on them fails soft.
 - The target shares the `iGhostVT/` folder with its own exception set: it
   drops the app's `Info.plist` and `InfoPlist.xcstrings` (its own are in
   `GhostRemote/`) and the four Shortcuts intent files, which only speak to
@@ -613,18 +612,16 @@ tabs of every connected scene (which is why the Mac app opts out of
 automatic and sudden termination — `NSSupportsAutomaticTermination` and
 `NSSupportsSuddenTermination` false in `Info.plist`: a quit that skipped the
 callback would leave every idle shell behind, and one AppKit chose to
-reclaim memory would do it without anyone asking): with Keep Alive on
-every session stays in the daemon, idle shells included, and with it off
-everything goes. The next launch asks nothing: its first window adopts
+reclaim memory would do it without anyone asking). A quit ends nothing:
+every session stays in the daemon, idle shells included. Keep Sessions
+Running, a switch that made a quit kill every session, was taken out after
+1.6.5 — a shell outliving the app is the point of the daemon, and a tab's
+Close or `ighostvt-cli kill` ends one. The next launch asks nothing: its first window adopts
 every session no tab holds and reopens every remote tab the last run had
 (`RemoteTabLedger`, written as a window goes to the background and again
 at terminate, in both editions), each taken back from whoever holds it.
 A question was tried in 1.4.17 (Restore / Discard) and taken out — the
-answer was always Restore. The kills travel over one
-blocking one-shot connection (`XPCDaemonTransport.closeSessionsForQuit`) —
-not the tabs' transports, whose `closeSession` is fire-and-forget on a queue
-the exit outruns — and the call polls `listSessions` until the closed
-sessions are gone, because a close reply only says the SIGHUP was sent.
+answer was always Restore.
 
 Opening is the other half, beside it in Settings ▸ Terminal (General on
 the Mac): New Session

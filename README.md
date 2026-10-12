@@ -47,7 +47,7 @@ or install `GhostRemote-<version>.ipa` from [GitHub Releases](https://github.com
 ## Features
 
 - **Ghostty’s engine**: GPU-drawn terminal, the Ghostty theme catalog, and extra keys on the software keyboard.
-- **Persistent Sessions**: With **Keep Sessions Running** enabled, programs continue after you quit the app, and their sessions reopen on the next launch. Idle shells close when the app quits. Manage this setting in **Settings → Advanced → Sessions**.
+- **Persistent Sessions**: Programs keep running after you quit the app, and every session reopens as a tab on the next launch. Close a tab to end its session.
 - **Tabs and Windows**: Open multiple sessions, use the tab switcher, lock a tab to prevent accidental input, and open multiple windows on iPad and Mac.
 - **Copy and share**: Copy Text, Copy as Image, or Export Text.
 - **Shortcuts**: Run a command, open a tab, or read terminal output from the Shortcuts app. Use `ighostvt://session/<id>` to open a specific session from another app.
