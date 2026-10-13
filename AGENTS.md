@@ -767,6 +767,16 @@ that bit:
   refused hello closes the link before the next is acted on, on every
   host of the line. Only the attach: an open sent ahead of a hello this
   side then gives up on would leave the host a shell no tab knows.
+- **The direct path keeps off tunnels; the host takes its own link's
+  IPv6.** A device on this network is dialled with `.other` and
+  `.cellular` prohibited (`RemoteNetwork.keepOnLocalNetwork`, for a
+  Bonjour service or a local address — never the relay), so a VPN or a
+  proxy app's packet tunnel (Surge's `utun`) cannot carry it; a VM bridge
+  is `.wiredEthernet` and stays allowed. Bonjour also resolves a host's
+  global IPv6, and a host that refused it as "not a local network
+  address" failed the attempt after TCP had connected — nothing tries the
+  next address then — and the link went to the relay. `isLocal` now takes
+  a global IPv6 inside a prefix the host holds on a broadcast interface.
 - **A relayed connection must never touch `lastAddress`.** The address
   that answered is the relay's; remembered as the host's it sent every later
   direct attempt there. `noteReached(viaRelay:)` records only the time.
@@ -1576,6 +1586,20 @@ Gotchas that bit us:
   `FD_CLOEXEC` as soon as it is acquired; otherwise later shells retain older
   PTYs and lose capacity from their own per-process fd limit. The harness
   proves it with `lsof` on a spawned shell.
+- **A child forked on a dispatch queue inherits its blocked signals.**
+  libdispatch's worker threads block every signal they can, the mask
+  survives `fork` and `execve`, and `forkpty` runs on io's control queue:
+  a `cmd` session came up with SIGINT, SIGHUP and SIGWINCH pending for
+  good (^C did nothing, a close waited for the SIGKILL, no resize
+  reached it). A shell clears its own mask, which is why nothing typed
+  into one showed it. The child sets an empty mask before `execve`; the
+  harness checks ^C and the redraw on a verbatim command.
+- **Every attach asks the foreground for a full redraw** (SIGWINCH to
+  `tcgetpgrp`, `PTYSession.redrawForeground`). The replay starts where the
+  buffer was trimmed, and a TUI that redraws by difference (Claude Code)
+  keeps painting onto the screen it thinks it left — a return to the
+  foreground left "esc to interrupt" half under "still thinking". An
+  unchanged `TIOCSWINSZ` sends no signal, so it is sent outright.
 - **XNU posts `NOTE_EXIT` before the child is waitable.** `proc_exit` fires
   the kqueue note, *then* marks the process `SZOMB` and signals `SIGCHLD`. A
   process dispatch source that reaps exactly once can therefore see

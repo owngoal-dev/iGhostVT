@@ -146,6 +146,7 @@ private final class PairingSession: @unchecked Sendable {
             keys: [RemoteTLS.Key(identity: RemoteAccess.pairingIdentity, secret: RemoteAccess.pairingKey)],
             serverName: hostID,
         )
+        RemoteNetwork.keepOnLocalNetwork(parameters, to: endpoint)
         frames = RemoteFrameConnection(connection: NWConnection(to: endpoint, using: parameters), queue: queue)
         frames.onFrame = { [weak self] header, object in
             guard let self, header.kind == .reply else { return }

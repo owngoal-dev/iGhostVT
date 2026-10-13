@@ -149,6 +149,7 @@ final class RemoteDaemonClient: DaemonRequester {
             keys: [RemoteTLS.Key(identity: Data(host.deviceID.utf8), secret: host.deviceKey)],
             serverName: host.id,
         )
+        RemoteNetwork.keepOnLocalNetwork(parameters, to: endpoint)
         let attempt = RemoteFrameConnection(connection: NWConnection(to: endpoint, using: parameters), queue: queue)
         attempt.acceptsCompressedInput = true
         attempt.onReady = { [weak self, weak attempt] in

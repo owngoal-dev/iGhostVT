@@ -331,6 +331,14 @@ final class PTYSession {
             // see EPIPE from `yes | head` instead of the exit a terminal
             // gives it. An interactive shell resets it anyway.
             signal(SIGPIPE, SIG_DFL)
+            // The mask survives execve too, and this fork ran on a dispatch
+            // worker thread, which blocks every signal it can: a verbatim
+            // command came up with SIGINT, SIGHUP and SIGWINCH held pending
+            // for good — ^C did nothing, a close waited out the SIGKILL
+            // grace, and no resize or redraw ever reached it. A shell
+            // clears its own mask, which is why only `cmd` sessions showed it.
+            var unblocked: sigset_t = 0
+            sigprocmask(SIG_SETMASK, &unblocked, nil)
             execve(executablePath, argv, envp)
             fail(Self.stepExec)
         }
@@ -589,6 +597,22 @@ final class PTYSession {
         self.rows = rows
         var size = winsize(ws_row: rows, ws_col: columns, ws_xpixel: 0, ws_ypixel: 0)
         _ = ioctl(master, TIOCSWINSZ, &size)
+    }
+
+    /// Asks the program in front to paint its whole screen again: SIGWINCH
+    /// to the terminal's foreground process group, as a resize would send
+    /// (`TIOCSWINSZ` sends none when the size is unchanged). An attach
+    /// rebuilds the surface from the replay, which starts wherever the
+    /// buffer was trimmed — mid-frame, mid-sequence — while a TUI that
+    /// redraws by difference (Claude Code, Ink) goes on from the screen it
+    /// believes it left, and every later frame lands on the wrong one: an
+    /// "esc to interrupt" left half under "still thinking". A program that
+    /// ignores the signal loses nothing; a shell redraws its prompt line.
+    func redrawForeground() {
+        guard isAlive else { return }
+        let processGroup = tcgetpgrp(master)
+        guard processGroup > 0 else { return }
+        _ = kill(-processGroup, SIGWINCH)
     }
 
     /// Everything the daemon has buffered for this session, oldest first.

@@ -36,8 +36,35 @@ enum RemoteNetwork {
         }
     }
 
+    /// Keeps a connection to a device on the local network on the local
+    /// network: off every tunnel (`utun`, `ipsec` — a VPN, or a proxy app's
+    /// packet tunnel) and off cellular, so it leaves by the Wi-Fi or
+    /// Ethernet interface the other device is on. A proxy app in the way
+    /// carries the link through a process of its own, and a device on this
+    /// network is never reached better through one. A VM's bridge reads as
+    /// wired Ethernet and stays allowed. Only a Bonjour service or a local
+    /// address is narrowed, never the relay: that is on the internet, and
+    /// a proxy may be the only way to it.
+    static func keepOnLocalNetwork(_ parameters: NWParameters, to endpoint: NWEndpoint) {
+        switch endpoint {
+        case .service:
+            break
+        case .hostPort:
+            guard isLocal(endpoint) else { return }
+        default:
+            return
+        }
+        parameters.prohibitedInterfaceTypes = [.cellular, .other]
+    }
+
     /// Until remote access goes beyond the local network, only a peer on it
-    /// is served: private IPv4, link-local, loopback, and IPv6 unique-local.
+    /// is served: private IPv4, link-local, loopback, IPv6 unique-local, and
+    /// a global IPv6 address inside a prefix one of this device's own
+    /// interfaces is on. That last one is the same link: Bonjour hands a
+    /// device the global address as readily as the link-local one on a
+    /// dual-stack network, and refusing it failed that connection outright
+    /// — TCP had connected, so nothing tried the next address — and sent
+    /// the link to the relay.
     static func isLocal(_ endpoint: NWEndpoint) -> Bool {
         guard case let .hostPort(host, _) = endpoint else { return false }
         switch host {
@@ -52,7 +79,10 @@ enum RemoteNetwork {
             if bytes[0 ..< 15].allSatisfy({ $0 == 0 }), bytes[15] == 1 {
                 return true
             }
-            return bytes[0] & 0xFE == 0xFC || (bytes[0] == 0xFE && bytes[1] & 0xC0 == 0x80)
+            if bytes[0] & 0xFE == 0xFC || (bytes[0] == 0xFE && bytes[1] & 0xC0 == 0x80) {
+                return true
+            }
+            return isOnLink(ipv6: bytes)
         default:
             return false
         }
@@ -81,6 +111,39 @@ enum RemoteNetwork {
             found.append((String(cString: entry.ifa_name), bytes.map(String.init).joined(separator: ".")))
         }
         return (found.first { $0.name == "en0" } ?? found.first)?.address
+    }
+
+    /// Whether `bytes` lies in the prefix of an IPv6 address this device
+    /// holds on a broadcast interface. A point-to-point interface (a VPN's
+    /// tunnel) is not the local network, whatever prefix it was handed.
+    private static func isOnLink(ipv6 bytes: [UInt8]) -> Bool {
+        var head: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&head) == 0, let head else { return false }
+        defer { freeifaddrs(head) }
+        var cursor: UnsafeMutablePointer<ifaddrs>? = head
+        while let entry = cursor?.pointee {
+            defer { cursor = entry.ifa_next }
+            let flags = Int32(entry.ifa_flags)
+            guard flags & IFF_UP != 0, flags & IFF_LOOPBACK == 0, flags & IFF_POINTOPOINT == 0,
+                  let address = entry.ifa_addr, address.pointee.sa_family == UInt8(AF_INET6),
+                  let netmask = entry.ifa_netmask
+            else { continue }
+            let own = address.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) {
+                withUnsafeBytes(of: $0.pointee.sin6_addr) { [UInt8]($0) }
+            }
+            let mask = netmask.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) {
+                withUnsafeBytes(of: $0.pointee.sin6_addr) { [UInt8]($0) }
+            }
+            // A link-local entry's prefix matches every link-local peer;
+            // those were decided already, and it says nothing of a global one.
+            guard own.count == 16, mask.count == 16, !(own[0] == 0xFE && own[1] & 0xC0 == 0x80),
+                  mask.contains(where: { $0 != 0 })
+            else { continue }
+            if (0 ..< 16).allSatisfy({ own[$0] & mask[$0] == bytes[$0] & mask[$0] }) {
+                return true
+            }
+        }
+        return false
     }
 
     private static func isLocal(ipv4 bytes: [UInt8]) -> Bool {

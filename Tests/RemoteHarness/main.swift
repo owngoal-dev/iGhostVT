@@ -270,6 +270,17 @@ let pairing = connect(RemoteTLS.Key(identity: RemoteAccess.pairingIdentity, secr
 check(waitUntil { pairing.1() }, "the public pairing key completes the handshake (the exchange inside is the security)")
 
 check(RemoteFrameConnectionTests.localAddresses(), "only local-network peers count as local")
+if let neighbours = RemoteFrameConnectionTests.onLinkNeighbours() {
+    check(
+        neighbours.allSatisfy { RemoteNetwork.isLocal(.hostPort(host: NWEndpoint.Host($0), port: 1)) },
+        "a global IPv6 address on this machine's own link counts as local (\(neighbours.joined(separator: ", ")))",
+    )
+} else {
+    print("  skip a global IPv6 address on this machine's own link: it holds none")
+}
+let direct = RemoteFrameConnectionTests.directParameters()
+check(direct.service && direct.local, "a direct connection keeps off tunnels and cellular")
+check(!direct.relay, "a connection to the relay may go any way the system routes it")
 
 check(
     RemoteAccess.isCompatible("1.4.0", with: "1.4.1") && RemoteAccess.isCompatible("1.4.3", with: "1.4.0"),
@@ -305,5 +316,48 @@ enum RemoteFrameConnectionTests {
         let remote = ["8.8.8.8", "172.32.0.1", "100.64.0.1", "2001:db8::1"]
         return local.allSatisfy { RemoteNetwork.isLocal(endpoint($0)) }
             && !remote.contains { RemoteNetwork.isLocal(endpoint($0)) }
+    }
+
+    /// Another address in the /64 of each global IPv6 address this machine
+    /// holds on a broadcast interface — a neighbour on the same link — or
+    /// nil when it holds none (a CI runner often has no IPv6).
+    static func onLinkNeighbours() -> [String]? {
+        var head: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&head) == 0, let head else { return nil }
+        defer { freeifaddrs(head) }
+        var found: [String] = []
+        var cursor: UnsafeMutablePointer<ifaddrs>? = head
+        while let entry = cursor?.pointee {
+            defer { cursor = entry.ifa_next }
+            let flags = Int32(entry.ifa_flags)
+            guard flags & IFF_UP != 0, flags & IFF_POINTOPOINT == 0, flags & IFF_LOOPBACK == 0,
+                  let address = entry.ifa_addr, address.pointee.sa_family == UInt8(AF_INET6)
+            else { continue }
+            var bytes = address.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) {
+                withUnsafeBytes(of: $0.pointee.sin6_addr) { [UInt8]($0) }
+            }
+            guard bytes[0] & 0xE0 == 0x20 else { continue }
+            bytes[15] ^= 0x5A
+            bytes[14] ^= 0xA5
+            if let address = IPv6Address(Data(bytes)) {
+                found.append("\(address)")
+            }
+        }
+        return found.isEmpty ? nil : found
+    }
+
+    static func directParameters() -> (service: Bool, local: Bool, relay: Bool) {
+        func prohibits(_ endpoint: NWEndpoint) -> Bool {
+            let parameters = RemoteTLS.parameters(keys: [])
+            RemoteNetwork.keepOnLocalNetwork(parameters, to: endpoint)
+            return parameters.prohibitedInterfaceTypes?.contains(.other) == true
+                && parameters.prohibitedInterfaceTypes?.contains(.cellular) == true
+        }
+        return (
+            prohibits(.service(name: "Host", type: RemoteAccess.serviceType, domain: "local.", interface: nil)),
+            prohibits(.hostPort(host: "192.168.1.58", port: 46404)),
+            prohibits(.hostPort(host: "relay.example.com", port: 46405))
+                || prohibits(.hostPort(host: "203.0.113.9", port: 46405)),
+        )
     }
 }

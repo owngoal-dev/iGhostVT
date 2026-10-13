@@ -260,6 +260,7 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         )
         switch path {
         case let .direct(endpoint):
+            RemoteNetwork.keepOnLocalNetwork(parameters, to: endpoint)
             return NWConnection(to: endpoint, using: parameters)
         case let .relay(configuration):
             return NWConnection(to: configuration.endpoint, using: parameters)

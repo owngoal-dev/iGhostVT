@@ -882,6 +882,61 @@ func runProxyLinkTests() {
     check(printed.contains("HOME=") && printed.contains("LC_CTYPE="), "and HOME and LC_CTYPE")
     check(!printed.contains("GHOSTTY_"), "and no shell integration")
 
+    // An attach rebuilds the surface from a replay that starts mid-stream,
+    // so the program in front is asked to paint its screen again.
+    print("proxy attach redraw")
+    let redrawn = request(supervisor, from: second, .openSession) { message in
+        let command = xpc_array_create(nil, 0)
+        xpc_array_append_value(command, xpc_string_create("/bin/sh"))
+        xpc_array_append_value(command, xpc_string_create("-c"))
+        xpc_array_append_value(
+            command,
+            xpc_string_create("trap 'echo redraw-asked' WINCH; echo redraw-ready; while :; do sleep 0.1; done"),
+        )
+        xpc_dictionary_set_value(message, iGhostVTWireKey.command, command)
+    }
+    let redrawnID = redrawn.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.sessionID) } ?? 0
+    check(replyCode(redrawn) == .success && redrawnID > 0, "a session opens for the redraw check")
+    check(waitUntil { second.output(of: redrawnID).contains("redraw-ready") }, "its program is running")
+    check(!second.output(of: redrawnID).contains("redraw-asked"), "an open asks for no redraw")
+    _ = request(supervisor, from: second, .detachSession) {
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, redrawnID)
+    }
+    check(
+        replyCode(request(supervisor, from: second, .attachSession) {
+            xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, redrawnID)
+        }) == .success,
+        "the session attaches again",
+    )
+    check(
+        waitUntil { second.output(of: redrawnID).contains("redraw-asked") },
+        "and the program in front is sent SIGWINCH to paint its screen again",
+    )
+    _ = request(supervisor, from: second, .closeSession) {
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, redrawnID)
+    }
+    _ = waitUntil { listedRow(supervisor, from: second, sessionID: redrawnID) == nil }
+
+    // A verbatim command is forked from a dispatch worker, which blocks
+    // signals; the child must not inherit that, or ^C never lands.
+    let interrupted = request(supervisor, from: second, .openSession) { message in
+        let command = xpc_array_create(nil, 0)
+        xpc_array_append_value(command, xpc_string_create("/bin/sleep"))
+        xpc_array_append_value(command, xpc_string_create("30"))
+        xpc_dictionary_set_value(message, iGhostVTWireKey.command, command)
+    }
+    let interruptedID = interrupted.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.sessionID) } ?? 0
+    check(replyCode(interrupted) == .success && interruptedID > 0, "a verbatim sleep opens")
+    Thread.sleep(forTimeInterval: 0.3)
+    _ = request(supervisor, from: second, .write) { message in
+        xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, interruptedID)
+        setInput(message, "\u{03}")
+    }
+    check(
+        waitUntil { second.exitCode(of: interruptedID) != nil },
+        "and ^C ends it: the command came up with no signal blocked",
+    )
+
     // The new-tab menu's recent rows: a directory named outright, and the
     // reply stating where the session actually landed — which is what the
     // app records as a visit.

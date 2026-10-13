@@ -344,6 +344,10 @@ final class PeerSession {
             if let reply {
                 Self.describe(session, into: reply)
             }
+            // The replay above is the screen as of now; whatever the
+            // program paints in answer is read later on this queue, so it
+            // reaches this peer behind the reply.
+            session.redrawForeground()
             DaemonLog.sessions.info("peer \(self.peerID) attached session \(id)")
             DaemonFileLog.log("peer \(self.peerID) attached session \(id)")
             return .success
