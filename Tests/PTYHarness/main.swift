@@ -350,6 +350,47 @@ if let result = run(
     check(false, "spawning a shell that floods the buffer succeeded")
 }
 
+// A session that set modes and then printed past the buffer: the raw tail
+// has lost them and begins mid-sequence, the rebuilt replay has neither
+// problem, and a client that holds the stream to some offset is handed the
+// rest of it exactly.
+print("replay is rebuilt, or continued from an offset")
+if let result = run(
+    command: [
+        "/bin/sh", "-c",
+        "printf '\\033[?1049h\\033[?1000h\\033[?2004h\\033]0;harness title\\007'; "
+            + "i=0; while [ $i -lt 25000 ]; do printf '\\033[38;5;%dmline %d\\033[0m\\r\\n' $((i % 200)) $i; i=$((i+1)); done; "
+            + "printf '\\033[6n\\033]52;c;aGk=\\007end-marker'",
+    ],
+    timeout: 60,
+) {
+    let session = result.session
+    let raw = harnessQueue.sync { session.replayData() }
+    let rebuiltReply = harnessQueue.sync { session.replay(resumingFrom: nil) }
+    let offset = harnessQueue.sync { session.outputOffset }
+    check(offset == UInt64(result.output.utf8.count), "the output offset counts every byte delivered (\(offset))")
+    check(!raw.contains(Data("\u{1B}[?1049h".utf8)), "evidence: the raw tail no longer holds the alternate-screen switch")
+    if case let .rebuilt(data, endsInTransfer) = rebuiltReply {
+        check(data.contains(Data("\u{1B}[?1049h".utf8)), "the rebuilt replay re-enters the alternate screen")
+        check(data.contains(Data("\u{1B}[?1000h".utf8)) && data.contains(Data("\u{1B}[?2004h".utf8)), "and turns mouse reporting and bracketed paste back on")
+        check(data.contains(Data("harness title".utf8)), "and sets the title again")
+        check(data.contains(Data("end-marker".utf8)), "it ends with the newest output")
+        check(!data.contains(Data("\u{1B}[6n".utf8)), "without the cursor-position question in it")
+        check(!data.contains(Data("\u{1B}]52;".utf8)), "or the clipboard write")
+        check(!endsInTransfer, "and no transfer is said to be running")
+    } else {
+        check(false, "a replay with no offset is rebuilt")
+    }
+    if case let .continuation(data) = harnessQueue.sync(execute: { session.replay(resumingFrom: offset - 10) }) {
+        check(String(decoding: data, as: UTF8.self) == "end-marker", "ten bytes behind, the client gets those ten bytes")
+    } else {
+        check(false, "an offset ten bytes behind gets a continuation")
+    }
+    session.invalidate()
+} else {
+    check(false, "spawning a shell that sets modes and floods succeeded")
+}
+
 // The count above is the logical size; what the session *costs* is the
 // storage behind it. Trimming a `Data` with `removeFirst` only moved the
 // slice's start, so the replay kept every byte ever printed — a flood grew

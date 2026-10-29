@@ -46,6 +46,14 @@ protocol TerminalTransport: AnyObject {
     /// one with no session to put it on yet.
     func setSessionAttributes(_ attributes: [String: String])
 
+    /// The terminal has more output waiting to be parsed than it should
+    /// hold: stop handing more over (true), and let the endpoint feel it,
+    /// until it has caught up (false). Output is held back, never dropped —
+    /// the producer blocks, as it would on a real terminal that is not
+    /// reading. Callable from any thread, from inside an event delivery
+    /// included.
+    func setReceivingPaused(_ paused: Bool)
+
     func disconnect()
 }
 
@@ -53,6 +61,8 @@ extension TerminalTransport {
     func connect() {
         connect(takingOver: false)
     }
+
+    func setReceivingPaused(_: Bool) {}
 }
 
 enum TerminalTransportEvent: Sendable {
@@ -83,6 +93,10 @@ enum TerminalTransportEvent: Sendable {
     /// the session it had before (true) or opened a fresh one. A download
     /// cut by the last link carries on only in the session it ran in.
     case sessionResumed(Bool)
+    /// The session the link attached to is in the middle of a ZMODEM
+    /// transfer, left out of the replay: the program on the other end is
+    /// still sending it. Sent before the replay.
+    case transferUnderway
 }
 
 enum TerminalTransportState: Sendable, Equatable {

@@ -1166,6 +1166,14 @@ func runProxyLinkTests() {
         "the attach reply replays the buffer",
     )
     check(attributes(in: attached) == lock, "and states the attributes the session kept")
+    let heldOffset = attached.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.outputOffset) } ?? 0
+    // Not the replay's length: a rebuilt replay opens with the state it
+    // writes back.
+    check(heldOffset > 0, "the attach reply says where the output stands (\(heldOffset))")
+    check(
+        attached.map { !xpc_dictionary_get_bool($0, iGhostVTWireKey.outputResumed) } ?? false,
+        "a client that names no offset gets the screen rebuilt",
+    )
     harnessQueue.async {
         let message = makeRequest(.write) { message in
             xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, sessionID)
@@ -1179,6 +1187,46 @@ func runProxyLinkTests() {
         "output now goes to the attached peer",
     )
     check(!peer.output(of: sessionID).contains("second-peer"), "and not to the departed one")
+
+    // The link drops and comes back: a client that says how much it holds
+    // gets only the output it missed, unchanged.
+    usleep(300_000)
+    let heldSince = UInt64(second.output(of: sessionID).utf8.count)
+    check(
+        replyCode(request(supervisor, from: second, .detachSession) {
+            xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
+        }) == .success,
+        "the peer detaches as a dropped link would",
+    )
+    let resumed = request(supervisor, from: second, .attachSession) {
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.outputOffset, heldOffset + heldSince)
+    }
+    check(replyCode(resumed) == .success, "it attaches again naming how much it holds")
+    check(
+        resumed.map { xpc_dictionary_get_bool($0, iGhostVTWireKey.outputResumed) } ?? false,
+        "and is answered with a continuation",
+    )
+    var missedLength = 0
+    _ = resumed.flatMap { xpc_dictionary_get_data($0, iGhostVTWireKey.data, &missedLength) }
+    check(missedLength == 0, "which holds nothing, since nothing was missed (\(missedLength) bytes)")
+    check(
+        resumed.map { xpc_dictionary_get_uint64($0, iGhostVTWireKey.outputOffset) } == heldOffset + heldSince,
+        "and the offset it states is the one the client is at",
+    )
+    let behind = request(supervisor, from: second, .attachSession) {
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
+        xpc_dictionary_set_uint64($0, iGhostVTWireKey.outputOffset, heldOffset + heldSince - 5)
+    }
+    var behindLength = 0
+    let behindBytes = behind.flatMap { xpc_dictionary_get_data($0, iGhostVTWireKey.data, &behindLength) }
+    let behindText = behindBytes.map {
+        String(decoding: UnsafeRawBufferPointer(start: $0, count: behindLength), as: UTF8.self)
+    } ?? ""
+    check(
+        behindLength == 5 && second.output(of: sessionID).hasSuffix(behindText),
+        "a client five bytes behind gets those five bytes (\(behindText.debugDescription))",
+    )
 
     check(
         replyCode(request(supervisor, from: second, .closeSession) {

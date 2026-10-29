@@ -22,6 +22,12 @@ protocol DaemonLink: AnyObject, Sendable {
     func activate(_ handler: @escaping @Sendable (DaemonLinkEvent) -> Void)
     func send(_ message: xpc_object_t)
     func send(_ message: xpc_object_t, reply: @escaping @Sendable (xpc_object_t) -> Void)
+    /// Stops delivering what arrives, and lets the sender feel it — the
+    /// local daemon's proxy stops reading its socket, a remote host's TCP
+    /// stops being drained — until resumed. Callable from any thread; from
+    /// the link's own queue, in the middle of a delivery, no later one
+    /// arrives until resumed.
+    func setReceivingPaused(_ paused: Bool)
     func cancel()
 }
 
@@ -62,6 +68,10 @@ final class XPCDaemonLink: DaemonLink, @unchecked Sendable {
     private let queue: DispatchQueue
     private let lock = NSLock()
     private var isCancelled = false
+    private var isActivated = false
+    /// `xpc_connection_suspend` is in force. Balanced before the connection
+    /// is cancelled: libxpc aborts on a suspended connection released.
+    private var isSuspended = false
 
     init?(queue: DispatchQueue) {
         // Ghost Remote has no daemon of its own, and its sandbox would
@@ -86,6 +96,7 @@ final class XPCDaemonLink: DaemonLink, @unchecked Sendable {
             }
         }
         xpc_connection_activate(connection)
+        lock.withLock { isActivated = true }
     }
 
     func send(_ message: xpc_object_t) {
@@ -96,8 +107,26 @@ final class XPCDaemonLink: DaemonLink, @unchecked Sendable {
         xpc_connection_send_message_with_reply(connection, message, queue, reply)
     }
 
+    func setReceivingPaused(_ paused: Bool) {
+        lock.withLock {
+            guard isActivated, !isCancelled, paused != isSuspended else { return }
+            isSuspended = paused
+            if paused {
+                xpc_connection_suspend(connection)
+            } else {
+                xpc_connection_resume(connection)
+            }
+        }
+    }
+
     func cancel() {
-        lock.withLock { isCancelled = true }
+        lock.withLock {
+            isCancelled = true
+            if isSuspended {
+                isSuspended = false
+                xpc_connection_resume(connection)
+            }
+        }
         xpc_connection_cancel(connection)
     }
 }
@@ -164,11 +193,31 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
     private var untried: [(path: Path, delay: TimeInterval)] = []
     private var launchGeneration = 0
 
+    /// Set while the owner cannot take more (`setReceivingPaused`), and
+    /// applied to the link that wins the race. Confined to `queue`.
+    private var isReceivingPaused = false
+    /// Marks `queue`, so a pause asked for in the middle of a delivery is
+    /// applied before the next frame rather than after the batch.
+    private let queueKey = DispatchSpecificKey<Void>()
+
     init?(hostID: String, queue: DispatchQueue) {
         guard let host = PairedRemoteHostStore.host(id: hostID) else { return nil }
         self.hostID = hostID
         self.host = host
         self.queue = queue
+        queue.setSpecific(key: queueKey, value: ())
+    }
+
+    func setReceivingPaused(_ paused: Bool) {
+        let apply = { [self] in
+            isReceivingPaused = paused
+            frames?.setReceivingPaused(paused)
+        }
+        if DispatchQueue.getSpecific(key: queueKey) != nil {
+            apply()
+        } else {
+            queue.async(execute: apply)
+        }
     }
 
     func activate(_ handler: @escaping @Sendable (DaemonLinkEvent) -> Void) {
@@ -271,6 +320,9 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
         guard frames == nil, !isFinished else { return }
         frames = winner
         winningPath = path
+        if isReceivingPaused {
+            winner.setReceivingPaused(true)
+        }
         untried.removeAll()
         for attempt in attempts where attempt !== winner {
             attempt.onClosed = nil

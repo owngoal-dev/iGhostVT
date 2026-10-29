@@ -301,6 +301,14 @@ harness:
 		$$(find "$(ROOT_DIR)/Tests/CLIRenderer" -name '*.swift' | sort) \
 		-o "$$harness_dir/cli-renderer" && \
 	"$$harness_dir/cli-renderer" && \
+	xcrun --sdk macosx swiftc -O -swift-version 5 \
+		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
+		"$(ROOT_DIR)/iGhostVTIO/Session/TerminalStreamTracker.swift" \
+		"$(ROOT_DIR)/iGhostVTIO/Session/TerminalReplayState.swift" \
+		"$(ROOT_DIR)/iGhostVTIO/Session/SessionOutputLog.swift" \
+		$$(find "$(ROOT_DIR)/Tests/ReplayStream" -name '*.swift' | sort) \
+		-o "$$harness_dir/replay-stream" && \
+	"$$harness_dir/replay-stream" && \
 	xcrun --sdk macosx swiftc -swift-version 5 -I "$(XPC_SHIM_DIR)" -I "$(CORECRYPTO_SHIM_DIR)" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \

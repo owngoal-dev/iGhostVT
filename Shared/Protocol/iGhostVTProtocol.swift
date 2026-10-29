@@ -142,7 +142,8 @@ enum iGhostVTOperation: UInt64, Sendable {
     /// Exclusive: a session held by another peer is `sessionBusy`, with the
     /// holder's name in `holder` when it has one. `takeover` takes it
     /// instead — the peer that held it is sent `sessionTaken` and detached.
-    /// `holder` as on `openSession`.
+    /// `holder` as on `openSession`. `outputOffset` says how much of the
+    /// session's output the client already holds; see `outputResumed`.
     case attachSession = 4
     case detachSession = 5
     /// `data` typed (or pasted) into the attached session's PTY, in full: the
@@ -414,6 +415,26 @@ enum iGhostVTWireKey {
     static let takeover = "takeover"
     /// On `hello`: send this connection the watcher events.
     static let watchSessions = "watch"
+
+    /// Where a session's output stream stands, counted in bytes from its
+    /// first: on every open, attach and snapshot reply, how much the
+    /// session has printed (the reply's `data` ends there); on an attach,
+    /// how much of it the client holds — the reply's offset plus every
+    /// output byte it took since. A host before this sends none, and a
+    /// client without one asks for none.
+    static let outputOffset = "ooff"
+    /// On an attach reply: `data` is the output after the `outputOffset`
+    /// the client sent, unchanged — a link that dropped resumes with no gap
+    /// and nothing printed twice. Absent, `data` is the screen rebuilt
+    /// (`SessionOutputLog`): the state the trimmed output left, written
+    /// back, then the newest output from a sequence boundary, with what a
+    /// terminal would answer or act on again left out — from a host before
+    /// this, the raw buffer, which a client recognises by the missing
+    /// `outputOffset`.
+    static let outputResumed = "ores"
+    /// On an attach or snapshot reply: a ZMODEM transfer is still running,
+    /// left out of the rebuilt `data` with the rest of its conversation.
+    static let transferUnderway = "xfer"
 
     /// `uploadFile`.
     static let fileName = "fname"

@@ -308,6 +308,7 @@ final class PeerSession {
                 )
                 Self.setDirectory(session.currentDirectory, in: reply)
                 Self.setAttributes(session.attributes, in: reply)
+                xpc_dictionary_set_uint64(reply, iGhostVTWireKey.outputOffset, session.outputOffset)
             }
             return .success
         } catch let failure as iGhostVTFailure {
@@ -341,15 +342,20 @@ final class PeerSession {
                 takeover: xpc_dictionary_get_bool(message, iGhostVTWireKey.takeover),
             )
             attachedSessionIDs.insert(id)
+            var replayNote = ""
             if let reply {
-                Self.describe(session, into: reply)
+                replayNote = Self.describe(
+                    session,
+                    into: reply,
+                    resumingFrom: optionalUInt64(message, key: iGhostVTWireKey.outputOffset),
+                )
             }
             // The replay above is the screen as of now; whatever the
             // program paints in answer is read later on this queue, so it
             // reaches this peer behind the reply.
             session.redrawForeground()
             DaemonLog.sessions.info("peer \(self.peerID) attached session \(id)")
-            DaemonFileLog.log("peer \(self.peerID) attached session \(id)")
+            DaemonFileLog.log("peer \(self.peerID) attached session \(id)\(replayNote)")
             return .success
         } catch let code as iGhostVTReplyCode {
             DaemonLog.sessions.error(
@@ -411,14 +417,15 @@ final class PeerSession {
         let id = xpc_dictionary_get_uint64(message, iGhostVTWireKey.sessionID)
         guard let session = registry.session(id) else { return .unknownSession }
         if let reply {
-            Self.describe(session, into: reply)
+            _ = Self.describe(session, into: reply, resumingFrom: nil)
         }
         return .success
     }
 
     /// The size, the foreground process, the directory, the attributes,
-    /// and the replay buffer — what an attach and a snapshot both answer with.
-    private static func describe(_ session: PTYSession, into reply: xpc_object_t) {
+    /// and the replay — what an attach and a snapshot both answer with.
+    /// Returns which replay it was, for the log.
+    private static func describe(_ session: PTYSession, into reply: xpc_object_t, resumingFrom offset: UInt64?) -> String {
         xpc_dictionary_set_uint64(reply, iGhostVTWireKey.columns, UInt64(session.columns))
         xpc_dictionary_set_uint64(reply, iGhostVTWireKey.rows, UInt64(session.rows))
         setForegroundProcess(
@@ -430,12 +437,28 @@ final class PeerSession {
         // the tab it answers wants the directory the shell is in now.
         setDirectory(session.currentDirectory, in: reply)
         setAttributes(session.attributes, in: reply)
-        let replay = session.replayData()
+        let replay: Data
+        let note: String
+        switch session.replay(resumingFrom: offset) {
+        case let .continuation(data):
+            replay = data
+            note = ", continuing from \(offset ?? 0) (\(data.count) byte(s) missed)"
+            xpc_dictionary_set_bool(reply, iGhostVTWireKey.outputResumed, true)
+        case let .rebuilt(data, endsInTransfer):
+            replay = data
+            note = ", replay rebuilt (\(data.count) byte(s)\(endsInTransfer ? ", a transfer still running" : "")"
+                + (offset.map { "; \($0) was out of reach" } ?? "") + ")"
+            if endsInTransfer {
+                xpc_dictionary_set_bool(reply, iGhostVTWireKey.transferUnderway, true)
+            }
+        }
+        xpc_dictionary_set_uint64(reply, iGhostVTWireKey.outputOffset, session.outputOffset)
         replay.withUnsafeBytes { buffer in
             if let base = buffer.baseAddress, !replay.isEmpty {
                 xpc_dictionary_set_data(reply, iGhostVTWireKey.data, base, buffer.count)
             }
         }
+        return note
     }
 
     /// Replaces what clients keep on a session, all or nothing. Not gated
