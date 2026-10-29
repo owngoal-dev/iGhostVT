@@ -80,6 +80,11 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
     /// daemon reads the path from the kernel; the app never names one.
     private let inheritDirectoryFrom: UInt64?
 
+    /// How much of the session's output the tab's terminal holds, shared
+    /// with the tab's earlier and later transports: an attach names it,
+    /// and every reply and output event moves it.
+    private let outputPosition: SessionOutputPosition?
+
     /// A directory a fresh open starts in when no live session can name it
     /// — a row of the recent list. Only ever a path the daemon itself
     /// reported (`TerminalDirectory.path`), handed straight back; the app
@@ -148,8 +153,10 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         resumeSessionID: UInt64? = nil,
         inheritDirectoryFrom: UInt64? = nil,
         startDirectory: String? = nil,
+        outputPosition: SessionOutputPosition? = nil,
     ) {
         self.endpoint = endpoint
+        self.outputPosition = outputPosition
         // The Settings shell is a path on this device; another device runs
         // its own default.
         let trimmed = endpoint.isRemote ? nil : shellPath?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -643,6 +650,18 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
 
     // MARK: - Connection lifecycle
 
+    /// Whether the host asked for received output to be held back
+    /// (`setReceivingPaused`); a link made later starts held. Under `lock`.
+    private var isReceivingPaused = false
+
+    func setReceivingPaused(_ paused: Bool) {
+        let connection: DaemonLink? = lock.locked {
+            isReceivingPaused = paused
+            return self.connection
+        }
+        connection?.setReceivingPaused(paused)
+    }
+
     private func establish() {
         guard let connection = endpoint.makeLink(queue: queue) else {
             emit(.state(.disconnected(
@@ -656,6 +675,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         lock.locked { self.connection = connection }
         connection.activate { [weak self] event in
             self?.handle(event)
+        }
+        if lock.locked({ isReceivingPaused }) {
+            connection.setReceivingPaused(true)
         }
 
         let hello = Self.makeMessage(.hello)
@@ -787,6 +809,9 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         if let resumeSessionID = lock.locked({ self.resumeSessionID }) {
             let message = Self.makeMessage(.attachSession)
             xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, resumeSessionID)
+            if let held = outputPosition?.offset(in: resumeSessionID) {
+                xpc_dictionary_set_uint64(message, iGhostVTWireKey.outputOffset, held)
+            }
             if takesOver {
                 xpc_dictionary_set_bool(message, iGhostVTWireKey.takeover, true)
             }
@@ -833,18 +858,43 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     emit(.sessionResumed(true))
                     emitSessionState(in: reply)
                     emitSessionAttributes(in: reply, isResumed: true)
-                    // Replayed scrollback so the surface rebuilds its screen.
-                    // Repainted from a clean slate: on an in-app reconnect the
-                    // surface still shows the session's last frame, and
-                    // appending the whole replay below it reprints history the
-                    // screen already has. Home + erase-display gives the
-                    // replay the blank canvas a cold launch gets, and is a
-                    // no-op on one.
-                    if let replay = Self.data(iGhostVTWireKey.data, in: reply), !replay.isEmpty {
-                        var payload = Data("\u{1B}[H\u{1B}[2J".utf8)
-                        payload.append(replay)
-                        emit(.received(payload, replay: true))
+                    let hostOffset = Self.uint64(iGhostVTWireKey.outputOffset, in: reply)
+                    let isContinuation = xpc_dictionary_get_bool(reply, iGhostVTWireKey.outputResumed)
+                    if !isContinuation, xpc_dictionary_get_bool(reply, iGhostVTWireKey.transferUnderway) {
+                        emit(.transferUnderway)
                     }
+                    let replayData = Self.data(iGhostVTWireKey.data, in: reply)
+                    AppLog.info(
+                        .transport,
+                        isContinuation
+                            ? "attached session \(resumeSessionID): continuation, \(replayData?.count ?? 0) byte(s) missed"
+                            : hostOffset != nil
+                            ? "attached session \(resumeSessionID): replay rebuilt, \(replayData?.count ?? 0) byte(s)"
+                            : "attached session \(resumeSessionID): raw replay from a host before offsets",
+                    )
+                    if let replay = replayData, !replay.isEmpty {
+                        if isContinuation {
+                            // Exactly what the terminal missed while the link
+                            // was down: live output, late.
+                            emit(.received(replay, replay: false))
+                        } else if hostOffset != nil {
+                            // The screen rebuilt by the host, from its own
+                            // clean slate (`SessionOutputLog`).
+                            emit(.received(replay, replay: true))
+                        } else {
+                            // A host from before offsets sends its raw buffer.
+                            // Repainted from a clean slate: on an in-app
+                            // reconnect the surface still shows the session's
+                            // last frame, and appending the whole replay below
+                            // it reprints history the screen already has.
+                            // Home + erase-display gives the replay the blank
+                            // canvas a cold launch gets, and is a no-op on one.
+                            var payload = Data("\u{1B}[H\u{1B}[2J".utf8)
+                            payload.append(replay)
+                            emit(.received(payload, replay: true))
+                        }
+                    }
+                    outputPosition?.set(sessionID: resumeSessionID, offset: hostOffset)
                 } else if code == .sessionBusy {
                     // Another window of this app still has it after the
                     // retries: it is open there, not gone.
@@ -926,6 +976,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                 self.resumeSessionID = sessionID
             }
             appliedViewport = (Int(columns), Int(rows))
+            outputPosition?.set(sessionID: sessionID, offset: Self.uint64(iGhostVTWireKey.outputOffset, in: reply))
             emit(.state(.connected))
             emit(.sessionResumed(false))
             emitSessionState(in: reply)
@@ -972,6 +1023,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                     AppLog.info(.transport, "first output event bytes=\(data.count) session=\(eventSessionID)")
                 }
                 emit(.received(data, replay: false))
+                outputPosition?.advance(sessionID: eventSessionID, by: data.count)
             }
         case .processName:
             emitSessionState(in: event)
@@ -1124,6 +1176,12 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
               let value = xpc_dictionary_get_string(dictionary, key)
         else { return nil }
         return String(cString: value)
+    }
+
+    private static func uint64(_ key: String, in dictionary: xpc_object_t) -> UInt64? {
+        guard let value = xpc_dictionary_get_value(dictionary, key),
+              xpc_get_type(value) == iGhostVTXPC.typeUInt64 else { return nil }
+        return xpc_uint64_get_value(value)
     }
 
     private static func data(_ key: String, in dictionary: xpc_object_t) -> Data? {

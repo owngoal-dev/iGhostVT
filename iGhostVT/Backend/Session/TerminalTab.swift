@@ -141,6 +141,7 @@ final class TerminalTab: ObservableObject, Identifiable {
     ) {
         let daemonSession = DaemonSessionBox(id: resumeDaemonSessionID)
         self.daemonSession = daemonSession
+        let outputPosition = SessionOutputPosition()
         self.remoteHostID = remoteHostID
         let endpoint: DaemonEndpoint = remoteHostID.map { .remote(hostID: $0) } ?? .local
         let customConfiguration = GhosttyAppConfiguration.customConfiguration
@@ -160,6 +161,7 @@ final class TerminalTab: ObservableObject, Identifiable {
                 resumeSessionID: daemonSession.id,
                 inheritDirectoryFrom: inheritDirectoryFrom,
                 startDirectory: startDirectory,
+                outputPosition: outputPosition,
             )
             // A real process exit (including one we asked for via
             // closeSession) means the ID must never be reused: forget it in

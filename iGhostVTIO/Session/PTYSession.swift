@@ -32,7 +32,7 @@ final class PTYSession {
     /// Recent output, replayed when a client attaches. The daemon holds this
     /// so a relaunched app can rebuild the screen without the shell knowing
     /// anything happened.
-    private var replayBuffer = Data()
+    private var output = SessionOutputLog()
 
     private let queue: DispatchQueue
     private let master: Int32
@@ -615,15 +615,28 @@ final class PTYSession {
         _ = kill(-processGroup, SIGWINCH)
     }
 
-    /// Everything the daemon has buffered for this session, oldest first.
+    /// The newest output as the program wrote it, oldest first.
     func replayData() -> Data {
-        replayBuffer.suffix(iGhostVTProtocol.sessionReplayByteCount)
+        output.rawTail
+    }
+
+    /// What an attach or a snapshot hands back: the output after `offset`
+    /// when the client says how much it holds and the rest is still here,
+    /// the screen rebuilt otherwise (`SessionOutputLog`).
+    func replay(resumingFrom offset: UInt64?) -> SessionOutputLog.Replay {
+        output.replay(resumingFrom: offset)
+    }
+
+    /// How much the session has printed: the stream offset a client
+    /// holding everything so far is at.
+    var outputOffset: UInt64 {
+        output.endOffset
     }
 
     /// Bytes the replay buffer holds, trimmed or not — what the session
     /// costs the daemon, for the harness's bound.
     var replayStorageByteCount: Int {
-        replayBuffer.count
+        output.storageByteCount
     }
 
     /// Stops or resumes draining the PTY. Idempotent; the source is
@@ -668,7 +681,7 @@ final class PTYSession {
         // Released here rather than left to deinit: this is what the daemon
         // is holding per session, and a caller may keep the object alive a
         // little longer than the session it stands for.
-        replayBuffer = Data()
+        output = SessionOutputLog()
         if isAlive {
             kill(childPID, SIGKILL)
             isAlive = false
@@ -729,7 +742,7 @@ final class PTYSession {
                 hasLoggedFirstOutput = true
                 DaemonFileLog.log("session \(id) first output, \(data.count) byte(s)")
             }
-            append(data)
+            output.append(data)
             onOutput?(id, data)
             // Output is the moment the foreground is most likely to have
             // just changed (a command echoed, a TUI's first draw).
@@ -761,20 +774,6 @@ final class PTYSession {
                 pollUntilReaped()
             }
             return
-        }
-    }
-
-    /// Keeps the newest `sessionReplayByteCount` bytes, trimmed in batches:
-    /// once the buffer holds twice that, the tail is copied into fresh
-    /// storage and the old storage freed. Not `removeFirst` on every append
-    /// — on a `Data` that only moves the slice's start, so the storage kept
-    /// every byte the session had ever printed: a flood grew `ighostvtd-io`
-    /// by its whole output and nothing gave it back. The copy moves each
-    /// byte at most once more.
-    private func append(_ data: Data) {
-        replayBuffer.append(data)
-        if replayBuffer.count > 2 * iGhostVTProtocol.sessionReplayByteCount {
-            replayBuffer = Data(replayBuffer.suffix(iGhostVTProtocol.sessionReplayByteCount))
         }
     }
 

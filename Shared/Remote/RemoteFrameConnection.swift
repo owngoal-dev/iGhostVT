@@ -55,6 +55,12 @@ final class RemoteFrameConnection: @unchecked Sendable {
     private var buffer: [UInt8] = []
     private var isClosed = false
     private var isReady = false
+    /// No frame is handed out and nothing more read off the network: the
+    /// owner cannot take more yet (`setReceivingPaused`). What is in
+    /// `buffer` waits there, and TCP holds the rest back at the sender.
+    private var isReceivePaused = false
+    /// A `receive` is outstanding on the connection.
+    private var isReceiving = false
     /// `closeWhenFlushed` is waiting for the last sends to leave.
     private var isDraining = false
     /// Held while draining: the owner has usually let go by then, and the
@@ -96,8 +102,11 @@ final class RemoteFrameConnection: @unchecked Sendable {
     }
 
     private func receive() {
+        guard !isReceiving, !isReceivePaused, !isClosed else { return }
+        isReceiving = true
         connection.receive(minimumIncompleteLength: 1, maximumLength: 256 * 1024) { [weak self] data, _, isComplete, error in
             guard let self, !isClosed else { return }
+            isReceiving = false
             if let data, !data.isEmpty {
                 receivedWireByteCount += UInt64(data.count)
                 buffer.append(contentsOf: data)
@@ -113,6 +122,17 @@ final class RemoteFrameConnection: @unchecked Sendable {
         }
     }
 
+    /// Stops handing out frames — at once, between two of them, when called
+    /// from an `onFrame` — and reading the network; resuming hands out what
+    /// waited and reads on. On `queue`.
+    func setReceivingPaused(_ paused: Bool) {
+        guard paused != isReceivePaused else { return }
+        isReceivePaused = paused
+        guard !paused, isReady, !isClosed else { return }
+        guard drainFrames() else { return }
+        receive()
+    }
+
     /// Hands out every whole frame in the buffer. False when the link
     /// carried something that is not a frame, which closes it.
     private func drainFrames() -> Bool {
@@ -122,7 +142,7 @@ final class RemoteFrameConnection: @unchecked Sendable {
                 buffer.removeFirst(offset)
             }
         }
-        while buffer.count - offset >= IOWire.headerByteCount {
+        while !isReceivePaused, buffer.count - offset >= IOWire.headerByteCount {
             let flags = buffer[offset + RemoteFrameCompression.flagsOffset]
             let isCompressed = flags == RemoteFrameCompression.compressedFlag
             guard flags == 0 || (isCompressed && acceptsCompressedInput) else {

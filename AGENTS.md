@@ -501,7 +501,7 @@ Data flow: one `TabManager` per `UIWindowScene` (owned by `SceneDelegate`);
 each `TerminalTab` owns a `TerminalSessionStore`, which drives a
 `TerminalTransport`. Daemon sessions outlive the app —
 `disconnect()` = detach, `closeSession()` = kill; `DaemonSessionLedger`
-persists session IDs so a cold launch reattaches (256 KiB replay).
+persists session IDs so a cold launch reattaches (256 KiB replay, below).
 Those IDs never repeat across `ighostvtd-io` processes
 (`SessionIDReservation`, a block counter kept beside the daemon log): after
 io dies a kept ID must name nothing, so the attach fails and the tab opens a
@@ -509,6 +509,70 @@ fresh shell. A counter restarting at 1 handed a reconnecting tab whatever the
 replacement had opened under its old number — a CLI `new` included.
 SSH later = another `TerminalTransport` implementation; don't collapse the
 seam.
+
+**A replay is never the raw buffer.** The buffer is raw output trimmed from
+the front, and a terminal fed it as it is starts mid-session: a cut CSI
+prints its parameters, a cut character prints U+FFFD, every mode set before
+the cut (the alternate screen, mouse reporting, bracketed paste, the kitty
+keyboard flags, modifyOtherKeys, the scroll region, charsets, the pen) is
+gone while the program still running expects it, and the history played
+again is *acted on* again — its DA/DSR/DECRQM/XTVERSION/colour questions
+answered into the program's input, an OSC 52 rewriting the clipboard, a
+notification posted, a ZMODEM transfer drawn as a screen of binary (what
+"reopening a terminal after sz shows garbage" was: the transfer's start had
+been trimmed, so the app's scanner never found a header to cut from). So
+`ighostvtd-io` keeps the buffer as a `SessionOutputLog`: the bytes, their
+place in the session's whole output stream (`startOffset`, `endOffset`),
+and the terminal state at their start, read off every byte once as it is
+trimmed by `TerminalStreamTracker` — Ghostty's own parser (the
+`Parser.zig` state table, `stream.zig`'s ground-state UTF-8, the parameter
+and string-terminator rules) at the pinned commit, with the state model
+(`TerminalReplayState`) following `Terminal.zig` and the termio stream
+handler: which modes Ghostty keeps, 1049's cursor save, DECKPAM as mode 66,
+the mouse event and format as one value each, DECSTR, RIS, the eight-entry
+kitty stack per screen with its wrapping. An attach gets one of two replays
+(`outputOffset` on the request, `outputResumed` on the reply):
+
+- a **continuation**, when the client names how much of the stream it
+  holds and everything after that is still buffered (and no more than a
+  replay's worth): those bytes, unchanged. The tab keeps its position in a
+  `SessionOutputPosition` across its transports (in memory only — a cold
+  launch holds nothing), so a link that drops — a cut peer, an iOS
+  suspension past the proxy's grace, a remote network change, a session
+  taken back with Use Here — resumes with no gap and nothing printed twice.
+  Nothing local may be written into the terminal between the two links: the
+  store no longer prints "Connection lost. Reconnecting…" (the pill says
+  it), because a line of ours would sit inside the program's output and move
+  its cursor. Failures still print.
+- a **rebuild** otherwise: a preamble written from the state at the replay's
+  first byte (back to the primary screen, DECSTR as a baseline, then every
+  setting the stream ever touched at its value there — touched *anywhere* in
+  the buffer, since the reader may be a terminal that already showed the
+  session further along), then the newest output from the first point
+  Ghostty is between sequences, characters and transfers, with every
+  question, OSC 52, notification, ENQ, answered kitty-graphics command and
+  ZMODEM conversation left out. A stretch left out whose introducer also
+  ended something kept is replaced by what ended it (ST for a string, CAN for
+  an unfinished CSI or a half-read character or a transfer), or what came
+  before would run on. A replay that ends inside a sequence begun before it
+  ends with a prefix that puts Ghostty's parser in an equivalent state, so
+  the live rest of it is not printed; one that ends inside a transfer says
+  so (`transferUnderway`) and the app's engine, unless it is resuming its own
+  download, swallows and cancels the sender's stream. Snapshots (the CLI's
+  `capture`, the Shortcuts) get the rebuild too.
+
+The client tells the two apart by the reply: `outputResumed` is a
+continuation (fed as live output, through the ZMODEM engine); an
+`outputOffset` without it is a rebuild, which brings its own clean slate; no
+`outputOffset` at all is a host from before this, whose raw buffer still gets
+the old `ESC[H ESC[2J` prefix. Both fields are optional both ways, so any
+patch of the line talks to any other. `Tests/ReplayStream` (`make test`)
+checks the boundaries, the exclusions, the continuation, the kitty stack,
+and the property the rest serves — over thousands of random streams of
+modes, screens, strings, fragments, C1 bytes and transfers, a fresh terminal
+and one that already showed the session both end, after the rebuilt
+replay, in the state the whole stream left. The PTY harness checks it on a
+real session and over the proxy wire.
 
 The CLI reaches those same sessions without disturbing them. Attach is
 exclusive — one peer per session, a second gets `sessionBusy` — so
@@ -711,9 +775,10 @@ bytes, not a grid, and libghostty could only turn them into a screen through
 a live surface with a renderer attached. It is the subset that decides where
 text lands — cursor, scroll region, erase, insert/delete, alternate screen,
 character width — with attributes parsed and dropped, no reflow, and a
-resync at the first byte that cannot continue a sequence (the replay buffer
-is trimmed from the front, so its first bytes are routinely a fragment).
-`Tests/CLIRenderer` is its own harness, run by `make test`.
+resync at the first byte that cannot continue a sequence (a host from
+before rebuilt replays sends its buffer trimmed from the front, so its
+first bytes are routinely a fragment; a current host's snapshot starts on a
+boundary). `Tests/CLIRenderer` is its own harness, run by `make test`.
 
 Quitting is the app's decision, made in `applicationWillTerminate` from the
 tabs of every connected scene (which is why the Mac app opts out of
@@ -1051,9 +1116,16 @@ animates only when the previous one was a second ago
 (`TerminalTab.animatesRetitle`). The library's own per-title publishes
 and wakeups are coalesced in libghostty-spm (1.6.20261002). Under `yes`
 or `base64` in three tabs the parser keeps up — the unparsed backlog never
-grows — so the app does not pause XPC delivery; if it ever has to, the
-hook is the session's `setOutputBacklogHandler`, and a suspension must
-stay well under the proxy's 10 s congestion grace or the peer is cut.
+grows — but where it does not (a flood of kitty images, a surface being
+rebuilt) output is held back, never dropped: the session's
+`setOutputBacklogHandler` (512 KiB high, 128 KiB low) pauses the transport
+(`setReceivingPaused` — `xpc_connection_suspend` locally, frames left
+unread and TCP undrained remotely, at once between two deliveries), and the
+program blocks on its write as it would on a terminal that is not reading.
+Below 1 MiB on purpose: with no surface attached the library keeps that
+much and drops the oldest bytes past it, mid-sequence. A pause longer than
+the proxy's 10 s grace gets the peer cut, and the reconnect's continuation
+loses nothing.
 
 **ZMODEM (`rz`/`sz`) is a clean-room client-side endpoint in
 `iGhostVT/Backend/Zmodem/`** (no lrzsz — it is GPL). It adds no protocol op and
@@ -1070,9 +1142,11 @@ upload under the daemon's input cap, and throttle progress off the main thread
 — with a trailing update, or the bar stands on a burst's first figure (it
 stood on 0) until the next burst. A transfer never reaches the surface
 outside an engine either: the attach replay (which skips the engine, so a
-stale frame cannot start one) has every conversation cut out by
-`ZmodemStreamScanner` — from `rz\r` and the first hex header to the ZFIN
-exchange or a CAN run. A link that drops mid-*download* keeps the engine
+stale frame cannot start one) has every conversation cut out — by the
+daemon's tracker, which sees each one begin however much of it was trimmed
+since (from `rz\r` and the first hex header to the ZFIN exchange, a CAN run,
+or the shell's next OSC 133 prompt mark when sz was killed), and again by
+`ZmodemStreamScanner` for a host from before that. A link that drops mid-*download* keeps the engine
 (`suspendForLostLink`): the next connect reuses it, and when that link
 reaches the same session (`TerminalTransportEvent.sessionResumed(true)`)
 it starts a fresh parser and sends ZRPOS for what arrived (`resume`,
@@ -1408,7 +1482,7 @@ the catalog's generated symbols, which is why the menu's entry is keyed
   build still uses whatever simulator SDK the Xcode has; the Duo
   simulator shows the 27.0 behaviour for a 27.0 one.
 - `make test` — the PTY harness, the CLI's screen-renderer tests, the
-  remote and ZMODEM harnesses, and the relay harness where Go is installed
+  replay-stream tests, the remote and ZMODEM harnesses, and the relay harness where Go is installed
   (`make harness` builds `ighostvtd-io` and
   spawns it as the proxy's child over a real socket, then drives the whole
   stack — the codec, a session's lifecycle, output routing, the flow-control
@@ -1754,8 +1828,8 @@ Gotchas that bit us:
   into one showed it. The child sets an empty mask before `execve`; the
   harness checks ^C and the redraw on a verbatim command.
 - **Every attach asks the foreground for a full redraw** (SIGWINCH to
-  `tcgetpgrp`, `PTYSession.redrawForeground`). The replay starts where the
-  buffer was trimmed, and a TUI that redraws by difference (Claude Code)
+  `tcgetpgrp`, `PTYSession.redrawForeground`). A rebuilt replay puts back
+  the modes but not the screen the trimmed output drew, and a TUI that redraws by difference (Claude Code)
   keeps painting onto the screen it thinks it left — a return to the
   foreground left "esc to interrupt" half under "still thinking". An
   unchanged `TIOCSWINSZ` sends no signal, so it is sent outright.

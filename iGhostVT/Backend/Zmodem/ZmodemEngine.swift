@@ -213,6 +213,18 @@ final class ZmodemEngine: @unchecked Sendable {
         }
     }
 
+    /// A link that attached to a session mid-transfer — taken from another
+    /// device, or found again after a launch — when this engine is not the
+    /// one resuming it: the same discard, unless a transfer of this
+    /// engine's own is running.
+    func discardForeignTransfer() {
+        queue.async { [weak self] in
+            guard let self, mode == .idle else { return }
+            AppLog.info(.zmodem, "attached mid-transfer: swallowing the sender's stream")
+            discardInterruptedTransfer()
+        }
+    }
+
     private var discardTail: [UInt8] = []
     private var hasCancelledInterrupted = false
     private static let discardLimit: TimeInterval = 15

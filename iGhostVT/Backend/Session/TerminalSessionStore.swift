@@ -232,6 +232,9 @@ final class TerminalSessionStore: ObservableObject {
     /// paced attempts reattach and resume before anything is declared failed.
     /// The generation invalidates a scheduled attempt when the user connects
     /// or disconnects by hand in the meantime.
+    private static let outputBacklogHighWater = 512 * 1024
+    private static let outputBacklogLowWater = 128 * 1024
+
     private var reconnectAttempt = 0
     private var reconnectGeneration: UInt64 = 0
     private static let reconnectAttemptLimit = 5
@@ -289,6 +292,22 @@ final class TerminalSessionStore: ObservableObject {
             // not change would only be dropped by the transport anyway.
             suppressesPixelOnlyResizes: true,
         )
+        // Output the terminal has not parsed yet is held to a bound, never
+        // dropped: past the high mark the transport stops taking more, and
+        // the program blocks on its write — down the daemon's proxy to the
+        // PTY, or a remote host's link — until the parser is back under the
+        // low one. Below 1 MiB on purpose: while no surface is attached
+        // (one being rebuilt), the library keeps at most that and drops the
+        // oldest bytes past it, mid-sequence. The mark is crossed inside a
+        // delivery and the pause lands before the next, so at most one
+        // message (a 16 KiB output event, or a replay) goes over it.
+        session.setOutputBacklogHandler(
+            highWater: Self.outputBacklogHighWater,
+            lowWater: Self.outputBacklogLowWater,
+        ) { isBacklogged in
+            AppLog.info(.session, isBacklogged ? "output backlog past the mark: holding the transport" : "output backlog drained: taking output again")
+            relay.setReceivingPaused(isBacklogged)
+        }
         // The first viewport report means the surface is attached and
         // rendering, so bytes fed to the session are no longer dropped — the
         // earliest safe moment to open the connection. It also means a
@@ -458,6 +477,11 @@ final class TerminalSessionStore: ObservableObject {
                 } else {
                     engine?.abandonSuspended()
                 }
+            case .transferUnderway:
+                // Not this engine's download coming back (that resumed
+                // above): a transfer the link took over mid-stream, whose
+                // sender is still writing it.
+                engine?.discardForeignTransfer()
             case .state(.heldElsewhere):
                 engine?.reset()
             default:
@@ -722,7 +746,7 @@ final class TerminalSessionStore: ObservableObject {
             onSessionAttributes?(attributes, isResumed)
         case .inputRefused:
             notePasteTruncated()
-        case .sessionResumed:
+        case .sessionResumed, .transferUnderway:
             // Handled on the transport's queue, ahead of the output.
             break
         case let .state(state):
@@ -738,8 +762,7 @@ final class TerminalSessionStore: ObservableObject {
             clearFirstOutputWait()
             // No status line: the pill overlay already says connecting, and
             // a clean launch should open on the shell's own first line.
-            // Only trouble (interruptions, failures) gets written into the
-            // terminal.
+            // Only a failure gets written into the terminal.
             status = .connecting
         case .connected:
             AppLog.info(.session, "connected to \(endpointDescription)")
@@ -750,7 +773,11 @@ final class TerminalSessionStore: ObservableObject {
         case let .interrupted(reason):
             clearFirstOutputWait()
             AppLog.error(.session, "link lost: \(reason ?? "no reason")")
-            printStatusLine(String(localized: "Connection lost. Reconnecting…"))
+            // Nothing is written into the terminal for a link that is being
+            // retried — the pill says so. The next attach hands the terminal
+            // the output it missed, exactly, after the last byte it holds,
+            // and a line of our own in between would sit in the middle of
+            // the program's output and move its cursor.
             scheduleReconnect(lastReason: reason)
         case let .heldElsewhere(holder):
             clearFirstOutputWait()
@@ -910,6 +937,7 @@ private final class TransportRelay: @unchecked Sendable {
     private var _transport: TerminalTransport?
     private var _latestViewport: (columns: Int, rows: Int)?
     private var _onFirstViewport: (@Sendable () -> Void)?
+    private var _isReceivingPaused = false
 
     /// Fires once, on the first report. Later reports change nothing the
     /// store tracks — the relay forwards them itself — so they cost no hop
@@ -945,12 +973,24 @@ private final class TransportRelay: @unchecked Sendable {
             if let newValue, let viewport = _latestViewport {
                 newValue.updateViewport(columns: viewport.columns, rows: viewport.rows)
             }
+            if let newValue, _isReceivingPaused {
+                newValue.setReceivingPaused(true)
+            }
             lock.unlock()
         }
     }
 
     func send(_ data: Data) {
         transport?.send(data)
+    }
+
+    /// Holds received output back while the terminal catches up, on the
+    /// transport of the moment and on any that replaces it meanwhile.
+    func setReceivingPaused(_ paused: Bool) {
+        lock.lock()
+        _isReceivingPaused = paused
+        _transport?.setReceivingPaused(paused)
+        lock.unlock()
     }
 
     func updateViewport(columns: Int, rows: Int) {
