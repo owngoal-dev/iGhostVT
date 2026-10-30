@@ -49,6 +49,10 @@ enum GhosttyAppConfiguration {
             // default-background cell, a prompt row, or a powerline row.
             builder.withCustom("window-padding-color", "extend")
             #if targetEnvironment(macCatalyst)
+                // The library's base config turns `font-thicken` on, which makes
+                // CoreText smooth every glyph; on a Mac that renders Latin and
+                // PingFang strokes visibly heavier than ghostty's own default.
+                builder.withFontThicken(false)
                 builder.withCustom("font-codepoint-map", "U+4E00-U+9FFF=PingFang SC")
                 builder.withCustom("font-codepoint-map", "U+3400-U+4DBF=PingFang SC")
                 builder.withCustom("font-codepoint-map", "U+F900-U+FAFF=PingFang SC")
