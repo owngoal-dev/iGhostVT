@@ -57,7 +57,13 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026102101, Ghostty 1e9e14af on Zig 0.16).
+  (`upToNextMajor` from 2.2.2026103001, Ghostty 1e9e14af on Zig 0.16).
+  2.2.2026103001 leaves `font-thicken` at Ghostty's default, off: the
+  package's default config had turned it on, and CoreText's smoothing
+  drew JetBrains Mono and PingFang on the Mac visibly heavier than
+  Ghostty does — Chinese read like a Linux rasteriser's. The app sets no
+  `font-thicken` of its own (a Settings ▸ Ghostty Configuration line
+  still can); the same Swift-only binary `upstream.1e9e14af5df1-3`.
   2.2.2026102101 pastes text as the text it is when UIKit also offers it
   as a link: on Catalyst, `UIPasteboard.string =` — the terminal's own
   copy, an OSC 52 write — registers `public.url` beside any text that
