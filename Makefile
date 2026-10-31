@@ -335,6 +335,11 @@ harness:
 		-o "$$harness_dir/one-line" && \
 	"$$harness_dir/one-line" && \
 	xcrun --sdk macosx swiftc -swift-version 5 \
+		"$(ROOT_DIR)/iGhostVT/Backend/Session/ThemeReportMode.swift" \
+		"$(ROOT_DIR)/Tests/ThemeReports/main.swift" \
+		-o "$$harness_dir/theme-reports" && \
+	"$$harness_dir/theme-reports" && \
+	xcrun --sdk macosx swiftc -swift-version 5 \
 		"$(ROOT_DIR)/iGhostVT/Backend/Shortcuts/TerminalLink.swift" \
 		"$(ROOT_DIR)/Tests/TerminalLink/main.swift" \
 		-o "$$harness_dir/terminal-link" && \
