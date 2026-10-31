@@ -895,6 +895,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                         }
                     }
                     outputPosition?.set(sessionID: resumeSessionID, offset: hostOffset)
+                    emit(.attachSettled)
                 } else if code == .sessionBusy {
                     // Another window of this app still has it after the
                     // retries: it is open there, not gone.

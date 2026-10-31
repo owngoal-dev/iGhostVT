@@ -405,6 +405,7 @@ final class TerminalSessionStore: ObservableObject {
         let downloadKeptAcrossLink = downloadKeptAcrossLink
         let session = session
         let outputSignal = outputSignal
+        let themeReports = themeReports
         // Per-connection and holds no shared session state, so another client
         // is unaffected.
         // A download the last link dropped is kept for this one: it
@@ -429,6 +430,7 @@ final class TerminalSessionStore: ObservableObject {
             // output stopped. The main actor now hears only that output
             // happened, through at most one pending hop (`OutputSignal`).
             if case let .received(data, replay) = event {
+                themeReports.feed(data, replacingState: replay)
                 if let engine, !replay {
                     // Live bytes run through the engine (it renders non-ZMODEM
                     // output and swallows a transfer); replayed scrollback is
@@ -476,6 +478,18 @@ final class TerminalSessionStore: ObservableObject {
                     engine?.resume()
                 } else {
                     engine?.abandonSuspended()
+                    themeReports.reset()
+                }
+            case .attachSettled:
+                // The program asked for light/dark reports before this
+                // device came, or the link was down when one went out: no
+                // configuration change here will tell it this device's
+                // appearance (`ThemeReportMode`). Claude Code asks for the
+                // background again on hearing it.
+                if themeReports.isEnabled {
+                    Task { @MainActor [weak relay] in
+                        relay?.send(ThemeReportMode.report(isDark: AppearancePreference.isDark))
+                    }
                 }
             case .transferUnderway:
                 // Not this engine's download coming back (that resumed
@@ -539,6 +553,9 @@ final class TerminalSessionStore: ObservableObject {
     /// Set when a link drops mid-transfer, taken by the next connect.
     /// Touched from the transport's queue and the main actor.
     private let transferCutByLink = OnceFlag()
+    /// Whether the program on the session wants light/dark reports, as the
+    /// output this tab received left it. Kept across links.
+    private let themeReports = ThemeReportTracker()
     /// Set when a link drops mid-download and the engine kept it, taken by
     /// the next connect, which reuses that engine.
     private let downloadKeptAcrossLink = OnceFlag()
@@ -746,7 +763,7 @@ final class TerminalSessionStore: ObservableObject {
             onSessionAttributes?(attributes, isResumed)
         case .inputRefused:
             notePasteTruncated()
-        case .sessionResumed, .transferUnderway:
+        case .sessionResumed, .transferUnderway, .attachSettled:
             // Handled on the transport's queue, ahead of the output.
             break
         case let .state(state):

@@ -43,6 +43,21 @@ enum AppearancePreference: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Whether a terminal shows its dark theme now: the held choice, or
+    /// the system's, which a window scene's traits carry (the override is
+    /// the window's, below the scene).
+    @MainActor
+    static var isDark: Bool {
+        switch current {
+        case .light: false
+        case .dark: true
+        case .system:
+            UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first?.traitCollection.userInterfaceStyle == .dark
+        }
+    }
+
     /// Every window's style, and on the Mac the application's appearance.
     /// Windows made later pick it up from the root modifier's first
     /// appearance.

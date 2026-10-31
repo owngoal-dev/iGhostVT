@@ -97,6 +97,9 @@ enum TerminalTransportEvent: Sendable {
     /// transfer, left out of the replay: the program on the other end is
     /// still sending it. Sent before the replay.
     case transferUnderway
+    /// Sent last for an attach, after the output it carried (a replay, or
+    /// the bytes the terminal missed).
+    case attachSettled
 }
 
 enum TerminalTransportState: Sendable, Equatable {
