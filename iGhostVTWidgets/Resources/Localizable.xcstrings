@@ -160,7 +160,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已連線 %lld 部"
+            "value" : "已連線 %lld 台"
           }
         }
       }
