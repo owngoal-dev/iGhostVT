@@ -115,7 +115,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ghost Remote 分頁"
+            "value" : "Ghost Remote 標籤頁"
           }
         }
       }
@@ -191,13 +191,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ghost Remote 会查找并连接你已打开远程访问的其他设备，以便你在它们上面打开终端。"
+            "value" : "Ghost Remote 会查找并连接你已开启远程访问的设备，以便你在这些设备上打开终端。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ghost Remote 會尋找並連線你已開啟遠端存取的其他裝置，讓你可以在上面開啟終端機。"
+            "value" : "Ghost Remote 會尋找並連線至你已開啟遠端存取的裝置，讓你可以在這些裝置上開啟終端機。"
           }
         }
       }

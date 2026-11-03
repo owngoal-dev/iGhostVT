@@ -242,13 +242,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ 正在重新启动 iGhostVT。它的终端已结束，等它恢复后再打开新的终端。"
+            "value" : "%@ 正在重新启动 iGhostVT。其上的终端已结束，请在它恢复后打开新的终端。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ 正在重新啟動 iGhostVT。它的終端機已結束，等它恢復後再開啟新的終端機。"
+            "value" : "%@ 正在重新啟動 iGhostVT。其上的終端機已結束，請在它恢復後開啟新的終端機。"
           }
         }
       }
@@ -491,13 +491,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 在安装 iGhostVT %2$@ 时停止了响应，很可能正在重新启动 iGhostVT。等它恢复后再打开新的终端。"
+            "value" : "%1$@ 在安装 iGhostVT %2$@ 时停止了响应，很可能正在重新启动 iGhostVT。请在它恢复后打开新的终端。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 在安裝 iGhostVT %2$@ 時停止了回應，很可能正在重新啟動 iGhostVT。等它恢復後再開啟新的終端機。"
+            "value" : "%1$@ 在安裝 iGhostVT %2$@ 時停止了回應，很可能正在重新啟動 iGhostVT。請在它恢復後開啟新的終端機。"
           }
         }
       }
@@ -1141,7 +1141,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld 点"
+            "value" : "%lld 磅"
           }
         },
         "zh-Hant" : {
@@ -1456,13 +1456,13 @@
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld 個分頁"
+                  "value" : "%lld 個標籤頁"
                 }
               },
               "zero" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "無分頁"
+                  "value" : "無標籤頁"
                 }
               }
             }
@@ -1708,13 +1708,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义按键将输入所设定的字符，并结合当前已启用的修饰键。"
+            "value" : "自定按键会输入你设定的字符，并同时应用已开启的修饰键。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自訂按鍵將輸入所設定的字元，並結合目前啟用的修飾鍵。"
+            "value" : "自訂按鍵會輸入你設定的字元，並同時套用已開啟的修飾鍵。"
           }
         }
       }
@@ -1791,13 +1791,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mac 会自行安装最新的 iGhostVT 并重新启动，它上面的终端会因此结束。越狱设备通过包管理器更新。"
+            "value" : "Mac 会自行安装并重新启动最新的 iGhostVT，其上的终端会因此结束。越狱设备通过包管理器更新。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mac 會自行安裝最新的 iGhostVT 並重新啟動，它上面的終端機會因此結束。越獄裝置透過套件管理器更新。"
+            "value" : "Mac 會自行安裝並重新啟動最新的 iGhostVT，其上的終端機會因此結束。越獄裝置透過套件管理器更新。"
           }
         }
       }
@@ -2787,7 +2787,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加自定义按键…"
+            "value" : "添加自定按键…"
           }
         },
         "zh-Hant" : {
@@ -2870,13 +2870,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加分隔符"
+            "value" : "添加分隔线"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "加入分隔符號"
+            "value" : "加入分隔線"
           }
         }
       }
@@ -3614,13 +3614,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一台设备以本机身份注册了"
+            "value" : "另一台设备已用本机的身份注册"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一台裝置以本機身分註冊了"
+            "value" : "另一台裝置已用本機的身分註冊"
           }
         }
       }
@@ -4110,13 +4110,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "授权的设备"
+            "value" : "已授权的设备"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "授權的裝置"
+            "value" : "已授權的裝置"
           }
         }
       }
@@ -4359,13 +4359,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启用后台活动后，退出软件时会话仍会保持运行。远程访问开启期间它会保持开启，以便已配对的设备访问你的终端。"
+            "value" : "开启“后台活动”后，退出 App 时会话仍会继续运行。远程访问开启期间此项会保持开启，以便已配对的设备访问这些会话。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用背景活動後，結束軟體時工作階段仍會保持執行。遠端存取開啟期間它會保持開啟，以便已配對的裝置存取你的終端機。"
+            "value" : "開啟「背景活動」後，結束 App 時工作階段仍會繼續執行。遠端存取開啟期間此項會保持開啟，讓已配對的裝置存取這些工作階段。"
           }
         }
       }
@@ -4442,13 +4442,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启用后台活动后，退出软件时会话仍会保持运行。如果关闭，shell 和正在执行的任务会在退出时结束。"
+            "value" : "开启“后台活动”后，退出 App 时会话仍会继续运行。关闭此项后，shell 及其运行的任务会在 App 退出时结束。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用背景活動後，結束軟體時工作階段仍會保持執行。如果關閉，shell 和正在執行的工作會在結束時終止。"
+            "value" : "開啟「背景活動」後，結束 App 時工作階段仍會繼續執行。關閉此項後，shell 及其執行的工作會在 App 結束時終止。"
           }
         }
       }
@@ -5601,13 +5601,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择“自动”以使用默认登录命令行解释器。自定义路径不得包含环境根目录，因为重新创建环境时该目录可能发生变化。"
+            "value" : "选择“自动”以使用默认登录 shell。自定路径不得包含环境根目录，因为重新创建环境时该目录可能发生变化。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇「自動」以使用預設登入命令列直譯器。自訂路徑不得包含環境根目錄，因為重新建立環境時該目錄可能會變更。"
+            "value" : "選擇「自動」以使用預設登入 shell。自訂路徑不得包含環境根目錄，因為重新建立環境時該目錄可能會變更。"
           }
         }
       }
@@ -5684,13 +5684,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择“自动”以使用登录命令行解释器。若未列于上方，请输入可执行文件的自定义路径。"
+            "value" : "选择“自动”以使用登录 shell。如果所需的 shell 未列于上方，请输入可执行文件的自定路径。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇「自動」以使用登入命令列直譯器。若未列於上方，請輸入可執行檔的自訂路徑。"
+            "value" : "選擇「自動」以使用登入 shell。如果所需的 shell 未列於上方，請輸入可執行檔的自訂路徑。"
           }
         }
       }
@@ -6105,7 +6105,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "關閉所有分頁？"
+            "value" : "關閉所有標籤頁？"
           }
         }
       }
@@ -6188,7 +6188,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "關閉分頁"
+            "value" : "關閉標籤頁"
           }
         }
       }
@@ -6847,13 +6847,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@连接过"
+            "value" : "%@ 连接过"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@連線過"
+            "value" : "%@ 連線過"
           }
         }
       }
@@ -7594,7 +7594,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Control-L（清屏）"
+            "value" : "Control-L（清除屏幕）"
           }
         },
         "zh-Hant" : {
@@ -8669,7 +8669,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义"
+            "value" : "自定"
           }
         },
         "zh-Hant" : {
@@ -8752,13 +8752,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义配置"
+            "value" : "自定配置"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自訂設定"
+            "value" : "自訂設定檔"
           }
         }
       }
@@ -8835,7 +8835,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义按键"
+            "value" : "自定按键"
           }
         },
         "zh-Hant" : {
@@ -8918,7 +8918,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义路径"
+            "value" : "自定路径"
           }
         },
         "zh-Hant" : {
@@ -9001,7 +9001,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义…"
+            "value" : "自定…"
           }
         },
         "zh-Hant" : {
@@ -9333,13 +9333,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "默认命令行解释器"
+            "value" : "默认 Shell"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "預設命令列直譯器"
+            "value" : "預設 Shell"
           }
         }
       }
@@ -9587,7 +9587,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "刪除舊日誌"
+            "value" : "刪除舊記錄"
           }
         }
       }
@@ -9835,7 +9835,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "詳細終端機日誌"
+            "value" : "詳細終端機記錄"
           }
         }
       }
@@ -9995,7 +9995,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此网络上已打开远程访问的设备会显示在这里。"
+            "value" : "此网络上已开启远程访问的设备会显示在这里。"
           }
         },
         "zh-Hant" : {
@@ -10160,13 +10160,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可以在本设备上打开终端的设备。"
+            "value" : "可以在这台设备上打开终端的设备。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可以在本裝置上開啟終端機的裝置。"
+            "value" : "可以在這台裝置上開啟終端機的裝置。"
           }
         }
       }
@@ -10242,13 +10242,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本设备可以在其上打开终端的设备。"
+            "value" : "这台设备可以在其上打开终端的设备。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本裝置可以在其上開啟終端機的裝置。"
+            "value" : "這台裝置可以在其上開啟終端機的裝置。"
           }
         }
       }
@@ -10574,13 +10574,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分隔符"
+            "value" : "分隔线"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分隔符號"
+            "value" : "分隔線"
           }
         }
       }
@@ -11071,13 +11071,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拖移以重新排序，轻点字符按键可编辑。移除的标准按键会回到“更多按键”；分隔符和自定按键会被删除。"
+            "value" : "拖移以重新排序，轻点字符按键可编辑。移除的标准按键会回到“更多按键”；分隔线和自定按键会被删除。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拖移以重新排序，點一下字元按鍵即可編輯。移除的標準按鍵會回到「更多按鍵」；分隔符號和自訂按鍵會被刪除。"
+            "value" : "拖移以重新排序，點一下字元按鍵即可編輯。移除的標準按鍵會回到「更多按鍵」；分隔線和自訂按鍵會被刪除。"
           }
         }
       }
@@ -11741,7 +11741,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "結束終端機工作階段及其中執行的程式。顯示該工作階段的分頁都會關閉。"
+            "value" : "結束終端機工作階段及其中執行的程式。顯示該工作階段的標籤頁都會關閉。"
           }
         }
       }
@@ -11907,7 +11907,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在另一部裝置上輸入此代碼。"
+            "value" : "在另一台裝置上輸入此代碼。"
           }
         }
       }
@@ -12156,7 +12156,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "離開分頁總覽"
+            "value" : "離開標籤頁總覽"
           }
         }
       }
@@ -12565,13 +12565,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "填充图片"
+            "value" : "用图片填充"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "填滿圖片"
+            "value" : "以圖片填滿"
           }
         }
       }
@@ -13566,7 +13566,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ghostty 設定"
+            "value" : "Ghostty 設定檔"
           }
         }
       }
@@ -13732,7 +13732,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub 正在限制來自此網路的請求。請稍後再試。"
+            "value" : "GitHub 正在限制來自此網路的請求。請稍後再試一次。"
           }
         }
       }
@@ -13899,7 +13899,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "前往分頁"
+            "value" : "前往標籤頁"
           }
         }
       }
@@ -14060,13 +14060,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用物理键盘时停用辅助键"
+            "value" : "使用硬件键盘时隐藏"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用實體鍵盤時停用輔助鍵"
+            "value" : "使用硬體鍵盤時隱藏"
           }
         }
       }
@@ -14558,13 +14558,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iGhostVT %@ 已发布，但经过公证的 Mac 下载尚未就绪。请过几分钟再试。"
+            "value" : "iGhostVT %@ 已发布，但经过公证的 Mac 下载项尚未就绪。请几分钟后重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iGhostVT %@ 已發佈，但經過公證的 Mac 下載項目尚未就緒。請過幾分鐘再試。"
+            "value" : "iGhostVT %@ 已發佈，但經過公證的 Mac 下載項目尚未就緒。請幾分鐘後再試一次。"
           }
         }
       }
@@ -15053,7 +15053,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iGhostVT 通过后台运行的助手打开终端，因此应用关闭后会话仍会继续。助手会自动完成设置。如需移除，请在“系统设置”的“登录项”中关闭 iGhostVT。"
+            "value" : "iGhostVT 通过在后台运行的助手打开终端，因此 App 关闭后会话仍会继续。助手会自动完成设置。如需移除，请在“系统设置”的“登录项”中关闭 iGhostVT。"
           }
         },
         "zh-Hant" : {
@@ -15217,13 +15217,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iGhostVT 在“应用程序”文件夹中运行，这样关闭此窗口后终端仍会继续运行。它可以自动移至该处并重新打开。"
+            "value" : "iGhostVT 需要在“应用程序”文件夹中运行，这样关闭此窗口后终端仍会继续运行。它可以自动移到该处并重新打开。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iGhostVT 在「應用程式」資料夾中執行，關閉此視窗後終端機仍會繼續執行。它可以自動移至該處並重新開啟。"
+            "value" : "iGhostVT 需要在「應用程式」檔案夾中執行，這樣關閉此視窗後終端機仍會繼續執行。它可以自動移到該處並重新開啟。"
           }
         }
       }
@@ -16384,7 +16384,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "它現在可以在這部裝置上開啟終端機。"
+            "value" : "它現在可以在這台裝置上開啟終端機。"
           }
         }
       }
@@ -17132,7 +17132,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最後一個分頁"
+            "value" : "最後一個標籤頁"
           }
         }
       }
@@ -18373,7 +18373,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "鎖定分頁"
+            "value" : "鎖定標籤頁"
           }
         }
       }
@@ -18622,7 +18622,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "鎖定或解鎖顯示工作階段的分頁。鎖定的分頁會忽略你的輸入，程式繼續執行。"
+            "value" : "鎖定或解鎖顯示工作階段的標籤頁。鎖定的標籤頁會忽略你的輸入，程式繼續執行。"
           }
         }
       }
@@ -18706,7 +18706,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "日誌選項"
+            "value" : "記錄選項"
           }
         }
       }
@@ -18788,7 +18788,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "日誌"
+            "value" : "記錄"
           }
         }
       }
@@ -20025,13 +20025,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“启动时新建会话”会在 App 启动且没有可恢复的会话时，在这台 Mac 上打开一个 Shell。"
+            "value" : "“启动时新建会话”会在 App 启动且没有可恢复的会话时，在这台 Mac 上打开一个 shell。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「啟動時新增工作階段」會在 App 啟動且沒有可恢復的工作階段時，在這台 Mac 上開啟一個 Shell。"
+            "value" : "「啟動時新增工作階段」會在 App 啟動且沒有可恢復的工作階段時，在這台 Mac 上開啟一個 shell。"
           }
         }
       }
@@ -20108,13 +20108,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“启动时新建会话”会在没有可恢复的会话时，在本设备上启动一个 Shell。"
+            "value" : "“启动时新建会话”会在没有可恢复的会话时，在这台设备上启动一个 shell。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「啟動時新增工作階段」會在沒有可恢復的工作階段時，在本裝置上啟動一個 Shell。"
+            "value" : "「啟動時新增工作階段」會在沒有可恢復的工作階段時，在這台裝置上啟動一個 shell。"
           }
         }
       }
@@ -20197,7 +20197,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新增分頁"
+            "value" : "新增標籤頁"
           }
         }
       }
@@ -20529,7 +20529,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 ${applicationName} 中新增終端機分頁"
+            "value" : "在 ${applicationName} 中新增終端機標籤頁"
           }
         }
       }
@@ -20611,7 +20611,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新終端機以終端機大小開啟；已開啟的分頁會保留縮放後的大小。介面大小會縮放所有標籤和控制項。"
+            "value" : "新終端機以終端機大小開啟；已開啟的標籤頁會保留縮放後的大小。介面大小會縮放所有標籤和控制項。"
           }
         }
       }
@@ -20941,7 +20941,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "沒有日誌項目。請重新整理後再次查看。"
+            "value" : "沒有記錄項目。請重新整理後再次查看。"
           }
         }
       }
@@ -21018,13 +21018,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无打开的标签页"
+            "value" : "没有打开的标签页"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無開啟的分頁"
+            "value" : "沒有開啟的標籤頁"
           }
         }
       }
@@ -21191,7 +21191,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無分頁"
+            "value" : "無標籤頁"
           }
         }
       }
@@ -21351,13 +21351,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未找到可用的 Shell。请在“设置”中检查默认 Shell。"
+            "value" : "未找到可用的 shell。请在“设置”中检查“默认 Shell”。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "找不到可用的 Shell。請在「設定」中檢查預設 Shell。"
+            "value" : "找不到可用的 shell。請在「設定」中檢查「預設 Shell」。"
           }
         }
       }
@@ -21439,7 +21439,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不可用"
+            "value" : "無法使用"
           }
         }
       }
@@ -22096,13 +22096,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "仅新建的标签页会加载修改后的配置。"
+            "value" : "只有新的标签页会载入更改后的配置。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "僅新建的分頁會載入修改後的設定。"
+            "value" : "只有新的標籤頁會載入更改後的設定檔。"
           }
         }
       }
@@ -22185,7 +22185,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 ${applicationName} 中開啟新分頁"
+            "value" : "在 ${applicationName} 中開啟新標籤頁"
           }
         }
       }
@@ -22268,7 +22268,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟新終端機分頁"
+            "value" : "開啟新終端機標籤頁"
           }
         }
       }
@@ -22428,13 +22428,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开全部"
+            "value" : "全部打开"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "全部打開"
+            "value" : "全部開啟"
           }
         }
       }
@@ -22517,7 +22517,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開 App 記錄"
+            "value" : "開啟 App 記錄"
           }
         }
       }
@@ -22594,13 +22594,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开辅助程序日志"
+            "value" : "打开助手日志"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開輔助程式記錄"
+            "value" : "開啟助手記錄"
           }
         }
       }
@@ -22767,7 +22767,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開連結"
+            "value" : "開啟連結"
           }
         }
       }
@@ -22932,7 +22932,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟新終端機分頁"
+            "value" : "開啟新終端機標籤頁"
           }
         }
       }
@@ -23015,7 +23015,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟的分頁"
+            "value" : "開啟的標籤頁"
           }
         }
       }
@@ -23098,7 +23098,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已打開的終端機"
+            "value" : "已開啟的終端機"
           }
         }
       }
@@ -23181,7 +23181,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟 iGhostVT 並顯示終端機工作階段；若沒有分頁顯示它，則在新分頁中顯示。"
+            "value" : "開啟 iGhostVT 並顯示終端機工作階段；若沒有標籤頁顯示它，則在新標籤頁中顯示。"
           }
         }
       }
@@ -23264,7 +23264,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟 iGhostVT 並新增分頁。該分頁執行你指定的程式，或在目前分頁的目錄中啟動 shell。"
+            "value" : "開啟 iGhostVT 並新增標籤頁。該標籤頁執行你指定的程式，或在目前標籤頁的目錄中啟動 shell。"
           }
         }
       }
@@ -24001,7 +24001,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "配對裝置後，它就能在這裡打開終端機。"
+            "value" : "配對裝置後，它就能在這裡開啟終端機。"
           }
         }
       }
@@ -24415,7 +24415,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iGhostVT 的部分組件遺失，無法開啟終端機。請重新下載 iGhostVT 並取代目前複本。"
+            "value" : "iGhostVT 的部分元件遺失，無法開啟終端機。請重新下載 iGhostVT 並取代目前的複本。"
           }
         }
       }
@@ -25487,13 +25487,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开启“最近目录”后，新建标签页会列出你的终端去过的目录，包括这台 Mac 和每台已配对的设备。关闭后会清除这些记录。"
+            "value" : "开启“最近目录”后，新建标签页会列出你的终端用过的目录，包括这台 Mac 和每台已配对的设备。关闭后会清除这些记录。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟「最近目錄」後，新增分頁會列出你的終端機去過的目錄，包括這台 Mac 和每台已配對的裝置。關閉後會清除這些記錄。"
+            "value" : "開啟「最近目錄」後，新增標籤頁會列出你的終端機用過的目錄，包括這台 Mac 和每台已配對的裝置。關閉後會清除這些記錄。"
           }
         }
       }
@@ -26986,7 +26986,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "回傳 iGhostVT 中的每個終端機工作階段，無論是否有分頁顯示它。"
+            "value" : "回傳 iGhostVT 中的每個終端機工作階段，無論是否有標籤頁顯示它。"
           }
         }
       }
@@ -27893,7 +27893,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存"
+            "value" : "存储"
           }
         },
         "zh-Hant" : {
@@ -29637,13 +29637,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "命令行解释器"
+            "value" : "Shell"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "命令列直譯器"
+            "value" : "Shell"
           }
         }
       }
@@ -30060,7 +30060,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "顯示所有分頁"
+            "value" : "顯示所有標籤頁"
           }
         }
       }
@@ -30228,7 +30228,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "顯示下一個分頁"
+            "value" : "顯示下一個標籤頁"
           }
         }
       }
@@ -30312,7 +30312,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "顯示上一個分頁"
+            "value" : "顯示上一個標籤頁"
           }
         }
       }
@@ -30645,7 +30645,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "顯示在分頁中"
+            "value" : "顯示在標籤頁中"
           }
         }
       }
@@ -31220,13 +31220,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在启动 Shell…"
+            "value" : "正在启动 shell…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在啟動 Shell…"
+            "value" : "正在啟動 shell…"
           }
         }
       }
@@ -31392,7 +31392,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在背景啟動 shell 並回傳該工作階段。之後可以在分頁中顯示它，或向它傳送文字。"
+            "value" : "在背景啟動 shell 並回傳該工作階段。之後可以在標籤頁中顯示它，或向它傳送文字。"
           }
         }
       }
@@ -31641,7 +31641,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分頁 %d"
+            "value" : "標籤頁 %d"
           }
         }
       }
@@ -31725,7 +31725,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分頁選單"
+            "value" : "標籤頁選單"
           }
         }
       }
@@ -31808,7 +31808,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分頁"
+            "value" : "標籤頁"
           }
         }
       }
@@ -32056,7 +32056,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機輔助程式未執行"
+            "value" : "終端機助手未執行"
           }
         }
       }
@@ -32630,13 +32630,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文字大小作用于新标签页。"
+            "value" : "文字大小将应用于新标签页。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文字大小套用於新分頁。"
+            "value" : "文字大小會套用至新標籤頁。"
           }
         }
       }
@@ -32961,13 +32961,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "键盘上方的快捷栏将按此顺序显示这些按键。若无法全部显示，可左右滑动查看。"
+            "value" : "键盘上方的辅助键栏会按此顺序显示这些按键。如果无法全部显示，可左右滚动查看。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "鍵盤上方的快捷列將按此順序顯示這些按鍵。若無法全部顯示，可左右滑動查看。"
+            "value" : "鍵盤上方的輔助鍵列會依此順序顯示這些按鍵。如果無法全部顯示，可左右捲動查看。"
           }
         }
       }
@@ -33044,13 +33044,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用物理键盘打字时不显示辅助键栏；屏幕键盘出现时（例如把键盘保护套折到背面）会重新显示。"
+            "value" : "使用硬件键盘输入时，辅助键栏会隐藏；屏幕键盘出现时（例如将键盘保护套折到背面），它会重新显示。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用實體鍵盤打字時不顯示輔助鍵列；螢幕鍵盤出現時（例如將鍵盤保護套折到背面）會重新顯示。"
+            "value" : "使用硬體鍵盤輸入時，輔助鍵列會隱藏；螢幕鍵盤出現時（例如將鍵盤保護套折到背面），它會重新顯示。"
           }
         }
       }
@@ -33376,7 +33376,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文件在复制过程中发生了变化。"
+            "value" : "文件在拷贝过程中发生了更改。"
           }
         },
         "zh-Hant" : {
@@ -33631,7 +33631,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一部裝置無法接收該檔案。"
+            "value" : "另一台裝置無法接收該檔案。"
           }
         }
       }
@@ -33714,7 +33714,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一部裝置已放棄接收該檔案。"
+            "value" : "另一台裝置已放棄接收該檔案。"
           }
         }
       }
@@ -33965,7 +33965,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一部裝置沒有回應。"
+            "value" : "另一台裝置沒有回應。"
           }
         }
       }
@@ -34048,7 +34048,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "中繼不接受此設定。請匯入目前的設定。"
+            "value" : "中繼不接受此設定檔。請匯入目前的設定檔。"
           }
         }
       }
@@ -34381,7 +34381,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "該工作階段中的程式沒有讀取輸入。請等待它處理完畢後重試。"
+            "value" : "該工作階段中的程式沒有讀取輸入。請等待它處理完畢後再試一次。"
           }
         }
       }
@@ -34458,13 +34458,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法启动 shell。请在 iGhostVT 设置中检查默认 shell。"
+            "value" : "无法启动 shell。请在 iGhostVT 的“设置”中检查“默认 Shell”。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法啟動 shell。請在 iGhostVT 設定中檢查預設 shell。"
+            "value" : "無法啟動 shell。請在 iGhostVT 的「設定」中檢查「預設 Shell」。"
           }
         }
       }
@@ -34542,13 +34542,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shell 已退出，状态码为 %lld。"
+            "value" : "shell 已退出，退出状态为 %lld。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shell 已結束，狀態碼為 %lld。"
+            "value" : "shell 已結束，結束狀態為 %lld。"
           }
         }
       }
@@ -34625,13 +34625,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shell 已退出。"
+            "value" : "shell 已退出。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shell 已結束。"
+            "value" : "shell 已結束。"
           }
         }
       }
@@ -34796,7 +34796,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機連線尚未就緒。請重試。"
+            "value" : "終端機連線尚未就緒。請再試一次。"
           }
         }
       }
@@ -34878,7 +34878,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機連線已中斷。請重試。"
+            "value" : "終端機連線已中斷。請再試一次。"
           }
         }
       }
@@ -34955,13 +34955,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "终端守护进程无法完成该请求。"
+            "value" : "终端助手无法完成该请求。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機常駐程式無法完成該請求。"
+            "value" : "終端機助手無法完成該請求。"
           }
         }
       }
@@ -35038,13 +35038,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "终端守护进程未运行。"
+            "value" : "终端助手未运行。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機常駐程式未執行。"
+            "value" : "終端機助手未執行。"
           }
         }
       }
@@ -35210,7 +35210,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機輔助程式沒有回應。"
+            "value" : "終端機助手沒有回應。"
           }
         }
       }
@@ -35458,7 +35458,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終端機助手未執行。請重新啟動 iGhostVT 後重試。"
+            "value" : "終端機助手未執行。請重新啟動 iGhostVT 後再試一次。"
           }
         }
       }
@@ -35624,7 +35624,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主題來自 Ghostty 主題庫，將套用至所有視窗與分頁。"
+            "value" : "主題來自 Ghostty 主題庫，將套用至所有視窗與標籤頁。"
           }
         }
       }
@@ -35707,7 +35707,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這將關閉所有分頁，並終止其中執行的所有程式。"
+            "value" : "這將關閉所有標籤頁，並終止其中執行的所有程式。"
           }
         }
       }
@@ -35790,7 +35790,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這將關閉該分頁，並終止其中執行的所有程式。"
+            "value" : "這將關閉該標籤頁，並終止其中執行的所有程式。"
           }
         }
       }
@@ -35950,13 +35950,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此设备已不再配对。请在设置中重新配对。"
+            "value" : "此设备已取消配对。请在“设置”中重新配对。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此裝置已不再配對。請在設定中重新配對。"
+            "value" : "此裝置已取消配對。請在「設定」中重新配對。"
           }
         }
       }
@@ -36122,7 +36122,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此檔案不是 iGhostVT 中繼設定。"
+            "value" : "此檔案不是 iGhostVT 中繼設定檔。"
           }
         }
       }
@@ -36204,7 +36204,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "目前仍是舊版本。請結束 iGhostVT 並重新打開以使用新版本。"
+            "value" : "目前仍是舊版本。請結束 iGhostVT 並重新開啟以使用新版本。"
           }
         }
       }
@@ -36287,7 +36287,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此中繼設定已損毀。"
+            "value" : "此中繼設定檔已損毀。"
           }
         }
       }
@@ -36370,7 +36370,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此中繼設定需要較新版本的 iGhostVT。"
+            "value" : "此中繼設定檔需要較新版本的 iGhostVT。"
           }
         }
       }
@@ -37114,7 +37114,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "參數過多。最多 %lld 個。"
+            "value" : "引數過多。最多 %lld 個。"
           }
         }
       }
@@ -37191,13 +37191,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开的终端数量已达上限。请关闭一个终端后再试。"
+            "value" : "打开的终端数量已达上限。请关闭一个终端后重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟的終端機數量已達上限。請關閉一個終端機後再試。"
+            "value" : "開啟的終端機數量已達上限。請關閉一個終端機後再試一次。"
           }
         }
       }
@@ -37775,7 +37775,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法完成此操作。請重試。"
+            "value" : "無法完成此操作。請再試一次。"
           }
         }
       }
@@ -37857,7 +37857,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法連接終端機助手。請重新啟動 iGhostVT 後重試。"
+            "value" : "無法連線至終端機助手。請重新啟動 iGhostVT 後再試一次。"
           }
         }
       }
@@ -38267,7 +38267,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法连接另一台设备。请确认那台设备已打开远程访问，并且两台设备在同一网络或使用同一个中继。"
+            "value" : "无法连接另一台设备。请确认那台设备已开启远程访问，并且两台设备在同一网络或使用同一个中继。"
           }
         },
         "zh-Hant" : {
@@ -38438,7 +38438,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法讀取日誌檔案。請重新整理後重試。"
+            "value" : "無法讀取記錄檔。請重新整理後再試一次。"
           }
         }
       }
@@ -38520,7 +38520,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法重新連接終端機。請重試或關閉分頁。"
+            "value" : "無法重新連線至終端機。請再試一次或關閉標籤頁。"
           }
         }
       }
@@ -38686,7 +38686,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法開啟終端機助手。請重試。"
+            "value" : "無法開啟終端機助手。請再試一次。"
           }
         }
       }
@@ -38935,7 +38935,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "解鎖分頁"
+            "value" : "解鎖標籤頁"
           }
         }
       }
@@ -39847,7 +39847,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「在此使用」會把它移到這部裝置。"
+            "value" : "「在此使用」會把它移到這台裝置。"
           }
         }
       }
@@ -41166,13 +41166,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "来自 %1$@ 的错误代码（第 %2$lld 次，共 %3$lld 次）"
+            "value" : "来自 %1$@ 的代码不正确（第 %2$lld 次，共 %3$lld 次）"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "來自 %1$@ 的錯誤代碼（第 %2$lld 次，共 %3$lld 次）"
+            "value" : "來自 %1$@ 的代碼不正確（第 %2$lld 次，共 %3$lld 次）"
           }
         }
       }
@@ -41249,13 +41249,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你可以从“新建标签页”在它上面打开终端。"
+            "value" : "你可以从“新建标签页”中在该设备上打开终端。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你可以從「新增標籤頁」在它上面開啟終端機。"
+            "value" : "你可以從「新增標籤頁」中在該裝置上開啟終端機。"
           }
         }
       }
@@ -41338,7 +41338,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的其他裝置會以這個名稱看到這部裝置。留空則使用裝置上設定的名稱。"
+            "value" : "你的其他裝置會以這個名稱看到這台裝置。留空則使用裝置上設定的名稱。"
           }
         }
       }
