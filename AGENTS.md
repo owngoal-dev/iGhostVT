@@ -57,8 +57,21 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026103001, Ghostty 1e9e14af on Zig 0.16).
-  2.2.2026103001 leaves `font-thicken` at Ghostty's default, off: the
+  (`upToNextMajor` from 2.2.2026110702, Ghostty 042b16b6 on Zig 0.17).
+  2.2.2026110701 moves from Ghostty 1e9e14af to 042b16b6, 404 commits
+  (binary `upstream.042b16b6146a`). The parser's table, the mode list, the
+  shell-integration environment and the config keys this app writes are
+  unchanged; Ghostty now answers DECXCPR (`CSI ? 6 n`) and keeps mode 5522
+  on every platform, and `TerminalStreamTracker` already cut the one and
+  kept the other. A finger, its momentum and a wheel all send points ×
+  display scale (a finger was ×3, a wheel ×1), so the text moves with a
+  finger on every scale and a wheel on an iPad or a Retina Mac goes twice
+  as far as it did. `TerminalOpenURLKind` gains `.osc8`, which nothing here
+  switches on. 2.2.2026110702, the same binary, strips control bytes from
+  the bash title (zsh's `%~` always showed them as text) and adds
+  `pasteWithProtection(text:)`; the library's own drop goes through it, but
+  this app replaces that interaction, so `TerminalDropDelegate` calls it
+  itself. 2.2.2026103001 leaves `font-thicken` at Ghostty's default, off: the
   package's default config had turned it on, and CoreText's smoothing
   drew JetBrains Mono and PingFang on the Mac visibly heavier than
   Ghostty does — Chinese read like a Linux rasteriser's. The app sets no
@@ -1674,7 +1687,11 @@ Gotchas that bit us:
   off a web page) is written there too, named for its UTType so the path
   carries a real extension. Links and text snippets paste as text. The
   library's own staging API is internal, so the copy lives in the app; only
-  the directory and the stale sweep are shared with pastes. On a **remote**
+  the directory and the stale sweep are shared with pastes. Whatever a drop
+  ends up pasting goes through `pasteWithProtection(text:)`, never
+  `paste(text:)`: nobody has read it, so line breaks for a program without
+  bracketed paste raise the card a clipboard paste raises. A real drag from
+  Safari onto a dash tab ran every line before that. On a **remote**
   tab every resolved file is then copied to the other device
   (`uploadFile`, above) and *that* path is pasted, the transfer pill showing
   progress and cancel; a folder is left out. A *paste* there goes the same
