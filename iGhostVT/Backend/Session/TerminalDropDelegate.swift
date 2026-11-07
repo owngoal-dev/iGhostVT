@@ -100,7 +100,10 @@ final class TerminalDropDelegate: NSObject, UIDropInteractionDelegate {
             let text = resolved.map(\.pasted).joined(separator: " ")
             let trailer = resolved.last?.isPath == true ? " " : ""
             AppLog.info(.drop, "drop pasting \(resolved.count) of \(payloads.count) item(s)")
-            terminal.paste(text: text + trailer)
+            // Nobody has read what a drop carries, so it passes paste
+            // protection as a clipboard paste does: line breaks going to a
+            // program without bracketed paste ask first.
+            terminal.pasteWithProtection(text: text + trailer)
             terminal.onDroppedPaths?(resolved.compactMap(\.path))
         }
     }
