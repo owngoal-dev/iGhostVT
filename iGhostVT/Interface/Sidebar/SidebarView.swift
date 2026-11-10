@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// Safari-iPad-style sidebar listing tabs for regular width. Selection,
@@ -50,7 +51,7 @@ struct SidebarView: View {
                             SidebarGroupHeader(
                                 tabManager: tabManager,
                                 hostID: group.hostID,
-                                tabCount: group.items.count,
+                                tabs: group.items,
                                 isCollapsed: isCollapsed,
                                 holdsActiveTab: group.items.contains { $0.id == tabManager.activeTabID },
                                 onToggle: { toggleCollapse(group.key) },
@@ -255,11 +256,11 @@ private struct SidebarRowTrailingSlot: View {
 
 /// A device's header over its tabs: a click folds them away, and the `+`
 /// opens another terminal there. Holds the tab manager as a plain
-/// reference, like the rows; the name observes for itself.
+/// reference, like the rows; its name and status observe for themselves.
 private struct SidebarGroupHeader: View {
     let tabManager: TabManager
     let hostID: String?
-    let tabCount: Int
+    let tabs: [TerminalTab]
     let isCollapsed: Bool
     let holdsActiveTab: Bool
     let onToggle: () -> Void
@@ -271,10 +272,11 @@ private struct SidebarGroupHeader: View {
                 HStack(spacing: DS.Padding.s) {
                     SidebarGroupName(hostID: hostID)
                     if isCollapsed {
-                        Text(verbatim: String(tabCount))
+                        Text(verbatim: String(tabs.count))
                             .font(DS.Font.caption)
                             .accessibilityHidden(true)
                     }
+                    SidebarGroupStatus(tabs: tabs)
                     Spacer(minLength: DS.Padding.s)
                     Image(systemName: "chevron.right")
                         .font(DS.Font.captionEmphasis)
@@ -286,7 +288,7 @@ private struct SidebarGroupHeader: View {
             }
             .buttonStyle(.plain)
             .accessibilityAddTraits(.isHeader)
-            .accessibilityValue(Text("\(tabCount) Tabs"))
+            .accessibilityValue(Text("\(tabs.count) Tabs"))
 
             NewTabMenu(tabManager: tabManager, scope: .device(hostID: hostID), onOpen: onOpen) {
                 Image(systemName: "plus")
@@ -328,5 +330,53 @@ private struct SidebarGroupName: View {
             return chosenName ?? RemoteDeviceIdentity.systemName
         }
         return remoteHosts.paired.first { $0.id == hostID }?.displayName ?? String(localized: "Remote")
+    }
+}
+
+/// Nothing while the device's tabs are connected; a quiet glyph while one
+/// connects, a warning while one has failed.
+private struct SidebarGroupStatus: View {
+    let tabs: [TerminalTab]
+    @State private var statuses: [TerminalSessionStore.Status] = []
+
+    var body: some View {
+        indicator
+            .onAppear(perform: refresh)
+            .onChange(of: tabs.map(\.id)) { _ in refresh() }
+            .onReceive(statusChanges) { _ in refresh() }
+    }
+
+    @ViewBuilder
+    private var indicator: some View {
+        if let failure {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(DS.Font.caption)
+                .foregroundColor(.orange)
+                .accessibilityLabel(Text(verbatim: failure))
+        } else if statuses.contains(.connecting) {
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .font(DS.Font.caption)
+                .accessibilityLabel("Connecting…")
+        }
+    }
+
+    private var failure: String? {
+        for status in statuses {
+            if case let .failed(reason) = status {
+                return reason
+            }
+        }
+        return nil
+    }
+
+    /// `$status` publishes before the value changes: read it a turn later.
+    private var statusChanges: AnyPublisher<Void, Never> {
+        Publishers.MergeMany(tabs.map { $0.store.$status.map { _ in () } })
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    private func refresh() {
+        statuses = tabs.map(\.store.status)
     }
 }
