@@ -51,12 +51,17 @@ final class TabManager: ObservableObject {
     @Published private(set) var clipboardRequests: [TerminalClipboardConfirmationRequest] = []
 
     private var networkSubscription: AnyCancellable?
+    private var pairedHostsSubscription: AnyCancellable?
 
     init() {
         networkSubscription = NotificationCenter.default.publisher(for: NetworkPathWatcher.pathDidChange)
             .filter { $0.userInfo?[NetworkPathWatcher.isSatisfiedKey] as? Bool ?? true }
             .sink { [weak self] _ in
                 MainActor.assumeIsolated { self?.reconnectRemoteTabs() }
+            }
+        pairedHostsSubscription = NotificationCenter.default.publisher(for: PairedRemoteHostStore.didChange)
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated { self?.rearrange() }
             }
         SessionActivityController.shared.register(self) { [weak self] in
             self.map {
@@ -122,7 +127,7 @@ final class TabManager: ObservableObject {
             tab.store.takesOverOnFirstConnect = true
             return tab
         }
-        tabs.append(contentsOf: restored)
+        insert(restored)
         activeTabID = activeIndex.map { restored[$0].id } ?? restored.last?.id
         SessionActivityController.shared.refresh()
     }
@@ -156,10 +161,10 @@ final class TabManager: ObservableObject {
         AppLog.info(.tabs, "resuming \(resumable.count) terminal(s) left in the daemon")
         let resumed = resumable.map { makeTab(resume: $0) }
         withAnimation(Self.tabTransition) {
-            tabs.append(contentsOf: resumed)
+            insert(resumed)
             // The remote tabs reopened before the daemon answered keep the
             // front they had.
-            activeTabID = activeTabID ?? tabs.last?.id
+            activeTabID = activeTabID ?? resumed.last?.id
         }
         if isSceneActive {
             for tab in tabs {
@@ -221,7 +226,7 @@ final class TabManager: ObservableObject {
     func adoptHeldSession(_ sessionID: UInt64) {
         let tab = makeTab(resume: sessionID)
         withAnimation(Self.tabTransition) {
-            tabs.append(tab)
+            insert([tab])
             activeTabID = activeTabID ?? tab.id
         }
         if isSceneActive {
@@ -380,16 +385,14 @@ final class TabManager: ObservableObject {
     /// `noteSceneActive()` gets no replay of it. Only ⌘T puts its tab right
     /// after the active one, as a browser's does, so it lands beside the
     /// work it came from; every other way in — ⌘N, the new-tab button and
-    /// its menu, a Shortcut, a URL, a moved session — appends. The
+    /// its menu, a Shortcut, a URL, a moved session — goes to the end of
+    /// its device's group (`TabGrouping`), the end of the list when there
+    /// is one device. The
     /// cold-launch resume batch does not go through here: it appends
     /// several at once and notifies every tab, not only the new ones.
     private func adopt(_ tab: TerminalTab, afterActiveTab: Bool = false) -> TerminalTab {
         withAnimation(Self.tabTransition) {
-            if afterActiveTab, let index = tabs.firstIndex(where: { $0.id == activeTabID }) {
-                tabs.insert(tab, at: index + 1)
-            } else {
-                tabs.append(tab)
-            }
+            insert([tab], afterActiveTab: afterActiveTab)
             activeTabID = tab.id
         }
         if isSceneActive {
@@ -397,6 +400,34 @@ final class TabManager: ObservableObject {
         }
         SessionActivityController.shared.refresh()
         return tab
+    }
+
+    /// Every tab joins `tabs` here: appending to `tabs` directly would split
+    /// a device's group (`TabGrouping`).
+    private func insert(_ added: [TerminalTab], afterActiveTab: Bool = false) {
+        var updated = tabs
+        if afterActiveTab, let index = updated.firstIndex(where: { $0.id == activeTabID }) {
+            updated.insert(contentsOf: added, at: index + 1)
+        } else {
+            updated.append(contentsOf: added)
+        }
+        tabs = arranged(updated)
+    }
+
+    private func arranged(_ tabs: [TerminalTab]) -> [TerminalTab] {
+        guard TabGrouping.isEnabled else { return tabs }
+        let hosts = PairedRemoteHostStore.hosts.map { (id: $0.id, name: $0.displayName) }
+        return TabGrouping.arranged(tabs, hostID: \.remoteHostID, hostOrder: TabGrouping.hostOrder(hosts))
+    }
+
+    /// A paired device was renamed, paired or forgotten: its group may
+    /// belong elsewhere now.
+    private func rearrange() {
+        let rearranged = arranged(tabs)
+        guard rearranged.map(\.id) != tabs.map(\.id) else { return }
+        withAnimation(Self.tabTransition) {
+            tabs = rearranged
+        }
     }
 
     /// The presenter answered the head of `clipboardRequests`.
@@ -668,6 +699,7 @@ final class TabManager: ObservableObject {
     /// follow it, the daemon never hears of it.
     func moveTab(_ tab: TerminalTab, toSlotOf destination: TerminalTab) {
         guard
+            TabGrouping.allowsMove(from: tab.remoteHostID, to: destination.remoteHostID),
             let from = tabs.firstIndex(where: { $0.id == tab.id }),
             let to = tabs.firstIndex(where: { $0.id == destination.id }),
             from != to
