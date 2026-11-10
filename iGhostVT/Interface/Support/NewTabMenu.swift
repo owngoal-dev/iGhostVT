@@ -16,6 +16,7 @@ import SwiftUI
 /// of one row would be a tap spent on nothing.
 struct NewTabMenu<Label: View>: View {
     @ObservedObject var tabManager: TabManager
+    var scope: NewTabMenuScope = .allDevices
     /// Called after a tab is opened, for a presentation that then has to
     /// get out of the way — the tab switcher's full-screen cover.
     var onOpen: () -> Void = {}
@@ -41,14 +42,14 @@ struct NewTabMenu<Label: View>: View {
             remoteHosts: remoteHosts,
             remoteSessions: remoteSessions,
         )
-        if choices.isEmpty {
+        if let origin = plainOrigin(choices) {
             Button {
-                tabManager.newTab()
+                tabManager.newTab(origin)
                 onOpen()
             } label: {
                 label()
             }
-            .accessibilityLabel("New Tab")
+            .accessibilityLabel(controlLabel)
         } else {
             #if targetEnvironment(macCatalyst)
                 // The Mac's is a popover (`NewTabPicker`): a dozen paired
@@ -58,11 +59,12 @@ struct NewTabMenu<Label: View>: View {
                 } label: {
                     label()
                 }
-                .accessibilityLabel("New Tab")
+                .accessibilityLabel(controlLabel)
                 .newTabPicker(
                     isPresented: $isShowingPicker,
                     tabManager: tabManager,
                     arrowEdge: popoverArrowEdge,
+                    scope: pickerScope,
                     onOpen: onOpen,
                 )
             #else
@@ -71,8 +73,49 @@ struct NewTabMenu<Label: View>: View {
                 // its last render.
                 label()
                     .accessibilityHidden(true)
-                    .overlay(NewTabMenuAnchor(tabManager: tabManager, onOpen: onOpen))
+                    .overlay(NewTabMenuAnchor(tabManager: tabManager, scope: scope, onOpen: onOpen))
             #endif
+        }
+    }
+
+    /// Where a tap opens when there is nothing to choose between; nil
+    /// makes the control a menu.
+    private func plainOrigin(_ choices: NewTabDirectoryChoices) -> TabManager.Origin? {
+        switch scope {
+        case .allDevices:
+            return choices.isEmpty ? .activeTab : nil
+        case .device(hostID: nil):
+            return choices.openTabs.isEmpty && choices.recents.isEmpty ? .home : nil
+        case let .device(hostID?):
+            // A forgotten device has no rows; its tab says it is no longer
+            // paired. One that has not listed its terminals yet may have some.
+            guard choices.remoteHosts.contains(where: { $0.id == hostID }) else {
+                return .remote(hostID: hostID)
+            }
+            guard case let .listed(sessions)? = choices.remoteListings[hostID],
+                  sessions.isEmpty,
+                  choices.remoteRecents[hostID, default: []].isEmpty
+            else { return nil }
+            return .remote(hostID: hostID)
+        }
+    }
+
+    #if targetEnvironment(macCatalyst)
+        /// The popover opens on the device a group's `+` belongs to.
+        private var pickerScope: NewTabPickerContent.Scope {
+            switch scope {
+            case .allDevices: .all
+            case .device(hostID: nil): .local
+            case let .device(hostID?): .host(hostID)
+            }
+        }
+    #endif
+
+    private var controlLabel: Text {
+        if scope == .allDevices {
+            Text("New Tab")
+        } else {
+            Text("New Terminal", comment: "Menu item: a fresh shell on another device")
         }
     }
 }

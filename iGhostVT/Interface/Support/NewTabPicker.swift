@@ -30,7 +30,7 @@
         @ObservedObject private var remoteSessions = RemoteSessionCatalog.shared
 
         @State private var query = ""
-        @State private var chosenScope = NewTabPickerContent.Scope.all
+        @State private var chosenScope: NewTabPickerContent.Scope
         @State private var highlightedID: String?
         /// The keyboard's last move of the highlight: the list scrolls to
         /// follow it, rows pass under a pointer that has not moved, and
@@ -40,6 +40,20 @@
         private struct KeyboardMove: Equatable {
             var rowID: String
             var at: Date
+        }
+
+        /// `scope` is where it opens: everywhere, or the device a sidebar
+        /// group's `+` belongs to.
+        init(
+            tabManager: TabManager,
+            scope: NewTabPickerContent.Scope = .all,
+            dismiss: @escaping () -> Void,
+            onOpen: @escaping () -> Void = {},
+        ) {
+            self.tabManager = tabManager
+            self.dismiss = dismiss
+            self.onOpen = onOpen
+            _chosenScope = State(initialValue: scope)
         }
 
         private static let scopeColumnWidth: CGFloat = 240
@@ -776,11 +790,13 @@
             isPresented: Binding<Bool>,
             tabManager: TabManager,
             arrowEdge: Edge = .top,
+            scope: NewTabPickerContent.Scope = .all,
             onOpen: @escaping () -> Void = {},
         ) -> some View {
             popover(isPresented: isPresented, arrowEdge: arrowEdge) {
                 NewTabPicker(
                     tabManager: tabManager,
+                    scope: scope,
                     dismiss: { isPresented.wrappedValue = false },
                     onOpen: onOpen,
                 )

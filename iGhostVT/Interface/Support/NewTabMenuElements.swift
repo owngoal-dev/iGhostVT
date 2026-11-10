@@ -6,6 +6,13 @@
 import SwiftUI
 import UIKit
 
+enum NewTabMenuScope: Equatable {
+    case allDevices
+    /// One device's rows: this device's (nil), or a paired one's — a
+    /// device group's `+` in the sidebar.
+    case device(hostID: String?)
+}
+
 /// The new-tab menu in UIKit, built at the moment it opens.
 ///
 /// A SwiftUI `Menu` is built from what its view knew at its last render: a
@@ -37,18 +44,29 @@ enum NewTabMenuElements {
     /// that has just asked it, opened a second time, uses that answer.
     private static let answerFreshness: TimeInterval = 5
 
-    /// The whole menu for one window, built fresh on every opening.
-    static func deferred(tabManager: TabManager, onOpen: @escaping () -> Void) -> UIMenuElement {
+    /// The menu for one window, built fresh on every opening.
+    static func deferred(
+        tabManager: TabManager,
+        scope: NewTabMenuScope = .allDevices,
+        onOpen: @escaping () -> Void,
+    ) -> UIMenuElement {
         UIDeferredMenuElement.uncached { [weak tabManager] completion in
             // Answered before the provider returns, so the menu opens on
             // its rows with no Loading… of its own.
             MainActor.assumeIsolated {
-                askRemoteDevices()
+                switch scope {
+                case .allDevices:
+                    askRemoteDevices()
+                case let .device(hostID?):
+                    askRemoteDevices(only: hostID)
+                case .device(hostID: nil):
+                    break
+                }
                 guard let tabManager else {
                     completion([])
                     return
                 }
-                completion(elements(tabManager: tabManager, onOpen: onOpen))
+                completion(elements(tabManager: tabManager, scope: scope, onOpen: onOpen))
             }
         }
     }
@@ -61,9 +79,10 @@ enum NewTabMenuElements {
     /// bar fills this in as the app launches — so with nothing paired there
     /// is nobody to ask, and no browsing (Settings ▸ Remote Access browses
     /// when someone sets out to pair).
-    static func askRemoteDevices() {
+    static func askRemoteDevices(only onlyHostID: String? = nil) {
         RemoteHostDirectory.shared.startIfPaired()
         let hosts = RemoteHostDirectory.shared.reachablePaired
+            .filter { onlyHostID == nil || $0.id == onlyHostID }
             .filter { RemoteHostDirectory.shared.mismatchedVersion(of: $0.id) == nil }
         for host in hosts {
             Task { @MainActor in
@@ -99,8 +118,13 @@ enum NewTabMenuElements {
         return action
     }
 
-    /// The rows `NewTabMenuContent` lists, in the same order and groups.
-    static func elements(tabManager: TabManager, onOpen: @escaping () -> Void) -> [UIMenuElement] {
+    /// The rows `NewTabMenuContent` lists, in the same order and groups —
+    /// or one device's alone.
+    static func elements(
+        tabManager: TabManager,
+        scope: NewTabMenuScope = .allDevices,
+        onOpen: @escaping () -> Void,
+    ) -> [UIMenuElement] {
         let choices = NewTabDirectoryChoices(
             tabManager: tabManager,
             recents: RecentDirectoryStore.shared,
@@ -114,38 +138,49 @@ enum NewTabMenuElements {
             }
         }
         var elements: [UIMenuElement] = []
+        let hosts: [PairedRemoteHost]
+        switch scope {
+        case .allDevices:
+            hosts = choices.remoteHosts
+        case let .device(hostID?):
+            hosts = choices.remoteHosts.filter { $0.id == hostID }
+        case .device(hostID: nil):
+            hosts = []
+        }
         // This device's own rows. Ghost Remote has none: every row it has
         // is another device's.
-        if !AppEdition.isRemoteOnly {
-            elements.append(UIMenu(title: "", options: .displayInline, children: [
-                row(
-                    String(
-                        localized: "Home (directory)",
-                        comment: "Menu item: opens a terminal in the home directory; the English text is “Home”",
+        if scope == .allDevices || scope == .device(hostID: nil) {
+            if !AppEdition.isRemoteOnly {
+                elements.append(UIMenu(title: "", options: .displayInline, children: [
+                    row(
+                        String(
+                            localized: "Home (directory)",
+                            comment: "Menu item: opens a terminal in the home directory; the English text is “Home”",
+                        ),
+                        "house",
+                        .home,
                     ),
-                    "house",
-                    .home,
-                ),
-            ]))
+                ]))
+            }
+            if !choices.openTabs.isEmpty {
+                elements.append(UIMenu(
+                    title: String(localized: "Open Tabs"),
+                    options: .displayInline,
+                    children: choices.openTabs.map { row($0.directory.label, "macwindow", .session($0.sessionID)) },
+                ))
+            }
+            if !choices.recents.isEmpty {
+                elements.append(UIMenu(
+                    title: String(localized: "Recent"),
+                    options: .displayInline,
+                    children: choices.recents.map { directory in
+                        recentRow(directory, row("", "clock", .directory(directory)))
+                    },
+                ))
+            }
         }
-        if !choices.openTabs.isEmpty {
-            elements.append(UIMenu(
-                title: String(localized: "Open Tabs"),
-                options: .displayInline,
-                children: choices.openTabs.map { row($0.directory.label, "macwindow", .session($0.sessionID)) },
-            ))
-        }
-        if !choices.recents.isEmpty {
-            elements.append(UIMenu(
-                title: String(localized: "Recent"),
-                options: .displayInline,
-                children: choices.recents.map { directory in
-                    recentRow(directory, row("", "clock", .directory(directory)))
-                },
-            ))
-        }
-        let hosts = remoteHostElements(
-            hosts: choices.remoteHosts,
+        let hostElements = remoteHostElements(
+            hosts: hosts,
             isOpenHere: { host, session in
                 tabManager.tabs.contains { $0.remoteHostID == host.id && $0.remoteSessionID == session.id }
             },
@@ -158,14 +193,24 @@ enum NewTabMenuElements {
                 onOpen()
             },
         )
-        if AppEdition.isRemoteOnly, hosts.count == 1, let host = hosts.first as? UIMenu {
+        if scope != .allDevices {
+            // One device's rows, not a submenu of one. A device that
+            // cannot be opened stays the greyed row saying why.
+            for element in hostElements {
+                if let host = element as? UIMenu {
+                    elements.append(UIMenu(title: "", options: .displayInline, children: host.children))
+                } else {
+                    elements.append(element)
+                }
+            }
+        } else if AppEdition.isRemoteOnly, hostElements.count == 1, let host = hostElements.first as? UIMenu {
             // Ghost Remote with one device: its rows, not a submenu of one.
             elements.append(UIMenu(title: host.title, options: .displayInline, children: host.children))
-        } else if !hosts.isEmpty {
+        } else if !hostElements.isEmpty {
             // "Other" beside this device's rows; Ghost Remote has only
             // other devices.
             let title = AppEdition.isRemoteOnly ? "" : String(localized: "Other Devices")
-            elements.append(UIMenu(title: title, options: .displayInline, children: hosts))
+            elements.append(UIMenu(title: title, options: .displayInline, children: hostElements))
         }
         return elements
     }
@@ -296,17 +341,22 @@ enum NewTabMenuElements {
 /// itself is UIKit's.
 struct NewTabMenuAnchor: UIViewRepresentable {
     let tabManager: TabManager
+    var scope: NewTabMenuScope = .allDevices
     let onOpen: () -> Void
 
     func makeUIView(context _: Context) -> UIButton {
         let button = UIButton(type: .custom)
         button.showsMenuAsPrimaryAction = true
-        button.accessibilityLabel = String(localized: "New Tab")
+        button.accessibilityLabel = if scope == .allDevices {
+            String(localized: "New Tab")
+        } else {
+            String(localized: "New Terminal", comment: "Menu item: a fresh shell on another device")
+        }
         return button
     }
 
     func updateUIView(_ button: UIButton, context _: Context) {
-        button.menu = UIMenu(children: [NewTabMenuElements.deferred(tabManager: tabManager, onOpen: onOpen)])
+        button.menu = UIMenu(children: [NewTabMenuElements.deferred(tabManager: tabManager, scope: scope, onOpen: onOpen)])
     }
 }
 
