@@ -1275,8 +1275,27 @@ retimed.
 names its session to the far daemon and its last reported directory as
 the fallback) — and goes right after it, as a browser's does. Every other
 new tab — ⌘N (this device's home), a menu row, another device's terminal,
-a Shortcut, a URL, a moved session — is appended
+a Shortcut, a URL, a moved session — goes to the end of its device's group
 (`TabManager.newTab(_:besideActiveTab:)`).
+
+**A window's tabs are grouped by device** (`TabGrouping`, one `isEnabled`
+switch). `TabManager.tabs` itself keeps each device's tabs together — this
+device's first, then each paired device's by name (as Finder sorts), a
+forgotten one last — so the sidebar, the strip, ⌘1–9, ⌃Tab, the switcher
+and the Live Activity read one order. Every tab joins through
+`TabManager.insert`, which arranges; a rename, pairing or forgetting
+arranges again (`PairedRemoteHostStore.didChange`); `moveTab` refuses a
+slot in another device's group, so a drag stops at its group's edge. A
+device is its pairing id, never an address: LAN, Tailscale and the relay
+reach one group. The sidebar heads each device only when the window holds
+two or more, so one device looks as it always did: the name
+(`SidebarGroupName`, observed on its own), a count when folded, a glyph
+while a tab connects or has failed (`SidebarGroupStatus`), a click that
+folds — remembered app-wide in `Sidebar.collapsedDevices`, like the
+sidebar's visibility and width — and a `+` that is a `NewTabMenu` scoped
+to the device (`NewTabMenuScope.device`). Rows under a header leave the
+device off their second line; the strip marks no groups. An `ssh` in a
+local tab is this device's: nothing reads where it went.
 
 Every `+` is a `NewTabMenu`: the only decision a new terminal has is where
 its shell starts, so the control opens a menu of directories instead of a
@@ -1323,7 +1342,8 @@ is always `.activeTab` regardless. The ⋯ menu's New Tab is the same view
 with a `Label`, so it becomes a submenu; that matters because on a phone
 with tabs open the bar shows the title capsule and ⋯ is the only new-tab
 control on screen. The sidebar row, the compact bar's `+`, the switcher's
-dashed card and that entry are the four.
+dashed card and that entry are the four; a device group's `+` in the
+sidebar is the same control holding that device's rows alone.
 
 Paired devices (remote access) follow, each with New Terminal, the
 terminals it has open, and the directories this app's tabs were in on that
