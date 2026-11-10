@@ -38,15 +38,21 @@ struct ObservedTabTitle: View {
 /// (`TerminalTab.secondaryTitle`).
 struct ObservedTabSubtitle: View {
     @ObservedObject var tab: TerminalTab
+    /// Off under a device's header, which already names it.
+    var showsDevice = true
+
+    private var text: String {
+        showsDevice ? tab.secondaryTitle : tab.directoryName
+    }
 
     var body: some View {
-        Text(tab.secondaryTitle)
+        Text(text)
             .font(DS.Font.caption)
             .foregroundColor(.secondary)
             .lineLimit(1)
             .truncationMode(.middle)
             .retitleTransition()
-            .animation(tab.animatesRetitle ? DS.Motion.smooth : nil, value: tab.secondaryTitle)
+            .animation(tab.animatesRetitle ? DS.Motion.smooth : nil, value: text)
     }
 }
 

@@ -16,7 +16,7 @@ enum RemoteDeviceIdentity {
         return made
     }
 
-    private static let chosenNameKey = "Remote.deviceName"
+    static let chosenNameKey = "Remote.deviceName"
     private static let systemNameKey = "Remote.systemDeviceName"
 
     /// Kept where a transport's queue can read it: UIDevice answers on the

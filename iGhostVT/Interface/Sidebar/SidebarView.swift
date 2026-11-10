@@ -14,6 +14,9 @@ struct SidebarView: View {
     @State private var window: UIWindow?
     @StateObject private var reorderPacing = TabReorderPacing()
     @Environment(\.windowControlsLeading) private var windowControlsLeading
+    /// The folded device groups' keys, one per line; remembered like the
+    /// sidebar's visibility and width.
+    @AppStorage("Sidebar.collapsedDevices") private var collapsedStorage = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,18 +36,40 @@ struct SidebarView: View {
             #endif
 
             ScrollView {
+                let groups = TabGrouping.isEnabled
+                    ? TabGrouping.groups(tabManager.tabs, hostID: \.remoteHostID)
+                    : [TabGrouping.Group(hostID: nil, items: tabManager.tabs)]
+                let showsHeaders = groups.count > 1
                 // Not lazy: a window has tens of tabs at most, nothing here
                 // is worth deferring, and a plain stack keeps every row's
                 // drag and drop hooks mounted while a reorder moves them.
                 VStack(spacing: 2) {
-                    ForEach(tabManager.tabs) { tab in
-                        SidebarRow(
-                            tab: tab,
-                            isActive: tab.id == tabManager.activeTabID,
-                            onSelect: { tabManager.activeTabID = tab.id },
-                            onClose: { tabManager.requestClose(tab, from: .closeButton) },
-                        )
-                        .tabMenuAndReorder(tab, in: tabManager, pacing: reorderPacing, preview: .row, window: window)
+                    ForEach(groups, id: \.key) { group in
+                        let isCollapsed = showsHeaders && collapsedGroups.contains(group.key)
+                        if showsHeaders {
+                            SidebarGroupHeader(
+                                tabManager: tabManager,
+                                hostID: group.hostID,
+                                tabCount: group.items.count,
+                                isCollapsed: isCollapsed,
+                                holdsActiveTab: group.items.contains { $0.id == tabManager.activeTabID },
+                                onToggle: { toggleCollapse(group.key) },
+                                onOpen: { expand(group.key) },
+                            )
+                            .padding(.top, group.key == groups.first?.key ? 0 : DS.Padding.s)
+                        }
+                        if !isCollapsed {
+                            ForEach(group.items) { tab in
+                                SidebarRow(
+                                    tab: tab,
+                                    isActive: tab.id == tabManager.activeTabID,
+                                    showsDevice: !showsHeaders,
+                                    onSelect: { tabManager.activeTabID = tab.id },
+                                    onClose: { tabManager.requestClose(tab, from: .closeButton) },
+                                )
+                                .tabMenuAndReorder(tab, in: tabManager, pacing: reorderPacing, preview: .row, window: window)
+                            }
+                        }
                     }
 
                     NewTabMenu(tabManager: tabManager, popoverArrowEdge: .leading) {
@@ -66,6 +91,9 @@ struct SidebarView: View {
                 .padding(DS.Padding.m)
                 .frame(maxWidth: .infinity)
                 .tabReorderContainer()
+                // On the container, keyed on the value: a write to
+                // `@AppStorage` does not land inside a `withAnimation`.
+                .animation(DS.Motion.smooth, value: collapsedStorage)
             }
 
             footer
@@ -85,6 +113,25 @@ struct SidebarView: View {
                 .frame(width: 1)
                 .ignoresSafeArea()
         }
+    }
+
+    private var collapsedGroups: Set<String> {
+        Set(collapsedStorage.split(separator: "\n").map(String.init))
+    }
+
+    private func toggleCollapse(_ key: String) {
+        var groups = collapsedGroups
+        if groups.remove(key) == nil {
+            groups.insert(key)
+        }
+        collapsedStorage = groups.sorted().joined(separator: "\n")
+    }
+
+    /// A terminal opened from a folded group's `+` shows up in it.
+    private func expand(_ key: String) {
+        var groups = collapsedGroups
+        guard groups.remove(key) != nil else { return }
+        collapsedStorage = groups.sorted().joined(separator: "\n")
     }
 
     /// The top bar's height, so the list starts level with the terminal
@@ -140,6 +187,7 @@ struct SidebarView: View {
 private struct SidebarRow: View {
     let tab: TerminalTab
     let isActive: Bool
+    let showsDevice: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
 
@@ -155,7 +203,7 @@ private struct SidebarRow: View {
             HStack(spacing: DS.Padding.s) {
                 VStack(alignment: .leading, spacing: 2) {
                     ObservedTabTitle(tab: tab, font: titleFont)
-                    ObservedTabSubtitle(tab: tab)
+                    ObservedTabSubtitle(tab: tab, showsDevice: showsDevice)
                 }
                 // Title and subtitle name one tab: one VoiceOver stop, not
                 // two. The row's close button stays its own element.
@@ -202,5 +250,83 @@ private struct SidebarRowTrailingSlot: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Close Tab")
         }
+    }
+}
+
+/// A device's header over its tabs: a click folds them away, and the `+`
+/// opens another terminal there. Holds the tab manager as a plain
+/// reference, like the rows; the name observes for itself.
+private struct SidebarGroupHeader: View {
+    let tabManager: TabManager
+    let hostID: String?
+    let tabCount: Int
+    let isCollapsed: Bool
+    let holdsActiveTab: Bool
+    let onToggle: () -> Void
+    let onOpen: () -> Void
+
+    var body: some View {
+        HStack(spacing: DS.Padding.xs) {
+            Button(action: onToggle) {
+                HStack(spacing: DS.Padding.s) {
+                    SidebarGroupName(hostID: hostID)
+                    if isCollapsed {
+                        Text(verbatim: String(tabCount))
+                            .font(DS.Font.caption)
+                            .accessibilityHidden(true)
+                    }
+                    Spacer(minLength: DS.Padding.s)
+                    Image(systemName: "chevron.right")
+                        .font(DS.Font.captionEmphasis)
+                        .rotationEffect(.degrees(isCollapsed ? 0 : 90))
+                        .accessibilityHidden(true)
+                }
+                .foregroundColor(.secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityValue(Text("\(tabCount) Tabs"))
+
+            NewTabMenu(tabManager: tabManager, scope: .device(hostID: hostID), onOpen: onOpen) {
+                Image(systemName: "plus")
+                    .font(DS.Font.captionEmphasis)
+                    .foregroundColor(.secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, DS.Padding.m)
+        .padding(.vertical, DS.Padding.xs)
+        // A folded group that holds the active tab wears the active row's
+        // slab, so the window's tab is never out of sight.
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
+                .fill(isCollapsed && holdsActiveTab ? Color.primary.opacity(0.12) : Color.clear),
+        )
+    }
+}
+
+/// The device's name, observing the paired devices and this device's own
+/// name for itself: a rename reaches the header without re-rendering the
+/// rows, whose context menus would rebuild under the pointer.
+private struct SidebarGroupName: View {
+    let hostID: String?
+    @ObservedObject private var remoteHosts = RemoteHostDirectory.shared
+    @AppStorage(RemoteDeviceIdentity.chosenNameKey) private var chosenName: String?
+
+    var body: some View {
+        Text(verbatim: name)
+            .font(DS.Font.captionEmphasis)
+            .lineLimit(1)
+            .truncationMode(.tail)
+    }
+
+    private var name: String {
+        guard let hostID else {
+            return chosenName ?? RemoteDeviceIdentity.systemName
+        }
+        return remoteHosts.paired.first { $0.id == hostID }?.displayName ?? String(localized: "Remote")
     }
 }
