@@ -1200,7 +1200,8 @@ tab whose shell is at its prompt closes on the spot (`hasRunningProgram`). A
 detached tab's last report is stale, so it still asks; an unknown state reads
 as running. On the regular-width bar the trailing ⋯ button opens this same
 menu for the active tab with New Tab and New Window at its head — the
-strip has no + of its own.
+strip has no + of its own, except on the Mac, where one sits beside the
+sidebar toggle while the sidebar is hidden.
 
 That menu must not refresh while the terminal prints. UIKit rebuilds an
 open menu whenever SwiftUI re-evaluates its content, and the tab
@@ -1267,7 +1268,22 @@ a Shortcut, a URL, a moved session — is appended
 
 Every `+` is a `NewTabMenu`: the only decision a new terminal has is where
 its shell starts, so the control opens a menu of directories instead of a
-tab. The menu is UIKit's, a `UIDeferredMenuElement.uncached`
+tab. **On the Mac it opens a popover instead** (`NewTabPicker`, Catalyst
+only): a dozen paired devices, a submenu each, made the menu taller than
+the window. A search field over two columns — where to look (All Devices,
+This Mac, each device with the number of terminals it holds) and what
+opens there; with two devices or fewer there is no left column, one list
+holds this Mac and each device under its name, and the panel is as tall
+as what it lists. It is a view, so it observes the catalog and fills in as
+devices answer — nothing is deferred, which is also why the late-fulfilment
+crash below cannot reach it. Typing filters across the page showing (all
+devices from the first page), ↑ ↓ move the highlight, Return opens, Tab
+walks the left column, Escape closes; the field hands every one of those
+keys back while an input method is composing. The sidebar's row opens it
+beside itself (`popoverArrowEdge: .leading`), the ⋯ menu's New Tab is a
+plain item that opens it from the ⋯ button (`NewTabMenuRows.isShowingPicker`),
+and the strip's own `+` shows while the sidebar is hidden. The menu bar's
+File ▸ New Tab on Device is still a menu. On iOS the menu is UIKit's, a `UIDeferredMenuElement.uncached`
 built as it opens (`NewTabMenuElements`, over the SwiftUI label): this
 device's rows at once, and each paired device's open terminals in a
 deferred element of their own inside its submenu, which waits for that
