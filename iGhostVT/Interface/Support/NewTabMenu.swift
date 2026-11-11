@@ -19,11 +19,18 @@ struct NewTabMenu<Label: View>: View {
     /// Called after a tab is opened, for a presentation that then has to
     /// get out of the way — the tab switcher's full-screen cover.
     var onOpen: () -> Void = {}
+    /// The side of the Mac's popover its arrow is on: `.top` hangs it
+    /// under the control, `.leading` stands it beside one at the window's
+    /// leading edge, where under would run it off the window.
+    var popoverArrowEdge: Edge = .top
     @ViewBuilder var label: () -> Label
 
     @ObservedObject private var recents = RecentDirectoryStore.shared
     @ObservedObject private var remoteHosts = RemoteHostDirectory.shared
     @ObservedObject private var remoteSessions = RemoteSessionCatalog.shared
+    #if targetEnvironment(macCatalyst)
+        @State private var isShowingPicker = false
+    #endif
 
     var body: some View {
         // Read once: the same answer decides the shape of this control and
@@ -43,12 +50,29 @@ struct NewTabMenu<Label: View>: View {
             }
             .accessibilityLabel("New Tab")
         } else {
-            // UIKit's menu, built as it opens (`NewTabMenuElements`), over
-            // the label; a SwiftUI menu would list what it knew at its last
-            // render.
-            label()
-                .accessibilityHidden(true)
-                .overlay(NewTabMenuAnchor(tabManager: tabManager, onOpen: onOpen))
+            #if targetEnvironment(macCatalyst)
+                // The Mac's is a popover (`NewTabPicker`): a dozen paired
+                // devices made the menu taller than the window.
+                Button {
+                    isShowingPicker = true
+                } label: {
+                    label()
+                }
+                .accessibilityLabel("New Tab")
+                .newTabPicker(
+                    isPresented: $isShowingPicker,
+                    tabManager: tabManager,
+                    arrowEdge: popoverArrowEdge,
+                    onOpen: onOpen,
+                )
+            #else
+                // UIKit's menu, built as it opens (`NewTabMenuElements`),
+                // over the label; a SwiftUI menu would list what it knew at
+                // its last render.
+                label()
+                    .accessibilityHidden(true)
+                    .overlay(NewTabMenuAnchor(tabManager: tabManager, onOpen: onOpen))
+            #endif
         }
     }
 }
@@ -63,8 +87,11 @@ struct NewTabMenu<Label: View>: View {
 /// change with every command (and with every frame of a spinner), and a
 /// device on a weak network drops off the relay's list and comes back.
 /// Each rebuild closed the New Tab submenu as it opened, so on a phone
-/// whose remote tab was busy the submenu would not stay open at all. The
-/// Mac's menu bar draws these menus as NSMenus and keeps observing.
+/// whose remote tab was busy the submenu would not stay open at all.
+///
+/// On the Mac the entry is a plain item that opens the popover
+/// (`NewTabPicker`) from the menu's own button, which `takesNewTabRows`
+/// hangs it on.
 struct NewTabSubmenu<Label: View>: View {
     @ObservedObject var tabManager: TabManager
     @ObservedObject var rows: NewTabMenuRows
@@ -90,11 +117,21 @@ struct NewTabSubmenu<Label: View>: View {
         if choices.isEmpty {
             Button(action: { tabManager.newTab() }, label: label)
         } else {
-            Menu {
-                NewTabMenuContent(tabManager: tabManager, choices: choices)
-            } label: {
-                label()
-            }
+            #if targetEnvironment(macCatalyst)
+                Button {
+                    // Once the menu has gone: a popover asked for while it
+                    // is still closing is dropped.
+                    DispatchQueue.main.async { rows.isShowingPicker = true }
+                } label: {
+                    label()
+                }
+            #else
+                Menu {
+                    NewTabMenuContent(tabManager: tabManager, choices: choices)
+                } label: {
+                    label()
+                }
+            #endif
         }
     }
 }
@@ -104,6 +141,10 @@ struct NewTabSubmenu<Label: View>: View {
 @MainActor
 final class NewTabMenuRows: ObservableObject {
     @Published private(set) var choices: NewTabDirectoryChoices?
+    #if targetEnvironment(macCatalyst)
+        /// The Mac's popover, which the menu's New Tab item opens.
+        @Published var isShowingPicker = false
+    #endif
 
     /// Also asks the devices, as the UIKit menu does as it opens: the rows
     /// taken now are what is known, and the answer is in the next touch's.
@@ -123,13 +164,13 @@ extension View {
 }
 
 private struct NewTabRowsTaker: ViewModifier {
-    let rows: NewTabMenuRows
+    @ObservedObject var rows: NewTabMenuRows
     let tabManager: TabManager
     @State private var isTouching = false
 
     func body(content: Content) -> some View {
         #if targetEnvironment(macCatalyst)
-            content
+            content.newTabPicker(isPresented: $rows.isShowingPicker, tabManager: tabManager)
         #else
             content.simultaneousGesture(
                 DragGesture(minimumDistance: 0)

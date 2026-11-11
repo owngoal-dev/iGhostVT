@@ -47,7 +47,7 @@ struct SidebarView: View {
                         .tabMenuAndReorder(tab, in: tabManager, pacing: reorderPacing, preview: .row, window: window)
                     }
 
-                    NewTabMenu(tabManager: tabManager) {
+                    NewTabMenu(tabManager: tabManager, popoverArrowEdge: .leading) {
                         HStack(spacing: DS.Padding.s) {
                             Image(systemName: "plus")
                                 .font(DS.Font.labelEmphasis)
