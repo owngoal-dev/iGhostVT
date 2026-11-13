@@ -57,7 +57,19 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026110702, Ghostty 042b16b6 on Zig 0.17).
+  (`upToNextMajor` from 2.2.2026111302, Ghostty cf5519b2 on Zig 0.17).
+  2.2.2026111301 moves from Ghostty 042b16b6 to cf5519b2, 203 commits
+  (binary `upstream.cf5519b22f91`): the parser's table, the mode list and
+  the config keys this app writes are unchanged, and `ghostty.h` now says
+  which pointers may be null, which the package adapts to. It also anchors
+  the iOS input method's candidate bar on the cursor's row (it sat one row
+  low), runs the touch momentum at the display's rate, and on a Mac with a
+  touch display lets a finger scroll and pinch on Catalyst too.
+  2.2.2026111302, the same binary, claims Ctrl+Shift+letter, Ctrl+Shift+'
+  and Ctrl+Backspace as key commands on UIKit: on Catalyst the text input
+  system ran Cocoa's key bindings, which took Ctrl+Shift+A, B, E, F, N, P
+  and V as selection commands, Ctrl+Shift+' as a typed `"` and
+  Ctrl+Backspace as a delete, and none reached the program.
   2.2.2026110701 moves from Ghostty 1e9e14af to 042b16b6, 404 commits
   (binary `upstream.042b16b6146a`). The parser's table, the mode list, the
   shell-integration environment and the config keys this app writes are
