@@ -1314,7 +1314,7 @@
 			repositoryURL = "https://github.com/Lakr233/libghostty-spm";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.2.2026110702;
+				minimumVersion = 2.2.2026111302;
 			};
 		};
 		AA0000000000000000000A02 /* XCRemoteSwiftPackageReference "Dog" */ = {
