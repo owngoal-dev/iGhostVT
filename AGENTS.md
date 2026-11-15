@@ -288,8 +288,8 @@ Settings is a sheet on iPhone and iPad and a window of its own on the
 Mac. The sheet keeps to what people change, in four sections — Display,
 Sessions, Keyboard, About — none named like a row inside it, and one footer
 (the text size's): Display holds the appearance, the themes and the
-terminal's text size; Sessions is Recent Directories, Group Tabs by
-Device, Background Activities and the Remote Access link — in Ghost Remote, which has no
+terminal's text size; Sessions is Recent Directories, Background
+Activities and the Remote Access link — in Ghost Remote, which has no
 sessions of its own and so no Background Activities, Remote Access leads,
 since it must show there without scrolling; Keyboard puts Accessory Keys before Shortcuts. Default Shell and New
 Session at Launch (not in Ghost Remote, whose launch never starts a shell
@@ -1279,9 +1279,11 @@ a Shortcut, a URL, a moved session — is appended, or with Group Tabs by
 Device on goes to the end of its device's group
 (`TabManager.newTab(_:besideActiveTab:)`).
 
-**Group Tabs by Device** (Settings ▸ Sessions; General ▸ Tabs on the Mac)
-is off until someone turns it on, so the tab list stays one freely ordered
-list by default (`TabGrouping.key`, read through `TabGrouping.isEnabled`).
+**Group Tabs by Device** is the Mac's alone (General ▸ Tabs in its
+Settings window; an iPhone or iPad never groups, whatever is stored —
+`TabGrouping.isAvailable`) and is off until someone turns it on, so the
+tab list stays one freely ordered list by default (`TabGrouping.key`, read
+through `TabGrouping.isEnabled`).
 On, `TabManager.tabs` itself keeps each device's tabs together — this
 device's first, then each paired device's by name (as Finder sorts), a
 forgotten one last — so the sidebar, the strip, ⌘1–9, ⌃Tab, the switcher
@@ -1298,9 +1300,8 @@ two or more, so one device looks as it always did: the name
 while a tab connects or has failed (`SidebarGroupStatus`), a click that
 folds — remembered app-wide in `Sidebar.collapsedDevices`, like the
 sidebar's visibility and width — and a `+` that is a `NewTabMenu` scoped
-to the device (`NewTabMenuScope.device`): on the Mac it opens the popover
-on that device (`NewTabPicker`'s `scope`), elsewhere the menu holds that
-device's rows alone. Rows under a header leave the
+to the device (`NewTabMenuScope.device`), whose popover opens on that
+device (`NewTabPicker`'s `scope`). Rows under a header leave the
 device off their second line; the strip marks no groups. An `ssh` in a
 local tab is this device's: nothing reads where it went.
 
@@ -1350,7 +1351,7 @@ with a `Label`, so it becomes a submenu; that matters because on a phone
 with tabs open the bar shows the title capsule and ⋯ is the only new-tab
 control on screen. The sidebar row, the compact bar's `+`, the switcher's
 dashed card and that entry are the four; a device group's `+` in the
-sidebar is the same control, scoped to that device.
+Mac's sidebar is the same control, scoped to that device.
 
 Paired devices (remote access) follow, each with New Terminal, the
 terminals it has open, and the directories this app's tabs were in on that
