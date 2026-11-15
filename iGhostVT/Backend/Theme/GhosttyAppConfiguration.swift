@@ -54,6 +54,10 @@ enum GhosttyAppConfiguration {
                 builder.withCustom("font-codepoint-map", "U+F900-U+FAFF=PingFang SC")
                 builder.withCustom("font-codepoint-map", "U+3000-U+303F=PingFang SC")
                 builder.withCustom("font-codepoint-map", "U+FF00-U+FFEF=PingFang SC")
+                if WindowTranslucency.isEnabled {
+                    builder.withCustom("background-opacity", "0")
+                    builder.withCustom("alpha-blending", "native")
+                }
             #endif
         }
     }

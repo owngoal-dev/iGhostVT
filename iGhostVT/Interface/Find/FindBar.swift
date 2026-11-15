@@ -72,7 +72,7 @@ struct FindDock: View {
                         .font(DS.Font.control)
                         .frame(width: Self.controlSize, height: Self.controlSize)
                         .contentShape(Circle())
-                        .barGlass(in: Circle())
+                        .barGlass(in: Circle(), floatsOverContent: true)
                 }
                 .accessibilityLabel("Close")
                 HStack(spacing: 0) {
@@ -83,13 +83,13 @@ struct FindDock: View {
                     FindStatus(search: search)
                 }
                 .padding(.trailing, DS.Padding.s)
-                .barGlass(in: Capsule(), interactive: false)
+                .barGlass(in: Capsule(), interactive: false, floatsOverContent: true)
                 HStack(spacing: 0) {
                     FindStepper(search: search, controlSize: Self.controlSize - DS.Padding.xs)
                 }
                 .frame(height: Self.controlSize)
                 .padding(.horizontal, DS.Padding.xs)
-                .barGlass(in: Capsule(), interactive: false)
+                .barGlass(in: Capsule(), interactive: false, floatsOverContent: true)
             }
         }
     }
