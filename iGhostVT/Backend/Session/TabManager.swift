@@ -31,6 +31,7 @@ final class TabManager: ObservableObject {
     enum TabCloseOrigin: String {
         case keyCommand = "close-tab command"
         case closeButton = "close button"
+        case middleClick = "middle click"
         case contextMenu = "context menu"
         case statusCard = "status card"
         case confirmation = "confirmed"
