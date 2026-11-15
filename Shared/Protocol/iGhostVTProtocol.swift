@@ -120,11 +120,23 @@ enum iGhostVTProtocol {
         daemonLogPath + ".1"
     }
 
-    /// Posted (`notify_post`) by `ighostvtd-io` once a Mac update is in
-    /// place (`hostUpdate`); the running app relaunches into the new copy.
-    /// Per user, since notify names are system wide.
+    /// Posted (`notify_post`) by `ighostvtd-io` before 1.6.30 once a Mac
+    /// update is in place (`hostUpdate`): the running app relaunched
+    /// itself into the new copy, a second instance beside the first, and
+    /// the Dock kept a tile for each. A helper from 1.6.30 posts it only
+    /// when the app did not quit for `updateQuitNotification` — an app
+    /// from before it, which knows only this one. Per user, since notify
+    /// names are system wide.
     static var updateInstalledNotification: String {
         "wiki.qaq.ighostvt.update-installed.\(getuid())"
+    }
+
+    /// Posted by `ighostvtd-io` from 1.6.30 once a Mac update is in place:
+    /// the running app quits, and the helper opens the new copy once the
+    /// old process is gone — the order Sparkle's installer keeps, so the
+    /// new copy is the only instance and takes the Dock's own tile.
+    static var updateQuitNotification: String {
+        "wiki.qaq.ighostvt.update-quit.\(getuid())"
     }
 }
 
@@ -512,6 +524,18 @@ enum iGhostVTWireKey {
     static let updateState = "updstate"
     static let updateVersion = "updver"
     static let updateProgress = "updpermille"
+    /// On a remote `hello`'s reply (1.6.30 on): the host's whole
+    /// `CFBundleShortVersionString`, patch and all, added by
+    /// `ighostvtd-remote`. Not `appVersion`, which another device always
+    /// reads as a release line (`RemoteAccess.wireVersion`); this one only
+    /// says what an update would replace. Absent from an older host.
+    static let installedVersion = "instver"
+    /// On a `hello`'s reply (1.6.30 on): whether this host updates itself
+    /// (`hostUpdate` would not answer `unsupported`) — a Mac with a
+    /// Developer ID copy of its own in `/Applications`; never a device,
+    /// which updates through its package manager. Absent from an older
+    /// host, and while the helper has not read its own signature yet.
+    static let selfUpdating = "selfupd"
 }
 
 /// Where the Mac's own update stands, as `hostUpdate` reports it.

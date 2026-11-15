@@ -31,10 +31,12 @@ import notify
 /// not own (an administrator's install), which this user cannot replace.
 ///
 /// The swap is one `renamex_np(RENAME_SWAP)` inside `/Applications`, so the
-/// bundle is never missing or half-written. The app then relaunches — told
-/// by `iGhostVTProtocol.updateInstalledNotification`, or opened if it was
-/// not running — and its launch-agent rebind restarts this helper from the
-/// new bundle, which ends every session on the Mac.
+/// bundle is never missing or half-written. A running app is then asked to
+/// quit (`iGhostVTProtocol.updateQuitNotification`) and the new copy is
+/// opened once it is gone, as Sparkle's installer does it; one that was not
+/// running is opened in the background. The new copy's launch-agent rebind
+/// restarts this helper from the new bundle, which ends every session on
+/// the Mac.
 final class MacUpdater: @unchecked Sendable {
     struct Snapshot {
         var state: HostUpdateState
@@ -51,9 +53,16 @@ final class MacUpdater: @unchecked Sendable {
     init() {
         #if os(macOS)
             snapshot = Snapshot(state: .idle, installedVersion: Self.installedVersion ?? "0")
-            queue.async { Self.sweepLeftovers() }
+            queue.async {
+                Self.sweepLeftovers()
+                // Read once: the copy only changes by an update, which
+                // restarts this process.
+                let updates = (try? Self.installedTeam().get()) != nil
+                self.lock.withLock { self.knownUpdatesItself = updates }
+            }
         #else
             snapshot = Snapshot(state: .idle, installedVersion: "0")
+            knownUpdatesItself = false
         #endif
     }
 
@@ -62,6 +71,16 @@ final class MacUpdater: @unchecked Sendable {
     var isBusy: Bool {
         lock.withLock { snapshot.state.isBusy }
     }
+
+    /// Whether `hostUpdate` can put an update in place here, for a hello's
+    /// reply (`iGhostVTWireKey.selfUpdating`): a Developer ID copy of this
+    /// user's in `/Applications`, never a device. Nil until the Mac has
+    /// read its own signature, just after the helper starts.
+    var updatesItself: Bool? {
+        lock.withLock { knownUpdatesItself }
+    }
+
+    private var knownUpdatesItself: Bool?
 
     /// Starts what the request asks for, unless something is already under
     /// way, and answers where things stand. Never blocks. An install asked
@@ -548,7 +567,7 @@ final class MacUpdater: @unchecked Sendable {
         /// The new copy is put beside the old one inside `/Applications` —
         /// same volume, so the swap is a rename — checked again where it
         /// landed, and swapped in at once. `installed` is said the moment
-        /// the rename is done: the app's relaunch restarts this process
+        /// the rename is done: the new copy's launch restarts this process
         /// soon after, and a client asking then must hear how it ended.
         private func swapIn(_ app: URL, team: String, version: String, log: URL) throws {
             let incoming = "/Applications/" + Self.incomingPrefix + String(getpid())
@@ -563,25 +582,58 @@ final class MacUpdater: @unchecked Sendable {
                 throw error
             }
             set(.installing, latest: version)
-            let appWasRunning = Self.isAppRunning()
+            // Read before the swap: past it the running app's executable is
+            // the old copy's, under `incoming`, and no longer matches.
+            let runningApp = Self.runningAppIDs()
             guard renamex_np(incoming, Self.destination, UInt32(RENAME_SWAP)) == 0 else {
                 let reason = String(cString: strerror(errno))
                 try? FileManager.default.removeItem(atPath: incoming)
                 throw Failure("The new copy could not be put in place: \(reason).")
             }
             set(.installed, latest: version)
-            DaemonFileLog.log("update: iGhostVT \(version) is in place; the app \(appWasRunning ? "is told to relaunch" : "is opened")")
-            // Before the old copy goes: the app hears this first, and its
-            // executable losing its last name then reads as the relaunch
-            // already under way, not as an update to ask about.
-            notify_post(iGhostVTProtocol.updateInstalledNotification)
-            if !appWasRunning {
+            DaemonFileLog.log("update: iGhostVT \(version) is in place; the app \(runningApp.isEmpty ? "is opened" : "is asked to quit")")
+            if runningApp.isEmpty {
+                removeOldCopy(at: incoming)
                 // In the background, as the open-at-login agent opens it:
                 // the launch is for the helper's rebind, not for a window.
                 try? Self.run("/usr/bin/open", ["-g", Self.destination], log: log)
+                return
             }
-            // `incoming` now names the old copy. Should the relaunch end
-            // this process first, the next start sweeps it.
+            // Sparkle's order: the app quits, and only once it is gone is
+            // the new copy opened. A relaunch from inside the app has to
+            // ask for a second instance beside itself, and the Dock kept
+            // a tile for each. Watched before it is asked, so no exit is
+            // missed.
+            let exits = ExitWatch(runningApp)
+            notify_post(iGhostVTProtocol.updateQuitNotification)
+            if exits.wait(timeout: Self.quitTimeout) {
+                removeOldCopy(at: incoming)
+                Self.reopen(log: log)
+                return
+            }
+            // An app from before 1.6.30 knows only the old notice, and
+            // relaunches itself on it. One that was only slow to quit may
+            // still go on the first notice: whichever way it leaves, a
+            // copy that is gone with no new one running is opened here.
+            DaemonFileLog.log("update: the app did not quit; asking it to relaunch itself")
+            notify_post(iGhostVTProtocol.updateInstalledNotification)
+            removeOldCopy(at: incoming)
+            if exits.wait(timeout: Self.lateQuitTimeout) {
+                usleep(2_000_000)
+                if Self.runningAppIDs().isEmpty {
+                    Self.reopen(log: log)
+                }
+            }
+        }
+
+        /// How long the app is given to quit for the update, and then to
+        /// leave on the old notice.
+        private static let quitTimeout: TimeInterval = 20
+        private static let lateQuitTimeout: TimeInterval = 60
+
+        /// `incoming` names the old copy after the swap. Should the new
+        /// app's launch end this process first, the next start sweeps it.
+        private func removeOldCopy(at incoming: String) {
             do {
                 try FileManager.default.removeItem(atPath: incoming)
             } catch {
@@ -589,14 +641,88 @@ final class MacUpdater: @unchecked Sendable {
             }
         }
 
-        /// Whether this user runs the app from `/Applications` now.
-        private static func isAppRunning() -> Bool {
+        /// Opens the new copy in front, as the app was. LaunchServices may
+        /// still count the old process for a moment after it exits, and an
+        /// `open` then only "activates" what is gone, so the launch is
+        /// checked and tried again.
+        private static func reopen(log: URL) {
+            for attempt in 1 ... 3 {
+                // A breath for LaunchServices to see the old process go.
+                usleep(attempt == 1 ? 300_000 : 1_000_000)
+                try? run("/usr/bin/open", [destination], log: log)
+                for _ in 0 ..< 30 {
+                    if !runningAppIDs().isEmpty {
+                        DaemonFileLog.log("update: opened the new copy")
+                        return
+                    }
+                    usleep(100_000)
+                }
+            }
+            DaemonFileLog.log("update: the new copy did not open; it opens at the next login, or by hand")
+        }
+
+        /// The exits of a set of processes, watched from the moment it is
+        /// made. A process already gone when it is watched counts as
+        /// exited.
+        private final class ExitWatch {
+            private let queue = kqueue()
+            private var left = 0
+
+            init(_ ids: [pid_t]) {
+                guard queue >= 0 else { return }
+                for id in ids {
+                    var change = kevent(
+                        ident: UInt(id),
+                        filter: Int16(EVFILT_PROC),
+                        flags: UInt16(EV_ADD | EV_ONESHOT),
+                        fflags: NOTE_EXIT,
+                        data: 0,
+                        udata: nil,
+                    )
+                    if kevent(queue, &change, 1, nil, 0, nil) == 0 {
+                        left += 1
+                    }
+                }
+            }
+
+            deinit {
+                if queue >= 0 {
+                    close(queue)
+                }
+            }
+
+            /// Whether every process has exited within `timeout`.
+            func wait(timeout: TimeInterval) -> Bool {
+                guard queue >= 0 else { return false }
+                let deadline = Date().addingTimeInterval(timeout)
+                while left > 0 {
+                    let remaining = deadline.timeIntervalSinceNow
+                    guard remaining > 0 else { return false }
+                    var wait = timespec(
+                        tv_sec: Int(remaining),
+                        tv_nsec: Int((remaining - remaining.rounded(.down)) * 1_000_000_000),
+                    )
+                    var event = kevent()
+                    let count = kevent(queue, nil, 0, &event, 1, &wait)
+                    if count > 0 {
+                        left -= 1
+                    } else if count < 0, errno != EINTR {
+                        return false
+                    }
+                }
+                return true
+            }
+        }
+
+        /// The processes of this user running the app from `/Applications`.
+        private static func runningAppIDs() -> [pid_t] {
             let target = destination + "/" + appExecutable
             let count = proc_listallpids(nil, 0)
-            guard count > 0 else { return false }
+            guard count > 0 else { return [] }
             var pids = [pid_t](repeating: 0, count: Int(count) + 32)
             let filled = proc_listallpids(&pids, Int32(pids.count * MemoryLayout<pid_t>.size))
             var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
+            var running: [pid_t] = []
             for pid in pids.prefix(Int(max(filled, 0))) where pid > 0 {
                 var info = proc_bsdshortinfo()
                 guard proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &info, Int32(MemoryLayout<proc_bsdshortinfo>.size)) > 0,
@@ -604,10 +730,10 @@ final class MacUpdater: @unchecked Sendable {
                       proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0
                 else { continue }
                 if String(cString: buffer) == target {
-                    return true
+                    running.append(pid)
                 }
             }
-            return false
+            return running
         }
 
         /// Runs a system tool to completion, its output in a file under

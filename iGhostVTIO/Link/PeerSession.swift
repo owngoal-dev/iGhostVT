@@ -191,6 +191,10 @@ final class PeerSession {
             if xpc_dictionary_get_bool(message, iGhostVTWireKey.watchSessions) {
                 registry.addWatcher(self)
             }
+            // A paired device's list says which hosts it can update.
+            if let reply, let updates = host.updater.updatesItself {
+                xpc_dictionary_set_bool(reply, iGhostVTWireKey.selfUpdating, updates)
+            }
             return Outcome(.success)
         case .listSessions:
             return Outcome(listSessions(into: reply))

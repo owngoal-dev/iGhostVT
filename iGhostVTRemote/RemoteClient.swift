@@ -353,7 +353,7 @@ final class RemoteClient {
         let message = xpc_dictionary_create(nil, nil, 0)
         xpc_dictionary_set_uint64(message, iGhostVTWireKey.version, xpc_dictionary_get_uint64(hello, iGhostVTWireKey.version))
         xpc_dictionary_set_uint64(message, iGhostVTWireKey.operation, iGhostVTOperation.hello.rawValue)
-        forward(message, tag: tag)
+        forward(message, tag: tag, operation: .hello)
     }
 
     /// What the daemon is told about the device on its behalf, never taken
@@ -419,10 +419,24 @@ final class RemoteClient {
                 noteGranted(operation, request: message, reply: reply)
             }
             guard !isClosed else { return }
+            let reply = operation == .hello ? Self.statingVersion(reply) : reply
             if xpc_get_type(reply) != iGhostVTXPC.typeDictionary || !frames.send(.reply, tag: tag, object: reply) {
                 self.reply(.operationFailed, tag: tag, message: "The terminal helper on the host did not answer.")
             }
         }
+    }
+
+    /// The daemon's answer to the device's hello, with the version this
+    /// host runs, patch and all (`installedVersion`): what the device's
+    /// list shows, and what an update would replace.
+    private static func statingVersion(_ reply: xpc_object_t) -> xpc_object_t {
+        guard xpc_get_type(reply) == iGhostVTXPC.typeDictionary,
+              xpc_dictionary_get_int64(reply, iGhostVTWireKey.code) == iGhostVTReplyCode.success.rawValue,
+              RemoteAccess.appVersion != RemoteAccess.unknownVersion,
+              let copy = xpc_copy(reply)
+        else { return reply }
+        xpc_dictionary_set_string(copy, iGhostVTWireKey.installedVersion, RemoteAccess.appVersion)
+        return copy
     }
 
     private func daemonEvent(_ event: xpc_object_t) {

@@ -380,11 +380,22 @@ BTM's launch constraint and every TCC grant (Documents, Local Network…)
 are keyed on it, so a same-team update keeps them and nothing re-prompts.
 It is copied beside the old one (`/Applications/.iGhostVT.app.update-<pid>`,
 swept at the next start if left), checked again there, and swapped in with
-one `renamex_np(RENAME_SWAP)`; `installed` is said right then, the app is
-told (`iGhostVTProtocol.updateInstalledNotification`, which it believes
-only when its own `Info.plist` on disk changed) or opened with `open -g`,
-and the relaunched app's launch-agent rebind restarts the helper — which
-ends every session on the Mac, the price of any helper update. A copy with
+one `renamex_np(RENAME_SWAP)`; `installed` is said right then. A running
+app is then asked to quit (`iGhostVTProtocol.updateQuitNotification`,
+believed only when its own `Info.plist` on disk changed) and the helper
+opens the new copy once the old process has exited (kqueue `NOTE_EXIT`,
+then `open`, checked and retried while LaunchServices still counts the
+old one) — Sparkle's order. Up to 1.6.29 the app relaunched itself with
+`createsNewApplicationInstance`, a second instance beside the first, and
+the Dock kept a tile for each. An app that has not quit within 20 s is
+sent `updateInstalledNotification` instead, the only notice an app from
+before 1.6.30 knows, which it answers by relaunching itself; should it
+leave later with no copy running, the helper opens one then. An app that
+was not running is opened with `open -g`. The app flushes its
+preferences before it exits, or the remote-tab ledger it just wrote could
+be lost. The new copy's launch-agent
+rebind restarts the helper — which ends every session on the Mac, the
+price of any helper update. A copy with
 no Team ID (ad-hoc, a local build), one outside `/Applications`, or one
 this user does not own is `unsupported`, and the menu falls back to the
 download above; `mac-install.sh` therefore hands the bundle to the user.
@@ -393,6 +404,27 @@ before the helper starts) points the check at a document shaped like
 GitHub's — the way an unreleased build is tested; every check above still
 applies. A Mac signed with another team (`mac-update-from-github.sh`'s
 local re-sign) never matches the release's team and updates by hand.
+
+**A paired device says what it runs, and the Mac's list updates several
+at once.** From 1.6.30 every remote `hello`'s reply carries the host's
+whole version (`installedVersion`, stamped by `ighostvtd-remote` — never
+`appVersion`, which another device reads as a release line) and whether
+it updates itself (`selfUpdating`, from `MacUpdater.updatesItself`, read
+once at the helper's start: a Developer ID copy of this user's in
+`/Applications`; never a device). `RemoteDaemonLink` hands each hello's
+answer to `RemoteHostVersions`, so the list fills in from the asks the
+session catalog makes anyway; a host from before says neither, and the
+list asks its updater instead (`probe`: a `hostUpdate` with no flag
+states what is installed and starts nothing). The Mac's Accessible
+Devices sheet selects the Finder's way (click, ⌘, ⇧ — modifiers read off
+`NSEvent`, since a SwiftUI tap does not say) and its Check for Updates,
+like each row's own button, runs `HostUpdateBatch`: every chosen device
+checks, one alert confirms the install on all that found an update, and
+each then downloads, verifies and installs on its own, its phase on its
+row (a bar while it downloads) and one overall bar under the table. It
+outlives the sheet; a newer run or Cancel retires a host's run, whose
+asks then change nothing, and Cancel never reaches past the swap. The
+iPhone and iPad keep `HostUpdateFlow`'s alerts for one device.
 
 ## Ghost Remote
 
