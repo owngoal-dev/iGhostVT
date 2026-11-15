@@ -1295,7 +1295,8 @@ Device on goes to the end of its device's group
 (`TabManager.newTab(_:besideActiveTab:)`).
 
 **Group Tabs by Device** is the Mac's alone (General ▸ Tabs in its
-Settings window; an iPhone or iPad never groups, whatever is stored —
+Settings window, under Recent Directories in the same row; an iPhone or
+iPad never groups, whatever is stored —
 `TabGrouping.isAvailable`) and is off until someone turns it on, so the
 tab list stays one freely ordered list by default (`TabGrouping.key`, read
 through `TabGrouping.isEnabled`).
@@ -1400,7 +1401,7 @@ tenth whenever they add up past five per slot, so last month's project
 sinks and this week's rises — and eight reach it, minus
 any directory an open tab is already offering and minus the home, which is
 the first row anyway. Recent Directories (Settings ▸ Sessions; General
-▸ New Tab on the Mac) is the whole
+▸ Tabs on the Mac) is the whole
 of its configuration, local and remote lists alike: off, it hides the groups, stops recording
 *and* clears what is stored — a switch that says the app is not keeping this
 has to mean it, and there is no separate Clear. There is no sort choice: a
