@@ -1454,6 +1454,37 @@ refuse outside the key window; `TerminalWindow.becomeKey` hands the active
 tab its focus back as the window comes forward. "Frontmost" on the Mac is
 the key window, never `activationState` (`ShortcutBridge`).
 
+**Find searches with Ghostty's own engine; the app is the driver and the
+bar.** libghostty-spm exposes the core's search as binding actions
+(`search:<needle>`, `navigate_search:next|previous`, `end_search`,
+`search_selection`) and `TerminalSurfaceSearchDelegate`. `TerminalViewState`
+is the surface's delegate and does not adopt that protocol, so the app
+declares the conformance itself (`TerminalSearch+Surface.swift`,
+`@retroactive`). **A library release that adopts it will stop that file
+compiling; delete the extension then and take the library's hook.** What
+`TerminalSearch` (one per tab) relies on in the core, read from the Zig at
+the pinned commit:
+
+- Match 0 is the newest; `next` goes to older output.
+- The one matcher is an ASCII-case-insensitive substring. Regex and
+  case-sensitive search need a change in the core.
+- A report (`search_total`, `search_selected`) names no needle, and one for
+  the previous needle can land after the next `search:`. Selecting the
+  first match is therefore a request repeated until a selection is
+  reported, never one sent once.
+- The core calls `terminalDidEndSearch` on every Escape pressed in a
+  terminal, search or not.
+- A resize restarts the search with nothing selected; the driver asks for
+  the selection again when that happens just after the bar opens.
+- While a needle is set the search thread wakes forty times a second, so a
+  tab that is not in front has its search stopped and run again on return.
+
+The bar (`FindDock`) is at the bottom and never at the top: the core
+scrolls a selected match to the viewport's top row. At regular width it
+floats over the terminal column and resizes nothing; at compact width it
+takes the bottom bar's place. There is no find while a status card covers
+the tab — the card claims first responder for its Return.
+
 Every keyboard shortcut is a `UIKeyCommand` in the main menu — `AppMenus`,
 installed from `AppDelegate.buildMenu` — never a SwiftUI `keyboardShortcut`.
 The chords themselves are `KeyShortcuts.all`, one list read by three
@@ -1478,7 +1509,9 @@ in the menu. ghostty's own bindings on the same chords (`goto_tab`,
 `new_tab`, `close_surface`…) are actions the library does not surface, so
 a key that is off is a dead key, not a ghostty feature — except font
 size and clear screen, which ghostty performs itself either way (the app
-fronts them so the size preference follows).
+fronts them so the size preference follows), and the four find keys
+(⌘F, ⌘G, ⇧⌘G, ⌘E), which are ghostty's own default bindings and reach the
+same find bar through the search delegate.
 One list feeds both the Mac's menu bar and the iPad's hold-⌘ overlay, and it
 is where the system's own File ▸ New (⌘N, a window) and Close (⌘W, the
 window) are replaced: in a tabbed terminal both keys belong to the tab.

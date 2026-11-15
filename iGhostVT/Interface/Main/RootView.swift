@@ -160,6 +160,15 @@ struct RootView: View {
 
     private var terminalColumn: some View {
         panes
+            .overlay {
+                if isRegularWidth, let tab = tabManager.activeTab {
+                    GeometryReader { proxy in
+                        FindDock(search: tab.search, placement: .floating(columnWidth: proxy.size.width))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    }
+                    .id(tab.id)
+                }
+            }
             .safeAreaInset(edge: .top, spacing: 0) {
                 if isRegularWidth {
                     TabStripBar(
@@ -180,6 +189,17 @@ struct RootView: View {
             .catalystColumnBackground(theme.background(for: colorScheme))
     }
 
+    private var bottomInset: some View {
+        ZStack(alignment: .bottom) {
+            toolbarInset
+                .modifier(HiddenWhileFinding(search: tabManager.activeTab?.search))
+            if let tab = tabManager.activeTab {
+                FindDock(search: tab.search, placement: .inset(keyboardOverlap: keyboard.overlap))
+                    .id(tab.id)
+            }
+        }
+    }
+
     /// What the phone keeps below the terminal: the bar, and the keyboard.
     /// The bar stays up with no tabs: `+` and settings. With a tab it is
     /// the title, the ⋯ menu, and the switcher.
@@ -189,7 +209,7 @@ struct RootView: View {
     /// it fades out beneath them, while the terminal's bottom edge follows
     /// the keyboard alone. With only the accessory bar up (a hardware
     /// keyboard) the bar sits on top of it, as before.
-    private var bottomInset: some View {
+    private var toolbarInset: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
                 Color.clear
@@ -228,6 +248,7 @@ struct RootView: View {
                     onCloseTab: { tabManager.requestClose(tab, from: .statusCard) },
                     onLockChange: refocus,
                     onStatusChange: refocusForStatus,
+                    onFindDismiss: refocusAfterFind,
                 )
                 .transition(.asymmetric(
                     insertion: .opacity,
@@ -313,6 +334,7 @@ struct RootView: View {
         guard !isCoveredByPresentation,
               let tab = tabManager.activeTab,
               !tab.isLocked,
+              !tab.search.isEditing,
               tabManager.closeRequest == nil,
               tabManager.clipboardRequests.isEmpty,
               !tab.isCoveredByStatusAlert
@@ -331,6 +353,12 @@ struct RootView: View {
         focusedTabID = tab.id
         guard view.isFirstResponder || view.becomeFirstResponder() else { return nil }
         return view
+    }
+
+    private func refocusAfterFind(_ terminalTakesFocus: Bool) {
+        if terminalTakesFocus {
+            refocus()
+        }
     }
 
     private func refocus() {
@@ -364,6 +392,7 @@ private struct TerminalPane: View {
     let onCloseTab: () -> Void
     let onLockChange: () -> Void
     let onStatusChange: (TerminalSessionStore.Status) -> Void
+    let onFindDismiss: (Bool) -> Void
 
     /// The lock the caption is naming right now; nil once it has faded.
     @State private var announcedLock: TabLock?
@@ -371,6 +400,45 @@ private struct TerminalPane: View {
     @State private var announcement = 0
 
     var body: some View {
+        surface
+            .opacity(isActive ? 1 : 0)
+            // The lock itself is not modeled here: `LockableTerminalView`
+            // refuses hit testing and first responder at the view, so every
+            // input path closes in one place while output keeps rendering.
+            .allowsHitTesting(isActive)
+            .accessibilityHidden(!isActive)
+            .onChange(of: attributes.lock) { lock in
+                announce(lock)
+                onLockChange()
+            }
+            // A touch the lock swallowed says why it did nothing.
+            .onReceive(tab.lockedTouches) {
+                if isActive, let lock = attributes.lock {
+                    announce(lock)
+                }
+            }
+            // The active pane's only: a background tab's shell exiting
+            // would otherwise hand the front tab's terminal first responder
+            // — and the software keyboard with it — for nothing the user did.
+            .onReceive(tab.store.$status) { status in
+                switch status {
+                case .failed, .elsewhere: tab.search.dismiss()
+                case .idle, .connecting, .connected: break
+                }
+                if isActive {
+                    onStatusChange(status)
+                }
+            }
+            .onAppear { tab.search.setSurfaceActive(isActive) }
+            .onChange(of: isActive) { tab.search.setSurfaceActive($0) }
+            .onReceive(tab.search.dismissals) { terminalTakesFocus in
+                if isActive {
+                    onFindDismiss(terminalTakesFocus)
+                }
+            }
+    }
+
+    private var surface: some View {
         TerminalSurfaceView(context: tab.terminal)
             .terminalFocused(focusedTabID, equals: tab.id)
             .overlay {
@@ -403,30 +471,6 @@ private struct TerminalPane: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(lock.badgeTitle)
                     .transition(.opacity)
-                }
-            }
-            .opacity(isActive ? 1 : 0)
-            // The lock itself is not modeled here: `LockableTerminalView`
-            // refuses hit testing and first responder at the view, so every
-            // input path closes in one place while output keeps rendering.
-            .allowsHitTesting(isActive)
-            .accessibilityHidden(!isActive)
-            .onChange(of: attributes.lock) { lock in
-                announce(lock)
-                onLockChange()
-            }
-            // A touch the lock swallowed says why it did nothing.
-            .onReceive(tab.lockedTouches) {
-                if isActive, let lock = attributes.lock {
-                    announce(lock)
-                }
-            }
-            // The active pane's only: a background tab's shell exiting
-            // would otherwise hand the front tab's terminal first responder
-            // — and the software keyboard with it — for nothing the user did.
-            .onReceive(tab.store.$status) { status in
-                if isActive {
-                    onStatusChange(status)
                 }
             }
     }

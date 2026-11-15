@@ -344,6 +344,12 @@ harness:
 		"$(ROOT_DIR)/Tests/TerminalLink/main.swift" \
 		-o "$$harness_dir/terminal-link" && \
 	"$$harness_dir/terminal-link" && \
+	xcrun --sdk macosx swiftc -swift-version 5 \
+		"$(ROOT_DIR)/iGhostVT/Backend/Search/FindQueryPacer.swift" \
+		"$(ROOT_DIR)/iGhostVT/Backend/Search/FindHistory.swift" \
+		"$(ROOT_DIR)/Tests/FindQuery/main.swift" \
+		-o "$$harness_dir/find-query" && \
+	"$$harness_dir/find-query" && \
 	$(MAKE) --no-print-directory relay-harness
 
 # The relay end to end (Tests/RelayHarness): the Go server under Relay/ built

@@ -25,6 +25,7 @@ final class TerminalTab: ObservableObject, Identifiable {
     /// was made; a theme change re-applies these lines, not newer ones.
     let customConfiguration: String
     let store: TerminalSessionStore
+    let search: TerminalSearch
 
     /// What the user has set on this tab — its lock, for now. Observed on
     /// its own (`TabAttributes`), so the views that show or change it are
@@ -146,10 +147,12 @@ final class TerminalTab: ObservableObject, Identifiable {
         let endpoint: DaemonEndpoint = remoteHostID.map { .remote(hostID: $0) } ?? .local
         let customConfiguration = GhosttyAppConfiguration.customConfiguration
         self.customConfiguration = customConfiguration
-        terminal = TerminalViewState(
+        let state = TerminalViewState(
             theme: GhosttyAppConfiguration.theme(custom: customConfiguration),
             terminalConfiguration: GhosttyAppConfiguration.terminal,
         )
+        terminal = state
+        search = TerminalSearch(terminal: state)
         // Built before the store exists (the factory closure cannot capture
         // `self` mid-init), armed right after: the exit the transport
         // observes must reach the store that presents it.
@@ -324,6 +327,9 @@ final class TerminalTab: ObservableObject, Identifiable {
         store.onSessionAttributes = { [weak self] attributes, isResumed in
             self?.adoptSessionAttributes(attributes, isResumed: isResumed)
         }
+        search.isAvailable = { [weak self] in
+            self?.isCoveredByStatusAlert == false
+        }
         terminal.makePlatformView = { [weak self] in
             let view = LockableTerminalView(frame: .zero)
             view.awaitConnection = { [weak self] in
@@ -336,6 +342,9 @@ final class TerminalTab: ObservableObject, Identifiable {
             view.isSoftwareKeyboardLocked = self?.isKeyboardLocked ?? false
             view.onLockedTouch = { [weak self] in
                 self?.lockedTouches.send()
+            }
+            view.onFind = { [weak self] needle in
+                self?.search.present(needle: needle)
             }
             view.onDroppedPaths = { [weak self] paths in
                 guard let self else { return }
