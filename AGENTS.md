@@ -1815,7 +1815,10 @@ Gotchas that bit us:
   with a gesture of its own (long press to lift; a plain drag moves the
   window) while the sidebar uses `onDrag`/`onDrop`. A `ScrollView` in that band draws Tahoe's scroll
   edge effect over its own content — the chips came up frosted — so the
-  strip's scroller hides it (`scrollEdgeEffectHidden`).
+  strip's scroller hides it (`scrollEdgeEffectHidden`). The sidebar's
+  trailing edge shows the column-resize pointer (`MacCursor`: an
+  `NSCursor` set from the hover and again from the drag) — UIKit's pointer
+  shapes have no resize.
 - **A windowed iPad's red, yellow and green buttons sit over the content,
   outside the safe area.** `WindowControlsInsetReader` reads iOS 26's
   corner-adapted safe area (`.safeArea(cornerAdaptation:)`) off a view that

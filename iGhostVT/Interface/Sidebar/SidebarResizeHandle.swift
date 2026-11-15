@@ -32,6 +32,9 @@ struct SidebarResizeHandle: View {
                 // finger and the drag jitters.
                 DragGesture(minimumDistance: 1, coordinateSpace: .global)
                     .onChanged { value in
+                        #if targetEnvironment(macCatalyst)
+                            MacCursor.columnResize.set()
+                        #endif
                         let base = dragBaseWidth ?? width
                         dragBaseWidth = base
                         width = (base + value.translation.width)
@@ -41,6 +44,7 @@ struct SidebarResizeHandle: View {
                         dragBaseWidth = nil
                     },
             )
+            .modifier(ColumnResizePointer(isDragging: dragBaseWidth != nil))
             .accessibilityLabel("Resize Sidebar")
             .accessibilityAdjustableAction { direction in
                 switch direction {
@@ -49,6 +53,40 @@ struct SidebarResizeHandle: View {
                 @unknown default: break
                 }
             }
+    }
+}
+
+private struct ColumnResizePointer: ViewModifier {
+    let isDragging: Bool
+    @State private var isInside = false
+
+    func body(content: Content) -> some View {
+        #if targetEnvironment(macCatalyst)
+            if #available(iOS 16.0, *) {
+                content
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active:
+                            isInside = true
+                            MacCursor.columnResize.set()
+                        case .ended:
+                            isInside = false
+                            if !isDragging {
+                                MacCursor.arrow.set()
+                            }
+                        }
+                    }
+                    .onChange(of: isDragging) { dragging in
+                        if !dragging, !isInside {
+                            MacCursor.arrow.set()
+                        }
+                    }
+            } else {
+                content
+            }
+        #else
+            content
+        #endif
     }
 }
 
