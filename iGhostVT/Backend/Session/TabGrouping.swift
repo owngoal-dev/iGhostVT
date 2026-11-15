@@ -1,3 +1,8 @@
+//
+//  TabGrouping.swift
+//  iGhostVT
+//
+
 import Foundation
 
 /// A window's tabs kept together by the device their shell runs on: this
@@ -6,10 +11,10 @@ enum TabGrouping {
     /// Group Tabs by Device in Settings. Off until someone turns it on: the
     /// tabs are then one freely ordered list and the sidebar has no device
     /// headers.
-    static let defaultsKey = "Tabs.groupByDevice"
+    static let key = "Tabs.groupByDevice"
 
-    static var isOn: Bool {
-        UserDefaults.standard.bool(forKey: defaultsKey)
+    static var isEnabled: Bool {
+        UserDefaults.standard.bool(forKey: key)
     }
 
     struct Group<Item> {
@@ -23,7 +28,8 @@ enum TabGrouping {
         }
     }
 
-    /// Paired devices' ids in the order their groups take.
+    /// Paired devices' ids in the order their groups take: by name, as
+    /// Finder sorts them, so `dev2` comes before `dev10`.
     static func hostOrder(_ hosts: [(id: String, name: String)]) -> [String] {
         hosts.sorted { lhs, rhs in
             switch lhs.name.localizedStandardCompare(rhs.name) {

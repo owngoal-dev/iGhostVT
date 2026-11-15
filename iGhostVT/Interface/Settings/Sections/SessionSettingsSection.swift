@@ -18,7 +18,7 @@ struct SessionSettingsSection: View {
     @AppStorage(SessionKeepAlive.key) private var keepAlive = true
     /// Remote access holds Background Activities on (`SessionKeepAlive`).
     @AppStorage(SessionKeepAlive.remoteAccessKey) private var heldByRemoteAccess = false
-    @AppStorage(TabGrouping.defaultsKey) private var groupsByDevice = false
+    @AppStorage(TabGrouping.key) private var groupsByDevice = false
 
     var body: some View {
         Section {

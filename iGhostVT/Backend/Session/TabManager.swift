@@ -67,8 +67,8 @@ final class TabManager: ObservableObject {
         // Turned on in Settings, grouping takes the tabs already open; off,
         // they stay where they are and move freely again.
         groupingSubscription = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .map { _ in TabGrouping.isOn }
-            .prepend(TabGrouping.isOn)
+            .map { _ in TabGrouping.isEnabled }
+            .prepend(TabGrouping.isEnabled)
             .removeDuplicates()
             .dropFirst()
             .filter { $0 }
@@ -429,7 +429,7 @@ final class TabManager: ObservableObject {
     }
 
     private func arranged(_ tabs: [TerminalTab]) -> [TerminalTab] {
-        guard TabGrouping.isOn else { return tabs }
+        guard TabGrouping.isEnabled else { return tabs }
         let hosts = PairedRemoteHostStore.hosts.map { (id: $0.id, name: $0.displayName) }
         return TabGrouping.arranged(tabs, hostID: \.remoteHostID, hostOrder: TabGrouping.hostOrder(hosts))
     }
@@ -715,7 +715,7 @@ final class TabManager: ObservableObject {
         guard
             // Grouped, a reorder never carries a tab into another device's
             // group.
-            !TabGrouping.isOn || tab.remoteHostID == destination.remoteHostID,
+            !TabGrouping.isEnabled || tab.remoteHostID == destination.remoteHostID,
             let from = tabs.firstIndex(where: { $0.id == tab.id }),
             let to = tabs.firstIndex(where: { $0.id == destination.id }),
             from != to

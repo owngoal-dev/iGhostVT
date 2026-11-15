@@ -18,7 +18,7 @@ struct SidebarView: View {
     /// The folded device groups' keys, one per line; remembered like the
     /// sidebar's visibility and width.
     @AppStorage("Sidebar.collapsedDevices") private var collapsedStorage = ""
-    @AppStorage(TabGrouping.defaultsKey) private var groupsByDevice = false
+    @AppStorage(TabGrouping.key) private var groupsByDevice = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -117,6 +117,7 @@ struct SidebarView: View {
         }
     }
 
+    /// The folded groups' keys (`TabGrouping.Group.key`).
     private var collapsedGroups: Set<String> {
         Set(collapsedStorage.split(separator: "\n").map(String.init))
     }
@@ -317,6 +318,8 @@ private struct SidebarGroupHeader: View {
 private struct SidebarGroupName: View {
     let hostID: String?
     @ObservedObject private var remoteHosts = RemoteHostDirectory.shared
+    /// Not read: it is here so a rename in Settings ▸ Remote Access redraws
+    /// this device's header. The name is `RemoteDeviceIdentity.deviceName`.
     @AppStorage(RemoteDeviceIdentity.chosenNameKey) private var chosenName: String?
 
     var body: some View {
@@ -328,7 +331,7 @@ private struct SidebarGroupName: View {
 
     private var name: String {
         guard let hostID else {
-            return chosenName ?? RemoteDeviceIdentity.systemName
+            return RemoteDeviceIdentity.deviceName
         }
         return remoteHosts.paired.first { $0.id == hostID }?.displayName ?? String(localized: "Remote")
     }

@@ -90,7 +90,7 @@ check(scattered.map(\.key), ["host:A", "local"], "tabs out of order still make o
 check(scattered.map { $0.items.map(\.name) }, [["a1", "a2"], ["l1"]], "a device's scattered tabs join its group")
 
 print("tab-grouping: setting")
-check(TabGrouping.isOn, false, "grouping is off until it is turned on")
+check(TabGrouping.isEnabled, false, "grouping is off until it is turned on")
 
 if failures.isEmpty {
     print("tab-grouping: all passed")

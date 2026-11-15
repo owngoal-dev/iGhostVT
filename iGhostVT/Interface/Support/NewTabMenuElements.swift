@@ -119,7 +119,7 @@ enum NewTabMenuElements {
     }
 
     /// The rows `NewTabMenuContent` lists, in the same order and groups —
-    /// or one device's alone.
+    /// or, for a sidebar group's `+`, one device's alone (`scope`).
     static func elements(
         tabManager: TabManager,
         scope: NewTabMenuScope = .allDevices,
@@ -137,80 +137,81 @@ enum NewTabMenuElements {
                 onOpen()
             }
         }
-        var elements: [UIMenuElement] = []
-        let hosts: [PairedRemoteHost]
-        switch scope {
-        case .allDevices:
-            hosts = choices.remoteHosts
-        case let .device(hostID?):
-            hosts = choices.remoteHosts.filter { $0.id == hostID }
-        case .device(hostID: nil):
-            hosts = []
+        func hostElements(_ hosts: [PairedRemoteHost]) -> [UIMenuElement] {
+            remoteHostElements(
+                hosts: hosts,
+                isOpenHere: { host, session in
+                    tabManager.tabs.contains { $0.remoteHostID == host.id && $0.remoteSessionID == session.id }
+                },
+                openFresh: { [weak tabManager] hostID, directory in
+                    tabManager?.newTab(.remote(hostID: hostID, directory: directory))
+                    onOpen()
+                },
+                attach: { [weak tabManager] hostID, sessionID in
+                    tabManager?.openRemoteTab(attachingTo: sessionID, hostID: hostID)
+                    onOpen()
+                },
+            )
         }
-        // This device's own rows. Ghost Remote has none: every row it has
-        // is another device's.
-        if scope == .allDevices || scope == .device(hostID: nil) {
-            if !AppEdition.isRemoteOnly {
-                elements.append(UIMenu(title: "", options: .displayInline, children: [
-                    row(
-                        String(
-                            localized: "Home (directory)",
-                            comment: "Menu item: opens a terminal in the home directory; the English text is “Home”",
-                        ),
-                        "house",
-                        .home,
-                    ),
-                ]))
-            }
-            if !choices.openTabs.isEmpty {
-                elements.append(UIMenu(
-                    title: String(localized: "Open Tabs"),
-                    options: .displayInline,
-                    children: choices.openTabs.map { row($0.directory.label, "macwindow", .session($0.sessionID)) },
-                ))
-            }
-            if !choices.recents.isEmpty {
-                elements.append(UIMenu(
-                    title: String(localized: "Recent"),
-                    options: .displayInline,
-                    children: choices.recents.map { directory in
-                        recentRow(directory, row("", "clock", .directory(directory)))
-                    },
-                ))
+        if case let .device(hostID) = scope {
+            guard let hostID else { return localElements(choices, row: row) }
+            // One device's rows, not a submenu of one. A device that cannot
+            // be opened stays the greyed row saying why.
+            return hostElements(choices.remoteHosts.filter { $0.id == hostID }).map { element in
+                guard let host = element as? UIMenu else { return element }
+                return UIMenu(title: "", options: .displayInline, children: host.children)
             }
         }
-        let hostElements = remoteHostElements(
-            hosts: hosts,
-            isOpenHere: { host, session in
-                tabManager.tabs.contains { $0.remoteHostID == host.id && $0.remoteSessionID == session.id }
-            },
-            openFresh: { [weak tabManager] hostID, directory in
-                tabManager?.newTab(.remote(hostID: hostID, directory: directory))
-                onOpen()
-            },
-            attach: { [weak tabManager] hostID, sessionID in
-                tabManager?.openRemoteTab(attachingTo: sessionID, hostID: hostID)
-                onOpen()
-            },
-        )
-        if scope != .allDevices {
-            // One device's rows, not a submenu of one. A device that
-            // cannot be opened stays the greyed row saying why.
-            for element in hostElements {
-                if let host = element as? UIMenu {
-                    elements.append(UIMenu(title: "", options: .displayInline, children: host.children))
-                } else {
-                    elements.append(element)
-                }
-            }
-        } else if AppEdition.isRemoteOnly, hostElements.count == 1, let host = hostElements.first as? UIMenu {
+        var elements = localElements(choices, row: row)
+        let hosts = hostElements(choices.remoteHosts)
+        if AppEdition.isRemoteOnly, hosts.count == 1, let host = hosts.first as? UIMenu {
             // Ghost Remote with one device: its rows, not a submenu of one.
             elements.append(UIMenu(title: host.title, options: .displayInline, children: host.children))
-        } else if !hostElements.isEmpty {
+        } else if !hosts.isEmpty {
             // "Other" beside this device's rows; Ghost Remote has only
             // other devices.
             let title = AppEdition.isRemoteOnly ? "" : String(localized: "Other Devices")
-            elements.append(UIMenu(title: title, options: .displayInline, children: hostElements))
+            elements.append(UIMenu(title: title, options: .displayInline, children: hosts))
+        }
+        return elements
+    }
+
+    /// This device's rows: its home, the directories this window's tabs are
+    /// in, and the recent ones.
+    private static func localElements(
+        _ choices: NewTabDirectoryChoices,
+        row: (String, String, TabManager.Origin) -> UIAction,
+    ) -> [UIMenuElement] {
+        var elements: [UIMenuElement] = []
+        // This device's own rows. Ghost Remote has none: every row it has
+        // is another device's.
+        if !AppEdition.isRemoteOnly {
+            elements.append(UIMenu(title: "", options: .displayInline, children: [
+                row(
+                    String(
+                        localized: "Home (directory)",
+                        comment: "Menu item: opens a terminal in the home directory; the English text is “Home”",
+                    ),
+                    "house",
+                    .home,
+                ),
+            ]))
+        }
+        if !choices.openTabs.isEmpty {
+            elements.append(UIMenu(
+                title: String(localized: "Open Tabs"),
+                options: .displayInline,
+                children: choices.openTabs.map { row($0.directory.label, "macwindow", .session($0.sessionID)) },
+            ))
+        }
+        if !choices.recents.isEmpty {
+            elements.append(UIMenu(
+                title: String(localized: "Recent"),
+                options: .displayInline,
+                children: choices.recents.map { directory in
+                    recentRow(directory, row("", "clock", .directory(directory)))
+                },
+            ))
         }
         return elements
     }
@@ -341,6 +342,7 @@ enum NewTabMenuElements {
 /// itself is UIKit's.
 struct NewTabMenuAnchor: UIViewRepresentable {
     let tabManager: TabManager
+    /// Which devices the menu offers (`NewTabMenuElements.elements`).
     var scope: NewTabMenuScope = .allDevices
     let onOpen: () -> Void
 

@@ -86,7 +86,7 @@ import SwiftUI
         @AppStorage(SessionKeepAlive.remoteAccessKey) private var heldByRemoteAccess = false
         @ObservedObject private var agent = MacLaunchAgent.shared
         @ObservedObject private var recents = RecentDirectoryStore.shared
-        @AppStorage(TabGrouping.defaultsKey) private var groupsByDevice = false
+        @AppStorage(TabGrouping.key) private var groupsByDevice = false
 
         var body: some View {
             MacSettingsForm {

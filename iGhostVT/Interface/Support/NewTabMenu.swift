@@ -16,6 +16,7 @@ import SwiftUI
 /// of one row would be a tap spent on nothing.
 struct NewTabMenu<Label: View>: View {
     @ObservedObject var tabManager: TabManager
+    /// Every device's rows, or one device's for a sidebar group's `+`.
     var scope: NewTabMenuScope = .allDevices
     /// Called after a tab is opened, for a presentation that then has to
     /// get out of the way — the tab switcher's full-screen cover.
