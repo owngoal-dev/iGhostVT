@@ -18,6 +18,7 @@ struct SidebarView: View {
     /// The folded device groups' keys, one per line; remembered like the
     /// sidebar's visibility and width.
     @AppStorage("Sidebar.collapsedDevices") private var collapsedStorage = ""
+    @AppStorage(TabGrouping.defaultsKey) private var groupsByDevice = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,7 +38,7 @@ struct SidebarView: View {
             #endif
 
             ScrollView {
-                let groups = TabGrouping.isEnabled
+                let groups = groupsByDevice
                     ? TabGrouping.groups(tabManager.tabs, hostID: \.remoteHostID)
                     : [TabGrouping.Group(hostID: nil, items: tabManager.tabs)]
                 let showsHeaders = groups.count > 1

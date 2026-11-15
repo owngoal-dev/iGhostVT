@@ -1,7 +1,8 @@
 import Foundation
 
 // Device groups (iGhostVT/Backend/Session/TabGrouping.swift): the order a
-// window's tabs take, and the moves that keep each device's tabs together.
+// window's tabs take with Group Tabs by Device on, and the groups the
+// sidebar heads.
 
 struct Tab {
     let name: String
@@ -88,10 +89,8 @@ let scattered = TabGrouping.groups([remote("a1", "A"), local("l1"), remote("a2",
 check(scattered.map(\.key), ["host:A", "local"], "tabs out of order still make one group per device")
 check(scattered.map { $0.items.map(\.name) }, [["a1", "a2"], ["l1"]], "a device's scattered tabs join its group")
 
-print("tab-grouping: moves")
-check(TabGrouping.allowsMove(from: "A", to: "A"), true, "a tab moves within its device's group")
-check(TabGrouping.allowsMove(from: "A", to: "B"), false, "a tab does not move into another device's group")
-check(TabGrouping.allowsMove(from: nil, to: "A"), false, "nor between this device and another")
+print("tab-grouping: setting")
+check(TabGrouping.isOn, false, "grouping is off until it is turned on")
 
 if failures.isEmpty {
     print("tab-grouping: all passed")

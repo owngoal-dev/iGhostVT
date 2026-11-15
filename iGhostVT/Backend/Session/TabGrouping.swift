@@ -3,9 +3,14 @@ import Foundation
 /// A window's tabs kept together by the device their shell runs on: this
 /// device's first, then each paired device's, by name.
 enum TabGrouping {
-    /// Off, the tabs are one freely ordered list and the sidebar has no
-    /// device headers.
-    static let isEnabled = true
+    /// Group Tabs by Device in Settings. Off until someone turns it on: the
+    /// tabs are then one freely ordered list and the sidebar has no device
+    /// headers.
+    static let defaultsKey = "Tabs.groupByDevice"
+
+    static var isOn: Bool {
+        UserDefaults.standard.bool(forKey: defaultsKey)
+    }
 
     struct Group<Item> {
         /// The paired device's id; nil for this device.
@@ -65,10 +70,5 @@ enum TabGrouping {
             }
         }
         return groups
-    }
-
-    /// A reorder never carries a tab into another device's group.
-    static func allowsMove(from hostID: String?, to destination: String?) -> Bool {
-        !isEnabled || hostID == destination
     }
 }

@@ -14576,6 +14576,172 @@
         }
       }
     },
+    "Group Tabs by Device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجميع علامات التبويب حسب الجهاز"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs nach Gerät gruppieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group Tabs by Device"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrupar pestañas por dispositivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regrouper les onglets par appareil"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raggruppa le schede per dispositivo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タブをデバイスごとにまとめる"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기별로 탭 묶기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrupar abas por dispositivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Группировать вкладки по устройствам"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhóm tab theo thiết bị"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按设备分组标签页"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "依裝置分組標籤頁"
+          }
+        }
+      }
+    },
+    "Group Tabs by Device keeps each device's tabs together, under its name in the sidebar, once a window has tabs from more than one device. Click a device's name to fold its tabs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُبقي «تجميع علامات التبويب حسب الجهاز» علامات تبويب كل جهاز معًا، تحت اسمه في الشريط الجانبي، عندما تضم النافذة علامات تبويب من أكثر من جهاز. انقر على اسم الجهاز لطي علامات التبويب الخاصة به."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit „Tabs nach Gerät gruppieren“ stehen die Tabs jedes Geräts zusammen unter seinem Namen in der Seitenleiste, sobald ein Fenster Tabs von mehr als einem Gerät hat. Klicke auf den Namen eines Geräts, um seine Tabs einzuklappen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group Tabs by Device keeps each device's tabs together, under its name in the sidebar, once a window has tabs from more than one device. Click a device's name to fold its tabs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Agrupar pestañas por dispositivo» mantiene juntas las pestañas de cada dispositivo, bajo su nombre en la barra lateral, cuando una ventana tiene pestañas de más de un dispositivo. Haz clic en el nombre de un dispositivo para contraer sus pestañas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Regrouper les onglets par appareil » garde les onglets de chaque appareil ensemble, sous son nom dans la barre latérale, dès qu’une fenêtre contient des onglets de plusieurs appareils. Cliquez sur le nom d’un appareil pour replier ses onglets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Raggruppa le schede per dispositivo” tiene insieme le schede di ogni dispositivo, sotto il suo nome nella barra laterale, quando una finestra ha schede di più dispositivi. Fai clic sul nome di un dispositivo per comprimerne le schede."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「タブをデバイスごとにまとめる」をオンにすると、1つのウインドウに複数のデバイスのタブがあるとき、各デバイスのタブをまとめてサイドバーのデバイス名の下に表示します。デバイス名をクリックすると、そのタブを折りたたみます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘기기별로 탭 묶기’를 켜면 한 윈도우에 여러 기기의 탭이 있을 때 각 기기의 탭을 모아 사이드바의 기기 이름 아래에 표시합니다. 기기 이름을 클릭하면 해당 탭을 접습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Agrupar abas por dispositivo” mantém juntas as abas de cada dispositivo, sob o nome dele na barra lateral, quando uma janela tem abas de mais de um dispositivo. Clique no nome de um dispositivo para recolher as abas dele."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Группировать вкладки по устройствам» собирает вкладки каждого устройства вместе под его именем на боковой панели, когда в окне есть вкладки с нескольких устройств. Нажмите на имя устройства, чтобы свернуть его вкладки."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Nhóm tab theo thiết bị” giữ các tab của từng thiết bị ở cạnh nhau, dưới tên thiết bị trong thanh bên, khi một cửa sổ có tab từ nhiều thiết bị. Bấm vào tên một thiết bị để thu gọn các tab của nó."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启“按设备分组标签页”后，一个窗口里有来自多台设备的标签页时，每台设备的标签页会排在一起，在边栏中显示在该设备的名称下。点按设备名称可以折叠它的标签页。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟「依裝置分組標籤頁」後，一個視窗裡有來自多台裝置的標籤頁時，每台裝置的標籤頁會排在一起，在側邊欄中顯示在該裝置的名稱下。按一下裝置名稱即可收合它的標籤頁。"
+          }
+        }
+      }
+    },
     "Hide Sidebar" : {
       "comment" : "Menu item: hides the tab sidebar",
       "extractionState" : "manual",

@@ -52,6 +52,7 @@ final class TabManager: ObservableObject {
 
     private var networkSubscription: AnyCancellable?
     private var pairedHostsSubscription: AnyCancellable?
+    private var groupingSubscription: AnyCancellable?
 
     init() {
         networkSubscription = NotificationCenter.default.publisher(for: NetworkPathWatcher.pathDidChange)
@@ -60,6 +61,19 @@ final class TabManager: ObservableObject {
                 MainActor.assumeIsolated { self?.reconnectRemoteTabs() }
             }
         pairedHostsSubscription = NotificationCenter.default.publisher(for: PairedRemoteHostStore.didChange)
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated { self?.rearrange() }
+            }
+        // Turned on in Settings, grouping takes the tabs already open; off,
+        // they stay where they are and move freely again.
+        groupingSubscription = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .map { _ in TabGrouping.isOn }
+            .prepend(TabGrouping.isOn)
+            .removeDuplicates()
+            .dropFirst()
+            .filter { $0 }
+            // Defaults change on whatever thread wrote them.
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 MainActor.assumeIsolated { self?.rearrange() }
             }
@@ -386,8 +400,8 @@ final class TabManager: ObservableObject {
     /// after the active one, as a browser's does, so it lands beside the
     /// work it came from; every other way in — ⌘N, the new-tab button and
     /// its menu, a Shortcut, a URL, a moved session — goes to the end of
-    /// its device's group (`TabGrouping`), the end of the list when there
-    /// is one device. The
+    /// the list, or of its device's group with Group Tabs by Device on
+    /// (`TabGrouping`). The
     /// cold-launch resume batch does not go through here: it appends
     /// several at once and notifies every tab, not only the new ones.
     private func adopt(_ tab: TerminalTab, afterActiveTab: Bool = false) -> TerminalTab {
@@ -415,13 +429,13 @@ final class TabManager: ObservableObject {
     }
 
     private func arranged(_ tabs: [TerminalTab]) -> [TerminalTab] {
-        guard TabGrouping.isEnabled else { return tabs }
+        guard TabGrouping.isOn else { return tabs }
         let hosts = PairedRemoteHostStore.hosts.map { (id: $0.id, name: $0.displayName) }
         return TabGrouping.arranged(tabs, hostID: \.remoteHostID, hostOrder: TabGrouping.hostOrder(hosts))
     }
 
-    /// A paired device was renamed, paired or forgotten: its group may
-    /// belong elsewhere now.
+    /// Grouping was turned on, or a paired device was renamed, paired or
+    /// forgotten: a group may belong elsewhere now.
     private func rearrange() {
         let rearranged = arranged(tabs)
         guard rearranged.map(\.id) != tabs.map(\.id) else { return }
@@ -699,7 +713,9 @@ final class TabManager: ObservableObject {
     /// follow it, the daemon never hears of it.
     func moveTab(_ tab: TerminalTab, toSlotOf destination: TerminalTab) {
         guard
-            TabGrouping.allowsMove(from: tab.remoteHostID, to: destination.remoteHostID),
+            // Grouped, a reorder never carries a tab into another device's
+            // group.
+            !TabGrouping.isOn || tab.remoteHostID == destination.remoteHostID,
             let from = tabs.firstIndex(where: { $0.id == tab.id }),
             let to = tabs.firstIndex(where: { $0.id == destination.id }),
             from != to

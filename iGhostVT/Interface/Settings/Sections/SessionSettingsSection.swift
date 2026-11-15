@@ -5,7 +5,8 @@
 
 import SwiftUI
 
-/// What the new-tab menu remembers, whether a quit leaves the sessions
+/// What the new-tab menu remembers, whether the tabs are grouped by
+/// device (`TabGrouping`), whether a quit leaves the sessions
 /// running (Background Activities, `SessionKeepAlive`), and the way into
 /// Settings ▸ Remote Access. The order differs by edition: Ghost Remote has
 /// no sessions of its own, so it has no Background Activities, and Remote
@@ -17,14 +18,17 @@ struct SessionSettingsSection: View {
     @AppStorage(SessionKeepAlive.key) private var keepAlive = true
     /// Remote access holds Background Activities on (`SessionKeepAlive`).
     @AppStorage(SessionKeepAlive.remoteAccessKey) private var heldByRemoteAccess = false
+    @AppStorage(TabGrouping.defaultsKey) private var groupsByDevice = false
 
     var body: some View {
         Section {
             if AppEdition.isRemoteOnly {
                 remoteAccessLink
                 Toggle("Recent Directories", isOn: $recents.isEnabled)
+                Toggle("Group Tabs by Device", isOn: $groupsByDevice)
             } else {
                 Toggle("Recent Directories", isOn: $recents.isEnabled)
+                Toggle("Group Tabs by Device", isOn: $groupsByDevice)
                 Toggle("Background Activities", isOn: Binding(
                     get: { keepAlive || heldByRemoteAccess },
                     set: { keepAlive = $0 },
