@@ -13135,7 +13135,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buscar próximo"
+            "value" : "Buscar seguinte"
           }
         },
         "ru" : {
@@ -13147,7 +13147,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tìm tiếp"
+            "value" : "Tìm mục tiếp theo"
           }
         },
         "zh-Hans" : {
@@ -13231,7 +13231,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tìm trước"
+            "value" : "Tìm mục trước"
           }
         },
         "zh-Hans" : {
@@ -13255,7 +13255,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "بحث عن التحديد"
+            "value" : "العثور على التحديد"
           }
         },
         "de" : {
@@ -13273,7 +13273,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buscar selección"
+            "value" : "Buscar la selección"
           }
         },
         "fr" : {
@@ -13297,7 +13297,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "선택 항목 찾기"
+            "value" : "선택 영역 찾기"
           }
         },
         "pt-BR" : {
@@ -13315,7 +13315,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tìm vùng chọn"
+            "value" : "Tìm lựa chọn"
           }
         },
         "zh-Hans" : {
@@ -22203,7 +22203,7 @@
       }
     },
     "No Results" : {
-      "comment" : "New-tab popover on the Mac: nothing matches what was typed in the search field",
+      "comment" : "Shown where a search matches nothing: the find bar over the terminal, and the new-tab popover on the Mac",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
@@ -41481,7 +41481,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Usa selezione per la ricerca"
+            "value" : "Usa selezione per trovare"
           }
         },
         "ja" : {
@@ -41493,7 +41493,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "선택 항목으로 찾기"
+            "value" : "선택 영역으로 찾기"
           }
         },
         "pt-BR" : {
@@ -41511,19 +41511,19 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dùng vùng chọn để tìm"
+            "value" : "Sử dụng lựa chọn để tìm"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查找所选内容"
+            "value" : "用所选内容查找"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尋找所選範圍"
+            "value" : "使用所選範圍尋找"
           }
         }
       }
