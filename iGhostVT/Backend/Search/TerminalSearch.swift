@@ -68,7 +68,9 @@ final class TerminalSearch: ObservableObject {
 
     init(terminal: TerminalViewState) {
         self.terminal = terminal
-        terminal.search = self
+        terminal.onSearch = { [weak self] event in
+            self?.surfaceDidReport(event)
+        }
     }
 
     // MARK: - Presentation
@@ -276,12 +278,25 @@ final class TerminalSearch: ObservableObject {
 
     // MARK: - What the surface reports
 
-    func surfaceDidReport(total: Int?) {
+    private func surfaceDidReport(_ event: TerminalSearchEvent) {
+        switch event {
+        case let .started(needle):
+            present(needle: needle)
+        case .ended:
+            dismiss()
+        case let .total(total):
+            surfaceDidReport(total: total)
+        case let .selected(selected):
+            surfaceDidReport(selected: selected)
+        }
+    }
+
+    private func surfaceDidReport(total: Int?) {
         reportedTotal = .some(total)
         scheduleFlush()
     }
 
-    func surfaceDidReport(selected: Int?) {
+    private func surfaceDidReport(selected: Int?) {
         reportedSelected = .some(selected)
         scheduleFlush()
     }

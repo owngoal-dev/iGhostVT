@@ -57,7 +57,22 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026111302, Ghostty cf5519b2 on Zig 0.17).
+  (`upToNextMajor` from 2.2.2026111501, Ghostty cf5519b2 on Zig 0.17).
+  2.2.2026111501 keeps Ghostty cf5519b2 and adds one patch (binary
+  `upstream.cf5519b22f91-3`, whose slices also carry the compiled
+  sources' notices under `Headers/Licenses`): on a surface that opts in —
+  every one the package's views build — a precision scroll (a trackpad, a
+  Magic Mouse, a finger) moves the picture by the pixel, and the views
+  bring it back to a whole row when the scroll ends, because hit testing
+  and the selection count whole rows. On iOS one finger over scrollback is
+  handed to a hidden `UIScrollView` whose pan is attached to the terminal
+  view (UIKit's deceleration and bounce); a program tracking the mouse, a
+  screen with nothing to scroll back to, two fingers and a selection drag
+  keep the view's own pan, and the interaction lock's refused `hitTest`
+  keeps a finger off both. It also has `TerminalViewState` hand the core's
+  search reports to `onSearch` (`TerminalSearchEvent`), which
+  `TerminalSearch` takes; the app's own `@retroactive` conformance went
+  with that release, since two would not compile.
   2.2.2026111301 moves from Ghostty 042b16b6 to cf5519b2, 203 commits
   (binary `upstream.cf5519b22f91`): the parser's table, the mode list and
   the config keys this app writes are unchanged, and `ghostty.h` now says
@@ -1485,13 +1500,12 @@ the key window, never `activationState` (`ShortcutBridge`).
 **Find searches with Ghostty's own engine; the app is the driver and the
 bar.** libghostty-spm exposes the core's search as binding actions
 (`search:<needle>`, `navigate_search:next|previous`, `end_search`,
-`search_selection`) and `TerminalSurfaceSearchDelegate`. `TerminalViewState`
-is the surface's delegate and does not adopt that protocol, so the app
-declares the conformance itself (`TerminalSearch+Surface.swift`,
-`@retroactive`). **A library release that adopts it will stop that file
-compiling; delete the extension then and take the library's hook.** What
-`TerminalSearch` (one per tab) relies on in the core, read from the Zig at
-the pinned commit:
+`search_selection`), and `TerminalViewState.onSearch` hands back every
+report the core makes, one call each and in order (`TerminalSearchEvent`,
+since 2.2.2026111501; before it the app declared the delegate conformance
+itself with `@retroactive`). `TerminalSearch` (one per tab) sets the hook.
+What it relies on in the core, read from the Zig at the pinned commit and
+measured by the library's `TerminalViewStateSearchTests` on a live surface:
 
 - Match 0 is the newest; `next` goes to older output.
 - The one matcher is an ASCII-case-insensitive substring. Regex and
