@@ -8,13 +8,22 @@ import Foundation
 /// A window's tabs kept together by the device their shell runs on: this
 /// device's first, then each paired device's, by name.
 enum TabGrouping {
-    /// Group Tabs by Device in Settings. Off until someone turns it on: the
-    /// tabs are then one freely ordered list and the sidebar has no device
-    /// headers.
+    /// Group Tabs by Device in the Mac's Settings window. Off until someone
+    /// turns it on: the tabs are then one freely ordered list and the
+    /// sidebar has no device headers.
     static let key = "Tabs.groupByDevice"
 
+    /// The Mac's alone: an iPhone or iPad never groups, whatever is stored.
+    static var isAvailable: Bool {
+        #if targetEnvironment(macCatalyst)
+            return true
+        #else
+            return false
+        #endif
+    }
+
     static var isEnabled: Bool {
-        UserDefaults.standard.bool(forKey: key)
+        isAvailable && UserDefaults.standard.bool(forKey: key)
     }
 
     struct Group<Item> {

@@ -38,7 +38,7 @@ struct SidebarView: View {
             #endif
 
             ScrollView {
-                let groups = groupsByDevice
+                let groups = (TabGrouping.isAvailable && groupsByDevice)
                     ? TabGrouping.groups(tabManager.tabs, hostID: \.remoteHostID)
                     : [TabGrouping.Group(hostID: nil, items: tabManager.tabs)]
                 let showsHeaders = groups.count > 1

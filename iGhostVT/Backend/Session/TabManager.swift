@@ -68,16 +68,18 @@ final class TabManager: ObservableObject {
         // they stay where they are and move freely again. The notification
         // comes on whatever thread wrote a default, so everything after it
         // runs on the main queue.
-        groupingSubscription = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .receive(on: DispatchQueue.main)
-            .map { _ in TabGrouping.isEnabled }
-            .prepend(TabGrouping.isEnabled)
-            .removeDuplicates()
-            .dropFirst()
-            .filter { $0 }
-            .sink { [weak self] _ in
-                MainActor.assumeIsolated { self?.rearrange() }
-            }
+        if TabGrouping.isAvailable {
+            groupingSubscription = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+                .receive(on: DispatchQueue.main)
+                .map { _ in TabGrouping.isEnabled }
+                .prepend(TabGrouping.isEnabled)
+                .removeDuplicates()
+                .dropFirst()
+                .filter { $0 }
+                .sink { [weak self] _ in
+                    MainActor.assumeIsolated { self?.rearrange() }
+                }
+        }
         SessionActivityController.shared.register(self) { [weak self] in
             self.map {
                 SessionActivityController.WindowSnapshot(

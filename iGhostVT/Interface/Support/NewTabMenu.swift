@@ -5,6 +5,14 @@
 
 import SwiftUI
 
+/// Which devices a new-tab control offers: all of them, or one — a device
+/// group's `+` in the Mac's sidebar, whose popover opens on that device.
+enum NewTabMenuScope: Equatable {
+    case allDevices
+    /// This device (nil) or a paired one.
+    case device(hostID: String?)
+}
+
 /// The new-tab control, wherever one appears — the sidebar's row, the
 /// compact bar's `+`, the switcher's dashed card, and the ⋯ menu's own
 /// entry. It opens a menu of directories to start the shell in rather than
@@ -16,7 +24,7 @@ import SwiftUI
 /// of one row would be a tap spent on nothing.
 struct NewTabMenu<Label: View>: View {
     @ObservedObject var tabManager: TabManager
-    /// Every device's rows, or one device's for a sidebar group's `+`.
+    /// Every device's rows, or one device's for a device group's `+`.
     var scope: NewTabMenuScope = .allDevices
     /// Called after a tab is opened, for a presentation that then has to
     /// get out of the way — the tab switcher's full-screen cover.
@@ -74,7 +82,7 @@ struct NewTabMenu<Label: View>: View {
                 // its last render.
                 label()
                     .accessibilityHidden(true)
-                    .overlay(NewTabMenuAnchor(tabManager: tabManager, scope: scope, onOpen: onOpen))
+                    .overlay(NewTabMenuAnchor(tabManager: tabManager, onOpen: onOpen))
             #endif
         }
     }
