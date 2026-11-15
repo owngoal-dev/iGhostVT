@@ -57,6 +57,7 @@ struct RootView: View {
             // sidebar shows, the same colour as the terminal beside it (the
             // sidebar paints nothing of its own, on the Mac or the iPad).
             theme.background(for: colorScheme)
+                .opacity(WindowTranslucency.opacity)
                 .ignoresSafeArea()
                 .background(WindowControlsInsetReader(inset: $windowControls).ignoresSafeArea())
                 .background(WindowReader(window: $window))
@@ -186,7 +187,7 @@ struct RootView: View {
             // `bottomInset`; SwiftUI's own avoidance stacked the keyboard on
             // top of the bar's inset.
             .ignoresSafeArea(.keyboard, edges: isRegularWidth ? [] : .bottom)
-            .catalystColumnBackground(theme.background(for: colorScheme))
+            .catalystColumnBackground(WindowTranslucency.isEnabled ? .clear : theme.background(for: colorScheme))
     }
 
     private var bottomInset: some View {

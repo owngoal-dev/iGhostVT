@@ -156,7 +156,10 @@ private struct TabSlotBackground: ViewModifier {
     func body(content: Content) -> some View {
         switch style {
         case .row:
-            content.background(theme.background(for: colorScheme), in: TabSlotShape(style: style))
+            content.background(
+                WindowTranslucency.isEnabled ? Color.clear : theme.background(for: colorScheme),
+                in: TabSlotShape(style: style),
+            )
         case .card:
             content
         }

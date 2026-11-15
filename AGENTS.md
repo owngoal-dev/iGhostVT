@@ -1870,6 +1870,24 @@ Gotchas that bit us:
   or the strip's toggle), so a maximized window, whose controls hide until
   asked for, keeps its full height. Zero on the Mac, which places its own
   traffic lights, and before iOS 26.
+- **The Mac window can be see-through, by two defaults and nothing else**
+  (`WindowTranslucency`): `Window.backgroundOpacity` (0.1–1; absent is an
+  opaque window) and `Window.blurRadius` (0–64, 20 when absent), read once
+  at launch. The `NSWindow` goes non-opaque over a near-clear white (a
+  clear one draws a dark rim) and the window server blurs what is behind it
+  (`CGSSetWindowBackgroundBlurRadius`, found with `dlsym`); `RootView`
+  paints the theme's background at that opacity and the terminal's own is
+  turned off (`background-opacity = 0`). **Such a surface must blend
+  natively** (`alpha-blending = native`): on Catalyst ghostty defaults to
+  `linear-corrected`, which weights each glyph's edge for the cell's
+  background — black, once that opacity is 0 — and leaves premultiplied
+  colour in linear light for a compositor that blends it gamma-encoded.
+  Pure black text is the one colour that hides it; grey and coloured text
+  lost 12–39 % of its weight and grew a pale outline over a dark desktop.
+  Glass and materials sample only the app's own layers, so chrome sitting
+  on the bare background (the title capsule, ⋯, a sidebar row's slab) is a
+  flat tint there, and only what floats over the terminal — the find dock
+  — stays Liquid Glass.
 - **Regular width is not an iPad, and an inset has a side.** The window's
   layout follows its horizontal size class alone (`RootView.isRegularWidth`):
   the sidebar and the strip wherever the width is regular — an iPad, the

@@ -190,6 +190,7 @@ import UIKit
             clearTitlebarFill(in: nsWindow)
             positionWindowControls(in: nsWindow)
             keepTitlebarBandForContent(nsWindow)
+            WindowTranslucency.apply(to: nsWindow)
         }
 
         /// The top bar sits in the band AppKit keeps for a title bar (the
