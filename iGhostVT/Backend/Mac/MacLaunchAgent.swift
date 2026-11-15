@@ -485,6 +485,9 @@ final class MacLaunchAgent: ObservableObject {
             guard isInApplications, bundleOnDiskIsAnotherBuild else { return false }
             UpdateNotice.shared.isRelaunching = true
             RemoteTabLedger.save(ShortcutBridge.tabManagers())
+            // The ledger reaches cfprefsd on its own time, and an exit on
+            // this same turn could leave it behind.
+            CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication)
             return true
         }
 

@@ -59,9 +59,34 @@ final class HostUpdateBatch: ObservableObject {
     /// before, whose asks then change nothing.
     private var runs: [String: Int] = [:]
     private var nextRun = 0
-    /// The hosts of the runs since nothing was last moving: the overall
-    /// bar measures these, not what finished before.
-    private var batch: Set<String> = []
+    /// The hosts that began installing since nothing was last moving: the
+    /// overall bar measures these, not what finished before, and one that
+    /// failed counts as done rather than pulling the bar back.
+    private var installs: Set<String> = []
+    /// A check is running, or its confirmation is up: a second one would
+    /// take that alert's place, and alerts do not stack.
+    @Published private(set) var isAsking = false
+    private var observer: NSObjectProtocol?
+
+    private init() {
+        // A device forgotten mid-run takes its row away; its phase goes too,
+        // so nothing stays busy for a row that is not there.
+        observer = NotificationCenter.default.addObserver(
+            forName: PairedRemoteHostStore.didChange,
+            object: nil,
+            queue: .main,
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let paired = Set(PairedRemoteHostStore.hosts.map(\.id))
+                for hostID in self.phases.keys where !paired.contains(hostID) {
+                    self.runs.removeValue(forKey: hostID)
+                    self.phases.removeValue(forKey: hostID)
+                    self.installs.remove(hostID)
+                }
+            }
+        }
+    }
 
     /// Whether anything is still moving.
     var isBusy: Bool {
@@ -77,14 +102,14 @@ final class HostUpdateBatch: ObservableObject {
     /// The overall bar: how far the installs of this batch have come, nil
     /// while none is under way (a check alone has no measure).
     var overallFraction: Double? {
-        let installs = batch.compactMap { phases[$0] }.filter { $0.installFraction != nil }
-        guard installs.contains(where: \.isBusy) else { return nil }
-        return installs.compactMap(\.installFraction).reduce(0, +) / Double(installs.count)
+        guard installingCount > 0 else { return nil }
+        let fractions = installs.map { phases[$0]?.installFraction ?? 1 }
+        return fractions.reduce(0, +) / Double(fractions.count)
     }
 
     /// How many hosts are installing right now.
     var installingCount: Int {
-        phases.values.filter { $0.isBusy && $0.installFraction != nil }.count
+        installs.filter { phases[$0]?.isBusy == true }.count
     }
 
     var isChecking: Bool {
@@ -94,22 +119,25 @@ final class HostUpdateBatch: ObservableObject {
     // MARK: - Running
 
     /// Checks each host not already busy, then asks once to install on
-    /// every one that has an update.
+    /// every one that has an update. Nothing while another check, or its
+    /// confirmation, is still up.
     func update(_ hostIDs: [String], in window: UIWindow?) {
         let hostIDs = hostIDs.filter { phases[$0]?.isBusy != true }
-        guard !hostIDs.isEmpty else { return }
+        guard !hostIDs.isEmpty, !isAsking else { return }
         if !isBusy {
-            batch.removeAll()
+            installs.removeAll()
         }
+        isAsking = true
         var started: [(hostID: String, run: Int)] = []
         for hostID in hostIDs {
             nextRun += 1
             runs[hostID] = nextRun
-            batch.insert(hostID)
             phases[hostID] = .checking
             started.append((hostID, nextRun))
         }
-        Task {
+        // Weak: a Settings window closed meanwhile must not take the alert
+        // with it; the frontmost window shows it instead.
+        Task { [weak window] in
             var found: [Found] = []
             await withTaskGroup(of: Found?.self) { group in
                 for item in started {
@@ -121,7 +149,13 @@ final class HostUpdateBatch: ObservableObject {
                     }
                 }
             }
-            guard !found.isEmpty else { return }
+            // Cancel retires a run that found an update too, and a host
+            // asked again or forgotten meanwhile is no longer this one's.
+            found = found.filter { isCurrent($0.hostID, $0.run) && phases[$0.hostID] == .available(version: $0.version) }
+            guard !found.isEmpty else {
+                isAsking = false
+                return
+            }
             // The order the person sees in the list.
             let order = PairedRemoteHostStore.hosts.map(\.id)
             found.sort { (order.firstIndex(of: $0.hostID) ?? .max) < (order.firstIndex(of: $1.hostID) ?? .max) }
@@ -129,13 +163,41 @@ final class HostUpdateBatch: ObservableObject {
         }
     }
 
-    /// Stops every check and download it can; a host already replacing
-    /// itself carries on.
+    /// Stops every check and download it can, and the confirmation the
+    /// checks were heading for; a host already replacing itself carries on.
+    /// The host has the last word: one that got past the point of no return
+    /// before the cancel reached it is followed again.
     func cancel() {
-        for (hostID, phase) in phases where Self.isCancellable(phase) {
+        for (hostID, phase) in phases {
+            if case .available = phase {
+                // Found while others still checked: no alert for it now.
+                runs.removeValue(forKey: hostID)
+            }
+            guard Self.isCancellable(phase) else { continue }
             runs.removeValue(forKey: hostID)
             phases.removeValue(forKey: hostID)
-            Task.detached { _ = await HostUpdateClient.ask(at: .remote(hostID: hostID), cancel: true) }
+            installs.remove(hostID)
+            Task {
+                let status = await HostUpdateClient.ask(at: .remote(hostID: hostID), cancel: true)
+                guard let status, runs[hostID] == nil else { return }
+                switch status.state {
+                case .installing, .installed:
+                    let version = status.latestVersion ?? ""
+                    nextRun += 1
+                    let run = nextRun
+                    runs[hostID] = run
+                    installs.insert(hostID)
+                    if status.state == .installed {
+                        phases[hostID] = .restarting(version: version)
+                        await settle(hostID, run: run, version: version)
+                    } else {
+                        phases[hostID] = .installing(version: version)
+                        await finishInstall(hostID, run: run, version: version, from: status)
+                    }
+                default:
+                    break
+                }
+            }
         }
     }
 
@@ -185,6 +247,7 @@ final class HostUpdateBatch: ObservableObject {
             // Someone else's install got there first: see it through, and
             // do not hold the others' confirmation for it.
             let version = status.latestVersion ?? ""
+            installs.insert(hostID)
             phases[hostID] = .restarting(version: version)
             Task { await settle(hostID, run: run, version: version) }
         default:
@@ -222,15 +285,20 @@ final class HostUpdateBatch: ObservableObject {
             content: content,
             actions: [
                 // The rows keep saying an update is there.
-                AlertAction("Later") {},
+                AlertAction("Later") { [self] in isAsking = false },
                 AlertAction("Install", kind: .highlighted) { [self] in
+                    isAsking = false
                     for item in found {
                         install(item)
                     }
                 },
             ],
         )
-        guard let window = window ?? HostUpdateFlow.keyWindow else { return }
+        alert.onDismissUnanswered = { [weak self] in self?.isAsking = false }
+        guard let window = window ?? HostUpdateFlow.keyWindow else {
+            isAsking = false
+            return
+        }
         alert.present(in: window)
     }
 
@@ -240,28 +308,34 @@ final class HostUpdateBatch: ObservableObject {
         // Asked again, or cancelled, since the check: leave it.
         guard isCurrent(hostID, item.run), phases[hostID] == .available(version: version) else { return }
         let run = item.run
+        installs.insert(hostID)
         phases[hostID] = .downloading(version: version, fraction: 0)
         Task {
-            let status = await follow(hostID, run: run, HostUpdateClient.ask(at: .remote(hostID: hostID), install: true))
-            guard isCurrent(hostID, run) else { return }
-            // Past the swap the helper restarts, so the answer can be a
-            // lost link or a fresh helper that knows of no update (`idle`):
-            // what the host runs then decides.
-            if let status, status.state != .installed, status.state != .idle {
-                if status.installedVersion == version {
-                    RemoteHostVersions.shared.note(status, fromHostID: hostID)
-                    phases[hostID] = .updated(version: version)
-                } else if status.state == .available {
-                    // Cancelled on the host itself.
-                    phases[hostID] = .available(version: status.latestVersion ?? version)
-                } else {
-                    phases[hostID] = .failed(message: status.message ?? Self.tryAgain)
-                }
-                return
-            }
-            phases[hostID] = .restarting(version: version)
-            await settle(hostID, run: run, version: version)
+            await finishInstall(hostID, run: run, version: version, from: HostUpdateClient.ask(at: .remote(hostID: hostID), install: true))
         }
+    }
+
+    /// Follows an install from `first` to its end on the row.
+    private func finishInstall(_ hostID: String, run: Int, version: String, from first: HostUpdateStatus?) async {
+        let status = await follow(hostID, run: run, first)
+        guard isCurrent(hostID, run) else { return }
+        // Past the swap the helper restarts, so the answer can be a
+        // lost link or a fresh helper that knows of no update (`idle`):
+        // what the host runs then decides.
+        if let status, status.state != .installed, status.state != .idle {
+            if status.installedVersion == version {
+                RemoteHostVersions.shared.note(status, fromHostID: hostID)
+                phases[hostID] = .updated(version: version)
+            } else if status.state == .available {
+                // Cancelled on the host itself.
+                phases[hostID] = .available(version: status.latestVersion ?? version)
+            } else {
+                phases[hostID] = .failed(message: status.message ?? Self.tryAgain)
+            }
+            return
+        }
+        phases[hostID] = .restarting(version: version)
+        await settle(hostID, run: run, version: version)
     }
 
     /// Waits about a minute for the host to come back running `version`.

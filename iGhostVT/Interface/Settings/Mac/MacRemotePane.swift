@@ -352,7 +352,7 @@ import SwiftUI
                             MacRowIconButton(symbol: "icloud.and.arrow.up", label: "Check for Update", isSelected: isSelected) {
                                 updates.update([host.id], in: window)
                             }
-                            .disabled(phase?.isBusy == true)
+                            .disabled(phase?.isBusy == true || updates.isAsking)
                             MacRowIconButton(symbol: "trash", label: "Forget", isSelected: isSelected) {
                                 confirmForget(host)
                             }
@@ -436,7 +436,7 @@ import SwiftUI
                 Button("Check for Updates") {
                     updates.update(updatableSelection, in: window)
                 }
-                .disabled(updatableSelection.isEmpty)
+                .disabled(updatableSelection.isEmpty || updates.isAsking)
             }
         }
 

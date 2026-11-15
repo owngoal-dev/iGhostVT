@@ -389,8 +389,11 @@ old one) — Sparkle's order. Up to 1.6.29 the app relaunched itself with
 `createsNewApplicationInstance`, a second instance beside the first, and
 the Dock kept a tile for each. An app that has not quit within 20 s is
 sent `updateInstalledNotification` instead, the only notice an app from
-before 1.6.30 knows, which it answers by relaunching itself; an app that
-was not running is opened with `open -g`. The new copy's launch-agent
+before 1.6.30 knows, which it answers by relaunching itself; should it
+leave later with no copy running, the helper opens one then. An app that
+was not running is opened with `open -g`. The app flushes its
+preferences before it exits, or the remote-tab ledger it just wrote could
+be lost. The new copy's launch-agent
 rebind restarts the helper — which ends every session on the Mac, the
 price of any helper update. A copy with
 no Team ID (ad-hoc, a local build), one outside `/Applications`, or one

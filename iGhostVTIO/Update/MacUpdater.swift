@@ -602,22 +602,34 @@ final class MacUpdater: @unchecked Sendable {
             // Sparkle's order: the app quits, and only once it is gone is
             // the new copy opened. A relaunch from inside the app has to
             // ask for a second instance beside itself, and the Dock kept
-            // a tile for each.
+            // a tile for each. Watched before it is asked, so no exit is
+            // missed.
+            let exits = ExitWatch(runningApp)
             notify_post(iGhostVTProtocol.updateQuitNotification)
-            guard Self.waitForExit(of: runningApp, timeout: Self.quitTimeout) else {
-                // An app from before 1.6.30 knows only the old notice, and
-                // relaunches itself on it.
-                DaemonFileLog.log("update: the app did not quit; asking it to relaunch itself")
-                notify_post(iGhostVTProtocol.updateInstalledNotification)
+            if exits.wait(timeout: Self.quitTimeout) {
                 removeOldCopy(at: incoming)
+                Self.reopen(log: log)
                 return
             }
+            // An app from before 1.6.30 knows only the old notice, and
+            // relaunches itself on it. One that was only slow to quit may
+            // still go on the first notice: whichever way it leaves, a
+            // copy that is gone with no new one running is opened here.
+            DaemonFileLog.log("update: the app did not quit; asking it to relaunch itself")
+            notify_post(iGhostVTProtocol.updateInstalledNotification)
             removeOldCopy(at: incoming)
-            Self.reopen(log: log)
+            if exits.wait(timeout: Self.lateQuitTimeout) {
+                usleep(2_000_000)
+                if Self.runningAppIDs().isEmpty {
+                    Self.reopen(log: log)
+                }
+            }
         }
 
-        /// How long the app is given to quit for the update.
+        /// How long the app is given to quit for the update, and then to
+        /// leave on the old notice.
         private static let quitTimeout: TimeInterval = 20
+        private static let lateQuitTimeout: TimeInterval = 60
 
         /// `incoming` names the old copy after the swap. Should the new
         /// app's launch end this process first, the next start sweeps it.
@@ -649,43 +661,57 @@ final class MacUpdater: @unchecked Sendable {
             DaemonFileLog.log("update: the new copy did not open; it opens at the next login, or by hand")
         }
 
-        /// Waits until every process in `ids` has exited, at most
-        /// `timeout`; false if one is still running then. A process that
-        /// is gone before it is watched counts as exited.
-        private static func waitForExit(of ids: [pid_t], timeout: TimeInterval) -> Bool {
-            let queue = kqueue()
-            guard queue >= 0 else { return false }
-            defer { close(queue) }
-            var watching = 0
-            for id in ids {
-                var change = kevent(
-                    ident: UInt(id),
-                    filter: Int16(EVFILT_PROC),
-                    flags: UInt16(EV_ADD | EV_ONESHOT),
-                    fflags: NOTE_EXIT,
-                    data: 0,
-                    udata: nil,
-                )
-                if kevent(queue, &change, 1, nil, 0, nil) == 0 {
-                    watching += 1
-                } else if errno != ESRCH {
-                    return false
+        /// The exits of a set of processes, watched from the moment it is
+        /// made. A process already gone when it is watched counts as
+        /// exited.
+        private final class ExitWatch {
+            private let queue = kqueue()
+            private var left = 0
+
+            init(_ ids: [pid_t]) {
+                guard queue >= 0 else { return }
+                for id in ids {
+                    var change = kevent(
+                        ident: UInt(id),
+                        filter: Int16(EVFILT_PROC),
+                        flags: UInt16(EV_ADD | EV_ONESHOT),
+                        fflags: NOTE_EXIT,
+                        data: 0,
+                        udata: nil,
+                    )
+                    if kevent(queue, &change, 1, nil, 0, nil) == 0 {
+                        left += 1
+                    }
                 }
             }
-            let deadline = Date().addingTimeInterval(timeout)
-            while watching > 0 {
-                let left = deadline.timeIntervalSinceNow
-                guard left > 0 else { return false }
-                var wait = timespec(tv_sec: Int(left), tv_nsec: Int((left - left.rounded(.down)) * 1_000_000_000))
-                var event = kevent()
-                let count = kevent(queue, nil, 0, &event, 1, &wait)
-                if count > 0 {
-                    watching -= 1
-                } else if count < 0, errno != EINTR {
-                    return false
+
+            deinit {
+                if queue >= 0 {
+                    close(queue)
                 }
             }
-            return true
+
+            /// Whether every process has exited within `timeout`.
+            func wait(timeout: TimeInterval) -> Bool {
+                guard queue >= 0 else { return false }
+                let deadline = Date().addingTimeInterval(timeout)
+                while left > 0 {
+                    let remaining = deadline.timeIntervalSinceNow
+                    guard remaining > 0 else { return false }
+                    var wait = timespec(
+                        tv_sec: Int(remaining),
+                        tv_nsec: Int((remaining - remaining.rounded(.down)) * 1_000_000_000),
+                    )
+                    var event = kevent()
+                    let count = kevent(queue, nil, 0, &event, 1, &wait)
+                    if count > 0 {
+                        left -= 1
+                    } else if count < 0, errno != EINTR {
+                        return false
+                    }
+                }
+                return true
+            }
         }
 
         /// The processes of this user running the app from `/Applications`.
