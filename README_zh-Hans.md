@@ -21,7 +21,7 @@
 | --- | --- |
 | 运行自定义固件的 iPhone 或 iPad，[roothide](https://github.com/roothide) | `iphoneos-arm64e` |
 | 运行自定义固件的 iPhone 或 iPad，rootless（`/var/jb`） | `iphoneos-arm64` |
-| Mac | `iGhostVT-<version>-macos.zip` |
+| Mac | `iGhostVT-<version>-macos-notarized.zip` |
 | 未运行自定义固件的 iPhone 或 iPad，用来连接上面这些设备 | `GhostRemote-<version>.ipa`（见 [Ghost Remote](#ghost-remote)） |
 
 需要 iOS 15 或更高版本，或 macOS 13 或更高版本。
@@ -30,7 +30,7 @@
 
 解压后将 `iGhostVT.app` 拖入**应用程序**，再从该位置打开。应用通过后台辅助程序运行终端会话。如需授权，请按应用提示在系统设置中启用。
 
-发布包为 ad-hoc 签名。如果 macOS 拒绝打开应用：
+这个版本经过签名和公证，打开时无需额外操作，并且可以自行更新：在 iGhostVT 菜单中选择**检查更新…**。发布页还提供 `iGhostVT-<version>-macos.zip`，它只有 ad-hoc 签名，不能自行更新。如果 macOS 拒绝打开它：
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/iGhostVT.app
@@ -47,7 +47,7 @@ Ghost Remote 是单独拿出来的 iGhostVT 远程访问，给未运行自定义
 ## 功能
 
 - **Ghostty 引擎**：GPU 绘制终端、Ghostty 主题目录，以及带额外按键的软件键盘。
-- **持久会话**：启用**保持会话运行**后，程序会在退出应用后继续执行，下次启动时恢复对应会话。空闲的 shell 会随应用退出而关闭。可在**设置 → 高级 → 会话**中调整。
+- **持久会话**：**后台活动**开启时（默认开启），程序会在退出应用后继续运行，下次启动时每个会话都会作为标签页重新打开。在**设置 → 会话**中关闭后，退出应用时会结束本设备上各标签页的 shell；已配对设备上的终端仍会继续运行。
 - **标签页与窗口**：同时打开多个会话，使用标签页切换器，锁定标签页以防止误输入，并在 iPad 和 Mac 上打开多个窗口。
 - **拷贝与分享**：拷贝文本、拷贝为图片或导出文本。
 - **查找**：按 ⌘F 或在标签页菜单中选择**查找…**，搜索终端的屏幕和回滚内容。输入时即高亮所有匹配项，⌘G 和 ⇧⌘G 从最新的匹配项开始逐个跳转。
@@ -72,6 +72,16 @@ ighostvt-cli kill 1
 ```
 
 在 Mac 上，该工具位于 `/Applications/iGhostVT.app/Contents/MacOS/ighostvt-cli`。
+
+同样的命令也可以用于已配对的设备。用 `--host` 指定设备（或设置 `IGHOSTVT_HOST`）：命令行使用 iGhostVT 已配对的设备，命令行配对的设备也会出现在 iGhostVT 中。
+
+```sh
+ighostvt-cli hosts                       # 已配对的设备
+ighostvt-cli hosts --nearby              # 附近或中继上提供远程访问的设备
+ighostvt-cli pair my-mac                 # 配对，配对码由那台设备上的 `ighostvt-cli remote pair` 显示
+ighostvt-cli --host my-mac list
+ighostvt-cli --host my-mac send 1 text "make test" key Enter
+```
 
 ## 从源码构建
 

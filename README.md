@@ -21,7 +21,7 @@ Packages are also on [GitHub Releases](https://github.com/owngoal-dev/iGhostVT/r
 | --- | --- |
 | iPhone or iPad on custom firmware, [roothide](https://github.com/roothide) | `iphoneos-arm64e` |
 | iPhone or iPad on custom firmware, rootless (`/var/jb`) | `iphoneos-arm64` |
-| Mac | `iGhostVT-<version>-macos.zip` |
+| Mac | `iGhostVT-<version>-macos-notarized.zip` |
 | iPhone or iPad without custom firmware, to reach the devices above | `GhostRemote-<version>.ipa` (see [Ghost Remote](#ghost-remote)) |
 
 Requires iOS 15 or later, or macOS 13 or later.
@@ -30,7 +30,7 @@ Requires iOS 15 or later, or macOS 13 or later.
 
 Unzip the archive, drag `iGhostVT.app` into **Applications**, then open it from there. The app uses a background helper to run your sessions. If approval is requested, follow the app’s prompt to enable it in System Settings.
 
-Releases are ad-hoc signed. If macOS refuses to open the app:
+This build is signed and notarized, so it opens without extra steps, and it updates itself: choose **Check for Updates…** in the iGhostVT menu. Releases also include `iGhostVT-<version>-macos.zip`, which is ad-hoc signed and does not update itself. If macOS refuses to open that one:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/iGhostVT.app
