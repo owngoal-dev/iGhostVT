@@ -390,7 +390,17 @@ final class RemoteDaemonLink: DaemonLink, @unchecked Sendable {
             }
             let tag = nextTag
             nextTag &+= 1
-            pendingReplies[tag] = reply
+            if xpc_dictionary_get_uint64(message, iGhostVTWireKey.operation) == iGhostVTOperation.hello.rawValue {
+                // Every link says hello — a tab's, a menu's, an update's —
+                // and its answer says what the host runs.
+                let hostID = hostID
+                pendingReplies[tag] = { answer in
+                    RemoteHostVersions.note(answer, fromHostID: hostID)
+                    reply(answer)
+                }
+            } else {
+                pendingReplies[tag] = reply
+            }
             enqueue(message, tag: tag)
         }
     }

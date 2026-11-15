@@ -14,6 +14,9 @@ struct HostUpdateStatus: Sendable {
     var latestVersion: String?
     var progress: Double?
     var message: String?
+    /// The hello was refused: the host runs another release line, and
+    /// `installedVersion` is only that line (`RemoteAccess.wireVersion`).
+    var isOtherLine = false
 }
 
 /// One `hostUpdate` over a link of its own — this Mac's daemon, or a paired
@@ -71,6 +74,7 @@ enum HostUpdateClient {
                         state: .unsupported,
                         installedVersion: theirs,
                         message: RemoteVersionText.mismatch(theirs: theirs, name: name),
+                        isOtherLine: true,
                     )
                 }
                 if finished.finish(refusal) {

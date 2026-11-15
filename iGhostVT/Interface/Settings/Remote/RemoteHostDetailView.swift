@@ -4,6 +4,7 @@ import SwiftUI
 struct RemoteHostDetailView: View {
     let hostID: String
     @ObservedObject private var directory = RemoteHostDirectory.shared
+    @ObservedObject private var versions = RemoteHostVersions.shared
     @Environment(\.dismiss) private var dismiss
 
     @State private var nickname = ""
@@ -27,8 +28,12 @@ struct RemoteHostDetailView: View {
                     Text("Leave this empty to use the name set on the device.")
                         .font(DS.Font.detail)
                 }
-                if host.lastSeen != nil || host.lastAddress != nil {
+                let version = versions.entries[hostID]?.version
+                if host.lastSeen != nil || host.lastAddress != nil || version != nil {
                     Section {
+                        if let version {
+                            SettingsValueText(title: "Version", value: version)
+                        }
                         if let lastSeen = host.lastSeen {
                             SettingsValueText(
                                 title: "Last Connected",
@@ -59,6 +64,7 @@ struct RemoteHostDetailView: View {
         .navigationTitle(host?.displayName ?? "")
         .onAppear {
             nickname = host?.nickname ?? ""
+            versions.probe([hostID])
         }
         .onDisappear(perform: saveNickname)
         .background(WindowReader(window: $window))

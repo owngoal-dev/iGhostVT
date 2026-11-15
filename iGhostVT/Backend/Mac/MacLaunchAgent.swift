@@ -444,28 +444,48 @@ final class MacLaunchAgent: ObservableObject {
         }
 
         private var updateToken: Int32 = 0
+        private var quitToken: Int32 = 0
 
         /// The helper put an update in place (`hostUpdate`, from the menu or
-        /// a paired device): this copy's files are gone from under it, so it
-        /// relaunches into the new one, whose launch rebinds the helper —
-        /// the digest changed — which restarts it from the new bundle.
+        /// a paired device): this copy's files are gone from under it, and
+        /// the new copy's launch rebinds the helper — the digest changed —
+        /// which restarts it from the new bundle.
+        ///
+        /// A helper from 1.6.30 on asks this copy to quit
+        /// (`updateQuitNotification`) and opens the new one once this
+        /// process is gone, the order Sparkle keeps. One from before posts
+        /// only `updateInstalledNotification` and opens nothing, so this
+        /// copy relaunches itself then, as it did — a second instance
+        /// launched beside this one, which left the Dock a tile for each.
         private func watchForInstalledUpdate() {
+            notify_register_dispatch(iGhostVTProtocol.updateQuitNotification, &quitToken, .main) { _ in
+                MainActor.assumeIsolated {
+                    guard Self.prepareForUpdate() else { return }
+                    AppLog.info(.app, "an update is in place; quitting for the helper to open it")
+                    exit(0)
+                }
+            }
             notify_register_dispatch(iGhostVTProtocol.updateInstalledNotification, &updateToken, .main) { _ in
                 MainActor.assumeIsolated {
-                    // Anyone can post a notify name: relaunch only when the
-                    // copy on disk really is another build than this one.
-                    guard Self.isInApplications, Self.bundleOnDiskIsAnotherBuild else { return }
+                    guard Self.prepareForUpdate() else { return }
                     AppLog.info(.app, "an update is in place; relaunching into it")
-                    UpdateNotice.shared.isRelaunching = true
-                    // What `applicationWillTerminate` would have kept, since
-                    // the relaunch exits without it: the remote tabs for the
-                    // new copy to reopen. The local sessions end with the
-                    // helper's restart either way, and the new copy sweeps
-                    // the temporary files as it starts.
-                    RemoteTabLedger.save(ShortcutBridge.tabManagers())
                     Self.relaunch(from: Bundle.main.bundleURL)
                 }
             }
+        }
+
+        /// Whether to leave for the copy an update put in place, with what
+        /// `applicationWillTerminate` would have kept saved first, since
+        /// neither way out runs it: the remote tabs, for the new copy to
+        /// reopen. The local sessions end with the helper's restart either
+        /// way, and the new copy sweeps the temporary files as it starts.
+        private static func prepareForUpdate() -> Bool {
+            // Anyone can post a notify name: leave only when the copy on
+            // disk really is another build than this one.
+            guard isInApplications, bundleOnDiskIsAnotherBuild else { return false }
+            UpdateNotice.shared.isRelaunching = true
+            RemoteTabLedger.save(ShortcutBridge.tabManagers())
+            return true
         }
 
         /// Whether the bundle's `Info.plist` on disk names another version

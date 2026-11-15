@@ -15,10 +15,15 @@ import SwiftUI
     struct MacRemotePane: View {
         @StateObject private var model = RemoteAccessModel()
         @ObservedObject private var directory = RemoteHostDirectory.shared
+        @ObservedObject private var versions = RemoteHostVersions.shared
+        @ObservedObject private var updates = HostUpdateBatch.shared
 
         @State private var name = RemoteDeviceIdentity.chosenName ?? ""
         @State private var selectedAllowedID: String?
-        @State private var selectedHostID: String?
+        /// The Accessible Devices rows selected: a click picks one, ⌘
+        /// adds or takes one away, ⇧ runs from the last one clicked.
+        @State private var selectedHostIDs: Set<String> = []
+        @State private var selectionAnchor: String?
         @State private var isShowingPairingCode = false
         @State private var pairingHost: DiscoveredRemoteHost?
         @State private var renamingHostID: String?
@@ -98,6 +103,14 @@ import SwiftUI
             .sheet(isPresented: $isShowingAccessible) {
                 MacDeviceSheet(title: "Accessible Devices") {
                     yourDevices
+                } footer: {
+                    updateBar
+                }
+                .onAppear {
+                    versions.probe(directory.paired.map(\.id))
+                }
+                .onDisappear {
+                    updates.clearSettled()
                 }
             }
             .relayImportPrompt()
@@ -146,11 +159,12 @@ import SwiftUI
                                 MacDeviceRow(
                                     name: device.name,
                                     address: nil,
-                                    detail: RemoteAccessView.lastSeenText(device),
                                     index: index,
                                     isSelected: device.id == selectedAllowedID,
                                     select: { selectedAllowedID = device.id },
                                 ) {
+                                    Text(verbatim: RemoteAccessView.lastSeenText(device))
+                                } accessory: {
                                     MacRowIconButton(symbol: "trash", label: "Remove", isSelected: device.id == selectedAllowedID) {
                                         model.revoke(device)
                                         selectedAllowedID = nil
@@ -227,6 +241,9 @@ import SwiftUI
         /// paired device, Pair for one nearby.
         private var yourDevices: some View {
             let entries = accessibleEntries
+            let order = entries.compactMap { entry -> String? in
+                if case let .device(device) = entry { device.id } else { nil }
+            }
             return MacTableFrame {
                 ScrollView {
                     LazyVStack(spacing: 0) {
@@ -238,7 +255,7 @@ import SwiftUI
                             case .otherDevicesTitle:
                                 MacTableSectionHeader(title: "Other Devices")
                             case let .device(device):
-                                accessibleRow(device)
+                                accessibleRow(device, order: order)
                             }
                         }
                     }
@@ -292,20 +309,33 @@ import SwiftUI
             return entries
         }
 
-        private func accessibleRow(_ device: AccessibleDevice) -> some View {
-            let isSelected = device.id == selectedHostID
+        private func accessibleRow(_ device: AccessibleDevice, order: [String]) -> some View {
+            let isSelected = selectedHostIDs.contains(device.id)
+            let phase = updates.phases[device.id]
             return MacDeviceRow(
                 name: device.name,
                 address: device.address,
-                detail: device.detail,
                 index: device.index,
                 isSelected: isSelected,
-                select: { selectedHostID = device.id },
+                select: { select(device.id, in: order) },
             ) {
+                // What an update is doing replaces where the device is; the
+                // version keeps its own column either way.
+                HStack(spacing: MacDeviceRowMetrics.spacing) {
+                    if let phase {
+                        MacUpdatePhaseView(phase: phase, hostName: device.name, isSelected: isSelected, window: window)
+                    } else {
+                        Text(verbatim: device.detail)
+                    }
+                    if case .forget = device.action {
+                        MacHostVersionText(entry: versions.entries[device.id], isSelected: isSelected)
+                    }
+                }
+            } accessory: {
                 Group {
                     switch device.action {
                     case let .forget(host):
-                        HStack(spacing: MacDeviceRow<EmptyView>.spacing) {
+                        HStack(spacing: MacDeviceRowMetrics.spacing) {
                             MacRowIconButton(symbol: "pencil", label: "Rename", isSelected: isSelected) {
                                 renamingHostID = host.id
                             }
@@ -320,8 +350,9 @@ import SwiftUI
                                     .keepsPopover()
                             }
                             MacRowIconButton(symbol: "icloud.and.arrow.up", label: "Check for Update", isSelected: isSelected) {
-                                HostUpdateFlow.run(endpoint: .remote(hostID: host.id), in: window)
+                                updates.update([host.id], in: window)
                             }
+                            .disabled(phase?.isBusy == true)
                             MacRowIconButton(symbol: "trash", label: "Forget", isSelected: isSelected) {
                                 confirmForget(host)
                             }
@@ -339,7 +370,7 @@ import SwiftUI
                 }
                 // As wide as a paired row's three buttons, so a nearby
                 // device's detail lines up with the paired ones above it.
-                .frame(minWidth: MacRowIconButton.width * 3 + MacDeviceRow<EmptyView>.spacing * 2, alignment: .trailing)
+                .frame(minWidth: MacRowIconButton.width * 3 + MacDeviceRowMetrics.spacing * 2, alignment: .trailing)
             }
             // On the row rather than its Pair button, which pairing takes
             // away: the popover stays to say how it went, still pointing at
@@ -357,6 +388,58 @@ import SwiftUI
             }
         }
 
+        /// A table's selection, the Finder's way: a click picks the row, ⌘
+        /// adds or takes it away, ⇧ selects from the last row clicked to
+        /// this one.
+        private func select(_ id: String, in order: [String]) {
+            let modifiers = MacEventModifiers.current
+            if modifiers.contains(.command) {
+                if selectedHostIDs.contains(id) {
+                    selectedHostIDs.remove(id)
+                } else {
+                    selectedHostIDs.insert(id)
+                }
+                selectionAnchor = id
+            } else if modifiers.contains(.shift),
+                      let anchor = selectionAnchor,
+                      let from = order.firstIndex(of: anchor),
+                      let to = order.firstIndex(of: id)
+            {
+                selectedHostIDs = Set(order[min(from, to) ... max(from, to)])
+            } else {
+                selectedHostIDs = [id]
+                selectionAnchor = id
+            }
+        }
+
+        /// The selected devices an update can be asked of: paired, and not
+        /// already updating.
+        private var updatableSelection: [String] {
+            directory.paired.map(\.id).filter { id in
+                selectedHostIDs.contains(id) && updates.phases[id]?.isBusy != true
+            }
+        }
+
+        /// Under the table: how the updates under way are going, and the
+        /// button that updates every selected device.
+        private var updateBar: some View {
+            HStack(spacing: DS.Padding.m) {
+                if updates.isBusy {
+                    MacUpdateProgressSummary(updates: updates)
+                } else if directory.paired.count > 1 {
+                    Text("Hold ⌘ or ⇧ to select more than one device.")
+                        .font(DS.Font.detail)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: DS.Padding.m)
+                Button("Check for Updates") {
+                    updates.update(updatableSelection, in: window)
+                }
+                .disabled(updatableSelection.isEmpty)
+            }
+        }
+
         private func confirmForget(_ host: PairedRemoteHost) {
             AlertViewController(
                 title: "Forget “\(host.displayName)”?",
@@ -365,7 +448,7 @@ import SwiftUI
                     AlertAction("Cancel") {},
                     AlertAction("Forget", kind: .highlighted) {
                         PairedRemoteHostStore.remove(id: host.id)
-                        selectedHostID = nil
+                        selectedHostIDs.remove(host.id)
                     },
                 ],
             ).present(in: window)
@@ -403,25 +486,29 @@ import SwiftUI
         let action: Action
     }
 
+    private enum MacDeviceRowMetrics {
+        /// Between the detail and the first button, and between buttons:
+        /// one gap, so the trailing end reads as one evenly spaced run.
+        static var spacing: CGFloat {
+            DS.Padding.s
+        }
+    }
+
     /// One row of a device table: the name with its address dim after it,
     /// a dim trailing detail, then the row's actions — there on every row,
     /// selected or not, so the details line up — striped, the selection in
     /// the accent.
-    private struct MacDeviceRow<Accessory: View>: View {
+    private struct MacDeviceRow<Detail: View, Accessory: View>: View {
         let name: String
         let address: String?
-        let detail: String
         let index: Int
         let isSelected: Bool
         let select: () -> Void
+        @ViewBuilder let detail: () -> Detail
         @ViewBuilder let accessory: () -> Accessory
 
-        /// Between the detail and the first button, and between buttons:
-        /// one gap, so the trailing end reads as one evenly spaced run.
-        static var spacing: CGFloat { DS.Padding.s }
-
         var body: some View {
-            HStack(spacing: Self.spacing) {
+            HStack(spacing: MacDeviceRowMetrics.spacing) {
                 Group {
                     if let address {
                         Text(verbatim: name)
@@ -432,7 +519,7 @@ import SwiftUI
                 }
                 .lineLimit(1)
                 Spacer(minLength: DS.Padding.m)
-                Text(verbatim: detail)
+                detail()
                     .font(DS.Font.detail)
                     .foregroundColor(isSelected ? .white.opacity(0.75) : .secondary)
                     .lineLimit(1)
@@ -448,6 +535,198 @@ import SwiftUI
             .onTapGesture(perform: select)
             .accessibilityElement(children: .contain)
             .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        }
+    }
+
+    /// The version a paired device runs, in a column of its own: dim, or in
+    /// the accent with an arrow when it is a Mac that updates itself and
+    /// runs an older iGhostVT than this one. Blank until the device has
+    /// said.
+    private struct MacHostVersionText: View {
+        let entry: RemoteHostVersions.Entry?
+        let isSelected: Bool
+
+        static let width: CGFloat = 76
+
+        var body: some View {
+            HStack(spacing: 3) {
+                if let entry {
+                    if isBehind(entry) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .foregroundColor(isSelected ? .white : .accentColor)
+                            .accessibilityHidden(true)
+                    }
+                    Text(verbatim: entry.version)
+                        .monospacedDigit()
+                        .foregroundColor(isBehind(entry) && !isSelected ? .accentColor : nil)
+                }
+            }
+            .frame(width: Self.width, alignment: .trailing)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(entry == nil ? Text(verbatim: "") : Text("Version"))
+            .accessibilityValue(Text(verbatim: entry?.version ?? ""))
+        }
+
+        private func isBehind(_ entry: RemoteHostVersions.Entry) -> Bool {
+            entry.updatesItself == true && UpdateCheck.isVersion(RemoteAccess.appVersion, newerThan: entry.version)
+        }
+    }
+
+    /// How a device's update is going, where its whereabouts were: a
+    /// spinner or a bar while it moves, the outcome once it stopped. An
+    /// outcome with more to say (why it failed, why it cannot update)
+    /// opens it in an alert.
+    private struct MacUpdatePhaseView: View {
+        let phase: HostUpdateBatch.Phase
+        let hostName: String
+        let isSelected: Bool
+        let window: UIWindow?
+
+        var body: some View {
+            switch phase {
+            case .checking:
+                spinning(Text("Checking…"))
+            case let .upToDate(version):
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle")
+                    Text("Up to date")
+                }
+                .help(Text("iGhostVT \(version) is the latest version."))
+            case let .available(version):
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down.circle")
+                    Text("\(version) available")
+                }
+                .foregroundColor(isSelected ? .white : .accentColor)
+            case let .unsupported(message):
+                explained(
+                    Text("Can’t update from here"),
+                    symbol: "info.circle",
+                    title: String(localized: "Updates Not Available"),
+                    message: message,
+                )
+            case let .downloading(version, fraction):
+                HStack(spacing: 6) {
+                    ProgressView(value: min(max(fraction, 0), 1))
+                        .progressViewStyle(.linear)
+                        .tint(isSelected ? .white : .accentColor)
+                        .frame(width: 96)
+                    Text(verbatim: fraction.formatted(.percent.precision(.fractionLength(0))))
+                        .monospacedDigit()
+                        .frame(minWidth: 34, alignment: .trailing)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(Text("Downloading iGhostVT \(version)"))
+            case .verifying:
+                spinning(Text("Verifying…"))
+            case .installing:
+                spinning(Text("Installing…"))
+            case .restarting:
+                spinning(Text("Restarting…"))
+            case let .updated(version):
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(isSelected ? .white : .green)
+                    Text("Updated to \(version)")
+                }
+            case let .unconfirmed(version):
+                explained(
+                    Text("Update sent (status)"),
+                    symbol: "info.circle",
+                    title: String(localized: "Update Sent"),
+                    message: String(localized: "\(hostName) stopped answering while it installed iGhostVT \(version). It is most likely restarting iGhostVT; open new terminals once it is back."),
+                )
+            case let .failed(message):
+                explained(
+                    Text("Failed"),
+                    symbol: "exclamationmark.triangle.fill",
+                    title: String(localized: "Unable to Install the Update"),
+                    message: message,
+                    tint: isSelected ? .white : .red,
+                )
+            }
+        }
+
+        private func spinning(_ label: Text) -> some View {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.small)
+                label
+            }
+        }
+
+        /// The outcome as a borderless button that says the rest.
+        private func explained(_ label: Text, symbol: String, title: String, message: String, tint: Color? = nil) -> some View {
+            Button {
+                AlertViewController(
+                    content: AlertViewController.Content(title: title, message: message),
+                    actions: [AlertAction("Done", kind: .highlighted) {}],
+                ).present(in: window)
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: symbol)
+                    label
+                }
+                .foregroundColor(tint)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .disabled(message.isEmpty)
+        }
+    }
+
+    /// Beside the button while updates run: one bar for all of them — how
+    /// far the installs have come, or moving while the devices still check
+    /// — what they are doing, and Cancel while there is something it can
+    /// still stop.
+    private struct MacUpdateProgressSummary: View {
+        @ObservedObject var updates: HostUpdateBatch
+
+        var body: some View {
+            HStack(spacing: DS.Padding.s) {
+                Group {
+                    if let fraction = updates.overallFraction {
+                        ProgressView(value: fraction)
+                    } else {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+                .progressViewStyle(.linear)
+                .frame(width: 140)
+                Text(title)
+                    .font(DS.Font.detail)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                if updates.isCancellable {
+                    Button("Cancel") { updates.cancel() }
+                        .buttonStyle(.borderless)
+                        .font(DS.Font.detail)
+                }
+            }
+        }
+
+        private var title: String {
+            let count = updates.installingCount
+            if count > 0 {
+                return String.localizedStringWithFormat(
+                    NSLocalizedString("Updating %lld devices…", comment: "Under the Accessible Devices table, beside one progress bar for every paired Mac installing an update"),
+                    count,
+                )
+            }
+            return String(localized: "Checking for Updates…")
+        }
+    }
+
+    /// The modifier keys held right now, read from AppKit (`NSEvent`
+    /// through the runtime): a SwiftUI tap does not say which were down.
+    private enum MacEventModifiers {
+        static var current: UIKeyModifierFlags {
+            guard let event = NSClassFromString("NSEvent") as? NSObject.Type,
+                  let raw = event.value(forKey: "modifierFlags") as? UInt
+            else { return [] }
+            // AppKit's flags and UIKit's share their bits.
+            return UIKeyModifierFlags(rawValue: Int(raw))
         }
     }
 
@@ -550,11 +829,24 @@ import SwiftUI
     }
 
     /// A list of devices on a sheet of its own: the title, the table filling
-    /// the sheet, Done.
-    private struct MacDeviceSheet<Content: View>: View {
+    /// the sheet, then whatever the list adds before Done. Wide enough for a
+    /// row's name, its whereabouts or an update's progress, its version and
+    /// its buttons side by side, and tall enough for a dozen devices.
+    private struct MacDeviceSheet<Content: View, Footer: View>: View {
         let title: LocalizedStringKey
         @ViewBuilder let content: () -> Content
+        @ViewBuilder let footer: () -> Footer
         @Environment(\.dismiss) private var dismiss
+
+        init(
+            title: LocalizedStringKey,
+            @ViewBuilder content: @escaping () -> Content,
+            @ViewBuilder footer: @escaping () -> Footer,
+        ) {
+            self.title = title
+            self.content = content
+            self.footer = footer
+        }
 
         var body: some View {
             VStack(alignment: .leading, spacing: DS.Padding.m) {
@@ -562,14 +854,21 @@ import SwiftUI
                     .font(DS.Font.labelEmphasis)
                 content()
                     .frame(maxHeight: .infinity)
-                HStack {
-                    Spacer()
+                HStack(spacing: DS.Padding.m) {
+                    footer()
                     Button("Done") { dismiss() }
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(DS.Padding.xl)
-            .frame(width: 480, height: 320)
+            .frame(width: 720, height: 480)
             .fittedSheet()
+        }
+    }
+
+    extension MacDeviceSheet where Footer == EmptyView {
+        init(title: LocalizedStringKey, @ViewBuilder content: @escaping () -> Content) {
+            self.init(title: title, content: content) { EmptyView() }
         }
     }
 
