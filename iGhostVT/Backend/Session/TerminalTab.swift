@@ -459,12 +459,18 @@ final class TerminalTab: ObservableObject, Identifiable {
     /// foreground program's name, which for some programs is only a
     /// version number. A shell on another device says which one.
     var secondaryTitle: String {
-        let directory = displayDirectory
-        let name = directory.isEmpty ? "" : TerminalDirectory(path: directory).name
+        let name = directoryName
         if let remoteHostName {
             return name.isEmpty ? remoteHostName : "\(name) · \(remoteHostName)"
         }
         return name
+    }
+
+    /// The secondary title without the device, for a row under its
+    /// device's header.
+    var directoryName: String {
+        let directory = displayDirectory
+        return directory.isEmpty ? "" : TerminalDirectory(path: directory).name
     }
 
     /// The paired device's name, for a remote tab.

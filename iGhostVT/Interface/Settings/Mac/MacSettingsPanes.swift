@@ -86,6 +86,7 @@ import SwiftUI
         @AppStorage(SessionKeepAlive.remoteAccessKey) private var heldByRemoteAccess = false
         @ObservedObject private var agent = MacLaunchAgent.shared
         @ObservedObject private var recents = RecentDirectoryStore.shared
+        @AppStorage(TabGrouping.key) private var groupsByDevice = false
 
         var body: some View {
             MacSettingsForm {
@@ -141,6 +142,8 @@ import SwiftUI
                 }
                 Divider()
                 recentDirectoriesRow
+                Divider()
+                tabGroupingRow
             }
             .onAppear {
                 ShellMenuItems.loadAvailable { availableShellPaths = $0 }
@@ -189,6 +192,21 @@ import SwiftUI
                     """
                     Choose Automatic to use your login shell. Enter a custom \
                     executable path when it is not listed above.
+                    """,
+                )
+            }
+        }
+
+        private var tabGroupingRow: some View {
+            MacSettingsRow("Tabs") {
+                MacCheckbox(String(localized: "Group Tabs by Device"), isOn: $groupsByDevice)
+            } details: {
+                MacSettingsNote(
+                    """
+                    Group Tabs by Device keeps each device's tabs together, \
+                    under its name in the sidebar, once a window has tabs \
+                    from more than one device. Click a device's name to fold \
+                    its tabs.
                     """,
                 )
             }

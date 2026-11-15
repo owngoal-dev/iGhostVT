@@ -350,6 +350,11 @@ harness:
 		"$(ROOT_DIR)/Tests/FindQuery/main.swift" \
 		-o "$$harness_dir/find-query" && \
 	"$$harness_dir/find-query" && \
+	xcrun --sdk macosx swiftc -swift-version 5 \
+		"$(ROOT_DIR)/iGhostVT/Backend/Session/TabGrouping.swift" \
+		"$(ROOT_DIR)/Tests/TabGrouping/main.swift" \
+		-o "$$harness_dir/tab-grouping" && \
+	"$$harness_dir/tab-grouping" && \
 	$(MAKE) --no-print-directory relay-harness
 
 # The relay end to end (Tests/RelayHarness): the Go server under Relay/ built
