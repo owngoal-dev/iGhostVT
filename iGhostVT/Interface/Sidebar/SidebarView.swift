@@ -290,7 +290,9 @@ private struct SidebarGroupHeader: View {
             }
             .buttonStyle(.plain)
             .accessibilityAddTraits(.isHeader)
-            .accessibilityValue(Text("\(tabs.count) Tabs"))
+            .accessibilityValue(
+                (isCollapsed ? Text("Collapsed") : Text("Expanded")) + Text(verbatim: ", ") + Text("\(tabs.count) Tabs"),
+            )
 
             NewTabMenu(tabManager: tabManager, scope: .device(hostID: hostID), onOpen: onOpen) {
                 Image(systemName: "plus")
