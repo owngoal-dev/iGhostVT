@@ -558,7 +558,7 @@ import SwiftUI
                     }
                     Text(verbatim: entry.version)
                         .monospacedDigit()
-                        .foregroundColor(isBehind(entry) && !isSelected ? .accentColor : nil)
+                        .foregroundColor(textColor(entry))
                 }
             }
             .frame(width: Self.width, alignment: .trailing)
@@ -568,8 +568,19 @@ import SwiftUI
             .accessibilityValue(Text(verbatim: entry?.version ?? ""))
         }
 
+        /// Never nil: a nil colour resets to the default rather than
+        /// keeping the row's, which on a selected row is black on blue.
+        private func textColor(_ entry: RemoteHostVersions.Entry) -> Color {
+            if isSelected {
+                return .white.opacity(0.75)
+            }
+            return isBehind(entry) ? .accentColor : .secondary
+        }
+
+        /// A Mac that may update itself — one from before 1.6.30 does not
+        /// say, and counts — on an older release than this one.
         private func isBehind(_ entry: RemoteHostVersions.Entry) -> Bool {
-            entry.updatesItself == true && UpdateCheck.isVersion(RemoteAccess.appVersion, newerThan: entry.version)
+            entry.updatesItself != false && UpdateCheck.isVersion(RemoteAccess.appVersion, newerThan: entry.version)
         }
     }
 
@@ -668,7 +679,10 @@ import SwiftUI
                     Image(systemName: symbol)
                     label
                 }
-                .foregroundColor(tint)
+                // The row's own dim colour unless the outcome has one: a
+                // borderless button would draw it in the accent, invisible
+                // on a selected row.
+                .foregroundColor(tint ?? (isSelected ? .white.opacity(0.75) : .secondary))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
