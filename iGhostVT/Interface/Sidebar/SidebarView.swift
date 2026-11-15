@@ -69,6 +69,7 @@ struct SidebarView: View {
                                     onSelect: { tabManager.activeTabID = tab.id },
                                     onClose: { tabManager.requestClose(tab, from: .closeButton) },
                                 )
+                                .onMiddleClick { tabManager.requestClose(tab, from: .middleClick) }
                                 .tabMenuAndReorder(tab, in: tabManager, pacing: reorderPacing, preview: .row, window: window)
                             }
                         }

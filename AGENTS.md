@@ -1230,6 +1230,17 @@ menu for the active tab with New Tab and New Window at its head — the
 strip has no + of its own, except on the Mac, where one sits beside the
 sidebar toggle while the sidebar is hidden.
 
+A middle click on a sidebar row or a strip chip closes that tab
+(`onMiddleClick`), through the same `requestClose`. Catalyst never turns
+the middle button into a UIKit touch — a recognizer asking for
+`.button(3)` does not fire there, and a terminal with mouse reporting on
+reports nothing — so on the Mac it is an `NSEvent` local monitor reached
+through the runtime, and the recognizer is iPadOS's. The reader is a view
+behind the row that takes no touches: it answers for a point inside its
+own bounds, inside every clipping ancestor and scroll view (a row scrolled
+out of the list still lies, geometrically, under the footer), and under
+nothing presented above the window's content.
+
 That menu must not refresh while the terminal prints. UIKit rebuilds an
 open menu whenever SwiftUI re-evaluates its content, and the tab
 republishes on every retitle — so a menu that observed the tab flickered
@@ -1847,7 +1858,10 @@ Gotchas that bit us:
   with a gesture of its own (long press to lift; a plain drag moves the
   window) while the sidebar uses `onDrag`/`onDrop`. A `ScrollView` in that band draws Tahoe's scroll
   edge effect over its own content — the chips came up frosted — so the
-  strip's scroller hides it (`scrollEdgeEffectHidden`).
+  strip's scroller hides it (`scrollEdgeEffectHidden`). The sidebar's
+  trailing edge shows the column-resize pointer (`MacCursor`: an
+  `NSCursor` set from the hover and again from the drag) — UIKit's pointer
+  shapes have no resize.
 - **A windowed iPad's red, yellow and green buttons sit over the content,
   outside the safe area.** `WindowControlsInsetReader` reads iOS 26's
   corner-adapted safe area (`.safeArea(cornerAdaptation:)`) off a view that
