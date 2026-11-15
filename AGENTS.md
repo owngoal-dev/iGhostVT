@@ -57,7 +57,22 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026111302, Ghostty cf5519b2 on Zig 0.17).
+  (`upToNextMajor` from 2.2.2026111501, Ghostty cf5519b2 on Zig 0.17).
+  2.2.2026111501 keeps Ghostty cf5519b2 and adds one patch (binary
+  `upstream.cf5519b22f91-3`, whose slices also carry the compiled
+  sources' notices under `Headers/Licenses`): on a surface that opts in —
+  every one the package's views build — a precision scroll (a trackpad, a
+  Magic Mouse, a finger) moves the picture by the pixel, and the views
+  bring it back to a whole row when the scroll ends, because hit testing
+  and the selection count whole rows. On iOS one finger over scrollback is
+  handed to a hidden `UIScrollView` whose pan is attached to the terminal
+  view (UIKit's deceleration and bounce); a program tracking the mouse, a
+  screen with nothing to scroll back to, two fingers and a selection drag
+  keep the view's own pan, and the interaction lock's refused `hitTest`
+  keeps a finger off both. It also has `TerminalViewState` hand the core's
+  search reports to `onSearch` (`TerminalSearchEvent`), which
+  `TerminalSearch` takes; the app's own `@retroactive` conformance went
+  with that release, since two would not compile.
   2.2.2026111301 moves from Ghostty 042b16b6 to cf5519b2, 203 commits
   (binary `upstream.cf5519b22f91`): the parser's table, the mode list and
   the config keys this app writes are unchanged, and `ghostty.h` now says
@@ -1215,6 +1230,17 @@ menu for the active tab with New Tab and New Window at its head — the
 strip has no + of its own, except on the Mac, where one sits beside the
 sidebar toggle while the sidebar is hidden.
 
+A middle click on a sidebar row or a strip chip closes that tab
+(`onMiddleClick`), through the same `requestClose`. Catalyst never turns
+the middle button into a UIKit touch — a recognizer asking for
+`.button(3)` does not fire there, and a terminal with mouse reporting on
+reports nothing — so on the Mac it is an `NSEvent` local monitor reached
+through the runtime, and the recognizer is iPadOS's. The reader is a view
+behind the row that takes no touches: it answers for a point inside its
+own bounds, inside every clipping ancestor and scroll view (a row scrolled
+out of the list still lies, geometrically, under the footer), and under
+nothing presented above the window's content.
+
 That menu must not refresh while the terminal prints. UIKit rebuilds an
 open menu whenever SwiftUI re-evaluates its content, and the tab
 republishes on every retitle — so a menu that observed the tab flickered
@@ -1280,7 +1306,8 @@ Device on goes to the end of its device's group
 (`TabManager.newTab(_:besideActiveTab:)`).
 
 **Group Tabs by Device** is the Mac's alone (General ▸ Tabs in its
-Settings window; an iPhone or iPad never groups, whatever is stored —
+Settings window, under Recent Directories in the same row; an iPhone or
+iPad never groups, whatever is stored —
 `TabGrouping.isAvailable`) and is off until someone turns it on, so the
 tab list stays one freely ordered list by default (`TabGrouping.key`, read
 through `TabGrouping.isEnabled`).
@@ -1385,7 +1412,7 @@ tenth whenever they add up past five per slot, so last month's project
 sinks and this week's rises — and eight reach it, minus
 any directory an open tab is already offering and minus the home, which is
 the first row anyway. Recent Directories (Settings ▸ Sessions; General
-▸ New Tab on the Mac) is the whole
+▸ Tabs on the Mac) is the whole
 of its configuration, local and remote lists alike: off, it hides the groups, stops recording
 *and* clears what is stored — a switch that says the app is not keeping this
 has to mean it, and there is no separate Clear. There is no sort choice: a
@@ -1485,13 +1512,12 @@ the key window, never `activationState` (`ShortcutBridge`).
 **Find searches with Ghostty's own engine; the app is the driver and the
 bar.** libghostty-spm exposes the core's search as binding actions
 (`search:<needle>`, `navigate_search:next|previous`, `end_search`,
-`search_selection`) and `TerminalSurfaceSearchDelegate`. `TerminalViewState`
-is the surface's delegate and does not adopt that protocol, so the app
-declares the conformance itself (`TerminalSearch+Surface.swift`,
-`@retroactive`). **A library release that adopts it will stop that file
-compiling; delete the extension then and take the library's hook.** What
-`TerminalSearch` (one per tab) relies on in the core, read from the Zig at
-the pinned commit:
+`search_selection`), and `TerminalViewState.onSearch` hands back every
+report the core makes, one call each and in order (`TerminalSearchEvent`,
+since 2.2.2026111501; before it the app declared the delegate conformance
+itself with `@retroactive`). `TerminalSearch` (one per tab) sets the hook.
+What it relies on in the core, read from the Zig at the pinned commit and
+measured by the library's `TerminalViewStateSearchTests` on a live surface:
 
 - Match 0 is the newest; `next` goes to older output.
 - The one matcher is an ASCII-case-insensitive substring. Regex and
@@ -1832,7 +1858,10 @@ Gotchas that bit us:
   with a gesture of its own (long press to lift; a plain drag moves the
   window) while the sidebar uses `onDrag`/`onDrop`. A `ScrollView` in that band draws Tahoe's scroll
   edge effect over its own content — the chips came up frosted — so the
-  strip's scroller hides it (`scrollEdgeEffectHidden`).
+  strip's scroller hides it (`scrollEdgeEffectHidden`). The sidebar's
+  trailing edge shows the column-resize pointer (`MacCursor`: an
+  `NSCursor` set from the hover and again from the drag) — UIKit's pointer
+  shapes have no resize.
 - **A windowed iPad's red, yellow and green buttons sit over the content,
   outside the safe area.** `WindowControlsInsetReader` reads iOS 26's
   corner-adapted safe area (`.safeArea(cornerAdaptation:)`) off a view that
@@ -1841,6 +1870,24 @@ Gotchas that bit us:
   or the strip's toggle), so a maximized window, whose controls hide until
   asked for, keeps its full height. Zero on the Mac, which places its own
   traffic lights, and before iOS 26.
+- **The Mac window can be see-through, by two defaults and nothing else**
+  (`WindowTranslucency`): `Window.backgroundOpacity` (0.1–1; absent is an
+  opaque window) and `Window.blurRadius` (0–64, 20 when absent), read once
+  at launch. The `NSWindow` goes non-opaque over a near-clear white (a
+  clear one draws a dark rim) and the window server blurs what is behind it
+  (`CGSSetWindowBackgroundBlurRadius`, found with `dlsym`); `RootView`
+  paints the theme's background at that opacity and the terminal's own is
+  turned off (`background-opacity = 0`). **Such a surface must blend
+  natively** (`alpha-blending = native`): on Catalyst ghostty defaults to
+  `linear-corrected`, which weights each glyph's edge for the cell's
+  background — black, once that opacity is 0 — and leaves premultiplied
+  colour in linear light for a compositor that blends it gamma-encoded.
+  Pure black text is the one colour that hides it; grey and coloured text
+  lost 12–39 % of its weight and grew a pale outline over a dark desktop.
+  Glass and materials sample only the app's own layers, so chrome sitting
+  on the bare background (the title capsule, ⋯, a sidebar row's slab) is a
+  flat tint there, and only what floats over the terminal — the find dock
+  — stays Liquid Glass.
 - **Regular width is not an iPad, and an inset has a side.** The window's
   layout follows its horizontal size class alone (`RootView.isRegularWidth`):
   the sidebar and the strip wherever the width is regular — an iPad, the

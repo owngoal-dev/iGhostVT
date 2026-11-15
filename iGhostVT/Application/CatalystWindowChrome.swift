@@ -140,6 +140,23 @@ import UIKit
             return frame
         }
 
+        @MainActor
+        static func location(of event: NSObject, in scene: UIWindowScene) -> CGPoint? {
+            guard let nsWindow = hostWindow(for: scene),
+                  (event.value(forKey: "window") as? NSObject) === nsWindow,
+                  let locationValue = event.value(forKey: "locationInWindow") as? NSValue,
+                  let frameValue = nsWindow.value(forKey: "frame") as? NSValue
+            else { return nil }
+            var location = CGPoint.zero
+            locationValue.getValue(&location, size: MemoryLayout<CGPoint>.size)
+            var frame = CGRect.zero
+            frameValue.getValue(&frame, size: MemoryLayout<CGRect>.size)
+            return CGPoint(
+                x: location.x * pointsPerScreenPoint,
+                y: (frame.height - location.y) * pointsPerScreenPoint,
+            )
+        }
+
         /// Whether `point` (screen coordinates) is over the top bar of a
         /// window with this frame — the band a tab is dropped on to join it.
         @MainActor
@@ -173,6 +190,7 @@ import UIKit
             clearTitlebarFill(in: nsWindow)
             positionWindowControls(in: nsWindow)
             keepTitlebarBandForContent(nsWindow)
+            WindowTranslucency.apply(to: nsWindow)
         }
 
         /// The top bar sits in the band AppKit keeps for a title bar (the

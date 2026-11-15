@@ -106,6 +106,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             rootView: RootView(tabManager: tabManager, interface: interface).interfaceTextSize().interfaceAccent().interfaceAppearance(),
         )
         window.rootViewController = host
+        #if targetEnvironment(macCatalyst)
+            WindowTranslucency.prepare(window)
+        #endif
         window.makeKeyAndVisible()
         self.window = window
 

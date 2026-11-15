@@ -141,9 +141,7 @@ import SwiftUI
                     .accessibilityElement(children: .combine)
                 }
                 Divider()
-                recentDirectoriesRow
-                Divider()
-                tabGroupingRow
+                tabsRow
             }
             .onAppear {
                 ShellMenuItems.loadAvailable { availableShellPaths = $0 }
@@ -197,23 +195,11 @@ import SwiftUI
             }
         }
 
-        private var tabGroupingRow: some View {
+        /// What the tab list and New Tab do: Recent Directories, then Group
+        /// Tabs by Device (the Mac's alone, `TabGrouping`), one row the way
+        /// Sessions holds its two.
+        private var tabsRow: some View {
             MacSettingsRow("Tabs") {
-                MacCheckbox(String(localized: "Group Tabs by Device"), isOn: $groupsByDevice)
-            } details: {
-                MacSettingsNote(
-                    """
-                    Group Tabs by Device keeps each device's tabs together, \
-                    under its name in the sidebar, once a window has tabs \
-                    from more than one device. Click a device's name to fold \
-                    its tabs.
-                    """,
-                )
-            }
-        }
-
-        private var recentDirectoriesRow: some View {
-            MacSettingsRow("New Tab") {
                 MacCheckbox(String(localized: "Recent Directories"), isOn: $recents.isEnabled)
             } details: {
                 MacSettingsNote(
@@ -221,6 +207,16 @@ import SwiftUI
                     Recent Directories lets New Tab offer the directories your \
                     terminals have been in, on this Mac and on each paired \
                     device. Turning it off forgets them.
+                    """,
+                )
+                MacCheckbox(String(localized: "Group Tabs by Device"), isOn: $groupsByDevice)
+                    .padding(.top, DS.Padding.s)
+                MacSettingsNote(
+                    """
+                    Group Tabs by Device keeps each device's tabs together, \
+                    under its name in the sidebar, once a window has tabs \
+                    from more than one device. Click a device's name to fold \
+                    its tabs.
                     """,
                 )
             }
