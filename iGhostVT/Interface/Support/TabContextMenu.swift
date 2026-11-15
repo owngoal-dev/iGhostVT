@@ -41,25 +41,33 @@ struct TabContextMenu: View {
             let _ = BodyTrace.note("TabContextMenu")
         #endif
         droppedFiles
+        // Copy, Find…, then the tab's lock: copying and the locks are
+        // submenus, so the menu stays short.
+        Menu {
+            Button(action: copyText) {
+                Label("Copy Text", systemImage: "doc.on.doc")
+            }
+            Button(action: copyImage) {
+                Label("Copy as Image", systemImage: "photo.on.rectangle")
+            }
+            Button(action: exportText) {
+                Label("Export Text…", systemImage: "square.and.arrow.up")
+            }
+        } label: {
+            Label("Copy", systemImage: "doc.on.doc")
+        }
         Button(action: find) {
             Label("Find…", systemImage: "magnifyingglass")
         }
         .disabled(tab.isCoveredByStatusAlert)
-        Button(action: copyText) {
-            Label("Copy Text", systemImage: "doc.on.doc")
-        }
-        Button(action: copyImage) {
-            Label("Copy as Image", systemImage: "photo.on.rectangle")
-        }
-        Button(action: exportText) {
-            Label("Export Text…", systemImage: "square.and.arrow.up")
-        }
+        // What happens to the tab — its lock, its window — then Close Tab
+        // in a section of its own, last.
         Divider()
-        lockControls
-        Divider()
+        lockMenu
         if TabWindowMove.isAvailable {
             TabMoveButton(tab: tab, tabManager: tabManager)
         }
+        Divider()
         Button(role: .destructive, action: { tabManager.requestClose(tab, from: .contextMenu) }) {
             Label("Close Tab", systemImage: "trash")
         }
@@ -92,6 +100,21 @@ struct TabContextMenu: View {
     private func pasteDroppedFile(_ file: DroppedFile) {
         tabManager.activate(tab)
         Task { await tab.pasteDroppedFile(file) }
+    }
+
+    /// The locks as a submenu, its glyph filled while one is on. The Mac
+    /// has only Lock Tab, which a submenu of one would hide for nothing.
+    @ViewBuilder
+    private var lockMenu: some View {
+        #if targetEnvironment(macCatalyst)
+            lockControls
+        #else
+            Menu {
+                lockControls
+            } label: {
+                Label("Lock", systemImage: attributes.lock == nil ? "lock" : "lock.fill")
+            }
+        #endif
     }
 
     /// Checkmarked toggles where the menu system renders them (iOS 16);
