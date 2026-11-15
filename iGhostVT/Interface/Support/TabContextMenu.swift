@@ -41,6 +41,10 @@ struct TabContextMenu: View {
             let _ = BodyTrace.note("TabContextMenu")
         #endif
         droppedFiles
+        Button(action: find) {
+            Label("Find…", systemImage: "magnifyingglass")
+        }
+        .disabled(tab.isCoveredByStatusAlert)
         Button(action: copyText) {
             Label("Copy Text", systemImage: "doc.on.doc")
         }
@@ -78,6 +82,11 @@ struct TabContextMenu: View {
             }
             Divider()
         }
+    }
+
+    private func find() {
+        tabManager.activate(tab)
+        tab.search.present()
     }
 
     private func pasteDroppedFile(_ file: DroppedFile) {

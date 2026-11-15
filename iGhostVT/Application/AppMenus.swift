@@ -30,6 +30,10 @@ import UIKit
     func selectTab(_ sender: Any?)
     func toggleTabLock(_ sender: Any?)
     func toggleKeyboardLock(_ sender: Any?)
+    func findInTerminal(_ sender: Any?)
+    func findNextMatch(_ sender: Any?)
+    func findPreviousMatch(_ sender: Any?)
+    func findSelection(_ sender: Any?)
 }
 
 /// The app's menu bar, following the platform's own bindings: Terminal.app
@@ -58,6 +62,7 @@ enum AppMenus {
 
     static func install(into builder: UIMenuBuilder) {
         installFileMenu(into: builder)
+        installFindMenu(into: builder)
         installSettings(into: builder)
         #if targetEnvironment(macCatalyst)
             installUpdateCheck(into: builder)
@@ -191,6 +196,29 @@ enum AppMenus {
                 }
             },
         )
+    }
+
+    // MARK: - Find
+
+    private static func installFindMenu(into builder: UIMenuBuilder) {
+        let commands: [UIMenuElement] = [
+            command(#selector(AppCommandResponder.findInTerminal(_:))),
+            command(#selector(AppCommandResponder.findNextMatch(_:))),
+            command(#selector(AppCommandResponder.findPreviousMatch(_:))),
+            command(#selector(AppCommandResponder.findSelection(_:))),
+        ]
+        if builder.menu(for: .find) != nil {
+            builder.replaceChildren(ofMenu: .find) { _ in commands }
+        } else if builder.menu(for: .edit) != nil {
+            builder.insertChild(
+                UIMenu(
+                    title: String(localized: "Find (field)"),
+                    identifier: UIMenu.Identifier("wiki.qaq.iGhostVT.edit.find"),
+                    children: commands,
+                ),
+                atEndOfMenu: .edit,
+            )
+        }
     }
 
     // MARK: - Settings

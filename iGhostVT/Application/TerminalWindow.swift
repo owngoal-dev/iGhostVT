@@ -332,6 +332,11 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
              #selector(showPreviousTab(_:)),
              #selector(toggleTabLock(_:)):
             return hasActiveTab
+        case #selector(findInTerminal(_:)),
+             #selector(findNextMatch(_:)),
+             #selector(findPreviousMatch(_:)),
+             #selector(findSelection(_:)):
+            return hasActiveTab && activeTab?.isCoveredByStatusAlert == false
         case #selector(toggleKeyboardLock(_:)):
             // Not offered on the Mac; anything that still asks (nothing
             // should) reads it as disabled rather than half-working.
@@ -492,6 +497,24 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
 
     func clearScreen(_: Any?) {
         _ = activeTab?.terminal.performBindingAction("clear_screen")
+    }
+
+    // MARK: - Find
+
+    func findInTerminal(_: Any?) {
+        activeTab?.search.present()
+    }
+
+    func findNextMatch(_: Any?) {
+        activeTab?.search.navigate(.older)
+    }
+
+    func findPreviousMatch(_: Any?) {
+        activeTab?.search.navigate(.newer)
+    }
+
+    func findSelection(_: Any?) {
+        _ = activeTab?.terminal.performBindingAction("search_selection")
     }
 
     // MARK: - Window

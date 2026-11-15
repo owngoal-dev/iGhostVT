@@ -12,8 +12,8 @@ enum ShortcutGroup: CaseIterable {
     case tabs
     /// Settings, the sidebar, the switcher, export, the locks.
     case interface
-    /// Font size and clear screen — ghostty's own actions, which the app
-    /// fronts so the size preference follows.
+    /// Font size, clear screen and find — ghostty's own actions, which the
+    /// app fronts so the size preference follows and the find bar opens.
     case terminal
 
     var title: String {
@@ -307,6 +307,38 @@ enum KeyShortcuts {
                 L("Clear Screen", "Menu item: clears the terminal screen and scrollback"),
                 #selector(R.clearScreen(_:)),
                 "k",
+                .command,
+                .terminal,
+            ),
+            listed(
+                "find",
+                L("Find…", "Menu item: opens the find bar over the terminal"),
+                #selector(R.findInTerminal(_:)),
+                "f",
+                .command,
+                .terminal,
+            ),
+            listed(
+                "findNext",
+                L("Find Next", "Menu item: selects the next match, towards older output"),
+                #selector(R.findNextMatch(_:)),
+                "g",
+                .command,
+                .terminal,
+            ),
+            listed(
+                "findPrevious",
+                L("Find Previous", "Menu item: selects the previous match, towards newer output"),
+                #selector(R.findPreviousMatch(_:)),
+                "g",
+                [.command, .shift],
+                .terminal,
+            ),
+            listed(
+                "findSelection",
+                L("Use Selection for Find", "Menu item: searches the terminal for the selected text"),
+                #selector(R.findSelection(_:)),
+                "e",
                 .command,
                 .terminal,
             ),

@@ -50,6 +50,7 @@ or install `GhostRemote-<version>.ipa` from [GitHub Releases](https://github.com
 - **Persistent Sessions**: With **Background Activities** on (the default), programs keep running after you quit the app, and every session reopens as a tab on the next launch. Turn it off in **Settings → Sessions** to end your tabs’ shells on this device when the app quits; terminals on paired devices keep running.
 - **Tabs and Windows**: Open multiple sessions, use the tab switcher, lock a tab to prevent accidental input, and open multiple windows on iPad and Mac.
 - **Copy and share**: Copy Text, Copy as Image, or Export Text.
+- **Find**: Search a terminal’s screen and scrollback with ⌘F or **Find…** in the tab menu. Matches are highlighted as you type; ⌘G and ⇧⌘G step through them, newest first.
 - **Shortcuts**: Run a command, open a tab, or read terminal output from the Shortcuts app. Use `ighostvt://session/<id>` to open a specific session from another app.
 - **Live Activities**: View session status on the Lock Screen on supported devices with iOS 16.2 or later, and in the Dynamic Island on supported iPhone models.
 - **Command line**: `ighostvt-cli` talks to the same sessions the app is showing, without taking them over.

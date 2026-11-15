@@ -78,6 +78,8 @@ final class LockableTerminalView: TerminalView {
     /// one. Copy as One Line reads where a row ends against it.
     var terminalColumns: (@MainActor () -> Int?)?
 
+    var onFind: (@MainActor (String?) -> Void)?
+
     /// What the terminal offers UIKit as its keyboard while locked. An empty
     /// view keeps first-responder status — and with it the hardware key
     /// path — while leaving nothing to raise.
@@ -416,7 +418,18 @@ final class LockableTerminalView: TerminalView {
         /// `paste(_:)`; on a remote tab it is swapped for one that goes
         /// through the override.
         override func touchMenuItems(for context: TerminalTouchMenuContext) -> [UIMenuElement] {
-            routingPaste(super.touchMenuItems(for: context))
+            var items = routingPaste(super.touchMenuItems(for: context))
+            let find = UIAction(
+                title: String(localized: "Find…"),
+                image: UIImage(systemName: "magnifyingglass"),
+                identifier: UIAction.Identifier("ighostvt.find"),
+            ) { [weak self] _ in
+                self?.onFind?(nil)
+            }
+            let selectAll = items.firstIndex { ($0 as? UIAction)?.identifier.rawValue == "terminal.selectAll" }
+            let beforeSystemItems = max(0, items.count - context.systemMenuItems.count)
+            items.insert(find, at: selectAll.map { $0 + 1 } ?? beforeSystemItems)
+            return items
         }
 
         /// A selection over more than one row gets Copy as One Line right
@@ -441,6 +454,16 @@ final class LockableTerminalView: TerminalView {
                     identifier: UIAction.Identifier("ighostvt.openLink"),
                 ) { _ in
                     UIApplication.shared.open(url)
+                })
+            }
+            let selection = context.selectedText
+            if !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                extras.append(UIAction(
+                    title: String(localized: "Find Selection"),
+                    image: UIImage(systemName: "magnifyingglass"),
+                    identifier: UIAction.Identifier("ighostvt.findSelection"),
+                ) { [weak self] _ in
+                    self?.onFind?(selection)
                 })
             }
             guard !extras.isEmpty else { return items }
