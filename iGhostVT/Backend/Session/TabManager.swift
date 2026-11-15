@@ -65,15 +65,16 @@ final class TabManager: ObservableObject {
                 MainActor.assumeIsolated { self?.rearrange() }
             }
         // Turned on in Settings, grouping takes the tabs already open; off,
-        // they stay where they are and move freely again.
+        // they stay where they are and move freely again. The notification
+        // comes on whatever thread wrote a default, so everything after it
+        // runs on the main queue.
         groupingSubscription = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: DispatchQueue.main)
             .map { _ in TabGrouping.isEnabled }
             .prepend(TabGrouping.isEnabled)
             .removeDuplicates()
             .dropFirst()
             .filter { $0 }
-            // Defaults change on whatever thread wrote them.
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 MainActor.assumeIsolated { self?.rearrange() }
             }

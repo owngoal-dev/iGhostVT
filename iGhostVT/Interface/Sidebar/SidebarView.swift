@@ -278,7 +278,7 @@ private struct SidebarGroupHeader: View {
                             .font(DS.Font.caption)
                             .accessibilityHidden(true)
                     }
-                    SidebarGroupStatus(tabs: tabs)
+                    SidebarGroupStatus(stores: tabs.map(\.store))
                     Spacer(minLength: DS.Padding.s)
                     Image(systemName: "chevron.right")
                         .font(DS.Font.captionEmphasis)
@@ -340,47 +340,76 @@ private struct SidebarGroupName: View {
 /// Nothing while the device's tabs are connected; a quiet glyph while one
 /// connects, a warning while one has failed.
 private struct SidebarGroupStatus: View {
-    let tabs: [TerminalTab]
-    @State private var statuses: [TerminalSessionStore.Status] = []
+    let stores: [TerminalSessionStore]
+    @StateObject private var watcher = SidebarGroupStatusWatcher()
 
     var body: some View {
         indicator
-            .onAppear(perform: refresh)
-            .onChange(of: tabs.map(\.id)) { _ in refresh() }
-            .onReceive(statusChanges) { _ in refresh() }
+            .onAppear { watcher.watch(stores) }
+            .onChange(of: stores.map(ObjectIdentifier.init)) { _ in watcher.watch(stores) }
     }
 
     @ViewBuilder
     private var indicator: some View {
-        if let failure {
+        switch watcher.trouble {
+        case let .failed(reason)?:
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(DS.Font.caption)
                 .foregroundColor(.orange)
-                .accessibilityLabel(Text(verbatim: failure))
-        } else if statuses.contains(.connecting) {
+                .accessibilityLabel(Text(verbatim: reason))
+        case .connecting?:
             Image(systemName: "arrow.triangle.2.circlepath")
                 .font(DS.Font.caption)
                 .accessibilityLabel("Connecting…")
+        case nil:
+            EmptyView()
         }
     }
+}
 
-    private var failure: String? {
-        for status in statuses {
+/// What a group's tabs say about reaching their device. One subscription
+/// for the group, made when its tabs change rather than on every render:
+/// a `$status` publisher sends its value as it is subscribed, and a
+/// subscription made in `body` was renewed by the redraw it caused.
+@MainActor
+private final class SidebarGroupStatusWatcher: ObservableObject {
+    enum Trouble: Equatable {
+        case connecting
+        case failed(String)
+    }
+
+    @Published private(set) var trouble: Trouble?
+    private var stores: [TerminalSessionStore] = []
+    private var subscription: AnyCancellable?
+
+    func watch(_ stores: [TerminalSessionStore]) {
+        self.stores = stores
+        subscription = Publishers.MergeMany(stores.map { $0.$status.map { _ in () } })
+            // `$status` publishes before the value changes: read it a turn later.
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                MainActor.assumeIsolated { self?.update() }
+            }
+        update()
+    }
+
+    private func update() {
+        let statuses = stores.map(\.status)
+        let failure = statuses.lazy.compactMap { status -> String? in
             if case let .failed(reason) = status {
                 return reason
             }
+            return nil
+        }.first
+        let found: Trouble? = if let failure {
+            .failed(failure)
+        } else if statuses.contains(.connecting) {
+            .connecting
+        } else {
+            nil
         }
-        return nil
-    }
-
-    /// `$status` publishes before the value changes: read it a turn later.
-    private var statusChanges: AnyPublisher<Void, Never> {
-        Publishers.MergeMany(tabs.map { $0.store.$status.map { _ in () } })
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
-    }
-
-    private func refresh() {
-        statuses = tabs.map(\.store.status)
+        if found != trouble {
+            trouble = found
+        }
     }
 }
