@@ -7,8 +7,10 @@ iGhostVT/                    the app, one folder-synchronized Xcode group
 ├── main.swift               UIApplicationMain entry (no @main)
 ├── Application/             AppDelegate, SceneDelegate
 ├── Backend/Session/         TerminalTab, TabManager, TerminalSessionStore
+├── Backend/Search/          TerminalSearch (Find), FindHistory
 ├── Interface/               SwiftUI, grouped by feature
 │   ├── Main/                RootView, SessionStatusOverlay
+│   ├── Find/                FindDock, FindField (the find bar)
 │   ├── Bars/                BottomBar (compact), TabStripBar (regular)
 │   ├── Sidebar/             SidebarView (iPad tab list)
 │   ├── TabSwitcher/         grid switcher with live snapshots
@@ -39,6 +41,7 @@ target — there is no generator step. The `TerminalTransport` seam lives in
 SceneDelegate ──owns──> TabManager ──owns──> [TerminalTab]
    (1 per window)          │                    │
                            │                    ├─ TerminalViewState (surface)
+                           │                    ├─ TerminalSearch (Find)
 UIHostingController        │                    └─ TerminalSessionStore
    └── RootView ──borrows──┘                          ├─ InMemoryTerminalSession
                                                       └─ XPCDaemonTransport
@@ -81,6 +84,13 @@ captured once at init, while the transport is replaced on every reconnect.
 - Compact: Safari-style floating bottom cluster (title capsule: swipe to
   switch tabs, long-press for settings; hides while the keyboard is up).
 - Regular: top tab strip; the sidebar replaces the chips when open.
+- Find (⌘F, or Find… in the tab menu) is Ghostty's own search over the
+  screen and scrollback. `TerminalSearch`, one per tab, drives it with
+  binding actions and reads what it reports; a tab not in front has its
+  search stopped until it comes back. The bar sits at the bottom — over
+  the terminal column at regular width, without resizing the grid, and in
+  the bottom bar's place at compact width — because a selected match is
+  scrolled to the viewport's top row.
 - Liquid Glass (`glassEffect`) on iOS 26+, `.ultraThinMaterial` below,
   wrapped once in `Interface/Support/GlassStyle.swift`.
 - `SessionStatusOverlay` covers a pane whose session is not usable: a pill
