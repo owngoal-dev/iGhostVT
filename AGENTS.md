@@ -288,8 +288,8 @@ Settings is a sheet on iPhone and iPad and a window of its own on the
 Mac. The sheet keeps to what people change, in four sections — Display,
 Sessions, Keyboard, About — none named like a row inside it, and one footer
 (the text size's): Display holds the appearance, the themes and the
-terminal's text size; Sessions is Recent Directories, Background
-Activities and the Remote Access link — in Ghost Remote, which has no
+terminal's text size; Sessions is Recent Directories, Group Tabs by
+Device, Background Activities and the Remote Access link — in Ghost Remote, which has no
 sessions of its own and so no Background Activities, Remote Access leads,
 since it must show there without scrolling; Keyboard puts Accessory Keys before Shortcuts. Default Shell and New
 Session at Launch (not in Ghost Remote, whose launch never starts a shell
@@ -1281,7 +1281,7 @@ Device on goes to the end of its device's group
 
 **Group Tabs by Device** (Settings ▸ Sessions; General ▸ Tabs on the Mac)
 is off until someone turns it on, so the tab list stays one freely ordered
-list by default (`TabGrouping.defaultsKey`, read through `TabGrouping.isOn`).
+list by default (`TabGrouping.key`, read through `TabGrouping.isEnabled`).
 On, `TabManager.tabs` itself keeps each device's tabs together — this
 device's first, then each paired device's by name (as Finder sorts), a
 forgotten one last — so the sidebar, the strip, ⌘1–9, ⌃Tab, the switcher
