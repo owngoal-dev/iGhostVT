@@ -327,9 +327,9 @@ import SwiftUI
                     } else {
                         Text(verbatim: device.detail)
                     }
-                    if case .forget = device.action {
-                        MacHostVersionText(entry: versions.entries[device.id], isSelected: isSelected)
-                    }
+                    // On every row, blank where nothing is known, so the
+                    // details line up down the whole table.
+                    MacHostVersionText(entry: versions.entries[device.id], isSelected: isSelected)
                 }
             } accessory: {
                 Group {
@@ -562,6 +562,7 @@ import SwiftUI
                 }
             }
             .frame(width: Self.width, alignment: .trailing)
+            .accessibilityHidden(entry == nil)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(entry == nil ? Text(verbatim: "") : Text("Version"))
             .accessibilityValue(Text(verbatim: entry?.version ?? ""))
