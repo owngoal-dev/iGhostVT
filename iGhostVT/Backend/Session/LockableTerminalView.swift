@@ -93,6 +93,18 @@ final class LockableTerminalView: TerminalView {
         !isInteractionLocked && super.canBecomeFirstResponder
     }
 
+    #if !targetEnvironment(macCatalyst)
+        @discardableResult
+        override func becomeFirstResponder() -> Bool {
+            let became = super.becomeFirstResponder()
+            if became {
+                installCursorAccessories()
+                updateCursorAccessories()
+            }
+            return became
+        }
+    #endif
+
     #if targetEnvironment(macCatalyst)
         /// Only the key window's terminal takes the keyboard. Every Mac
         /// window's scene is active at once, and each window hands its
@@ -350,6 +362,15 @@ final class LockableTerminalView: TerminalView {
         releaseDictatedText()
         var remaining = presses
         for press in presses {
+            #if !targetEnvironment(macCatalyst)
+                if let key = press.key, Self.switchesInputSource(key) {
+                    updateCursorAccessories()
+                    remaining.remove(press)
+                    inputSourcePresses.insert(press)
+                    UIApplication.shared.pressesBegan([press], with: event)
+                    continue
+                }
+            #endif
             if let key = press.key, isRemotePaste(key) {
                 remaining.remove(press)
                 interceptedPresses.insert(press)
@@ -368,7 +389,11 @@ final class LockableTerminalView: TerminalView {
     }
 
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        let remaining = presses.subtracting(interceptedPresses)
+        let system = takeInputSourcePresses(from: presses)
+        if !system.isEmpty {
+            UIApplication.shared.pressesEnded(system, with: event)
+        }
+        let remaining = presses.subtracting(interceptedPresses).subtracting(system)
         interceptedPresses.subtract(presses)
         if !remaining.isEmpty {
             super.pressesEnded(remaining, with: event)
@@ -376,12 +401,63 @@ final class LockableTerminalView: TerminalView {
     }
 
     override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        let remaining = presses.subtracting(interceptedPresses)
+        let system = takeInputSourcePresses(from: presses)
+        if !system.isEmpty {
+            UIApplication.shared.pressesCancelled(system, with: event)
+        }
+        let remaining = presses.subtracting(interceptedPresses).subtracting(system)
         interceptedPresses.subtract(presses)
         if !remaining.isEmpty {
             super.pressesCancelled(remaining, with: event)
         }
     }
+
+    private var inputSourcePresses: Set<UIPress> = []
+
+    private func takeInputSourcePresses(from presses: Set<UIPress>) -> Set<UIPress> {
+        let taken = presses.intersection(inputSourcePresses)
+        inputSourcePresses.subtract(taken)
+        return taken
+    }
+
+    #if !targetEnvironment(macCatalyst)
+        private var cursorAccessories: (any UIInteraction)?
+
+        private func installCursorAccessories() {
+            guard #available(iOS 17.0, *), cursorAccessories == nil else { return }
+            let interaction = UITextSelectionDisplayInteraction(textInput: self, delegate: CursorAccessoryDelegate.shared)
+            interaction.cursorView = ClearTextCursorView()
+            addInteraction(interaction)
+            cursorAccessories = interaction
+        }
+
+        private func updateCursorAccessories() {
+            guard #available(iOS 17.0, *),
+                  let interaction = cursorAccessories as? UITextSelectionDisplayInteraction
+            else { return }
+            interaction.isActivated = true
+            interaction.setNeedsSelectionUpdate()
+            interaction.layoutManagedSubviews()
+        }
+
+        private static var hasSeveralInputSources: Bool {
+            UITextInputMode.activeInputModes.filter { mode in
+                guard let language = mode.primaryLanguage else { return false }
+                return language != "emoji" && language != "dictation"
+            }.count > 1
+        }
+
+        private static func switchesInputSource(_ key: UIKey) -> Bool {
+            guard key.keyCode == .keyboardSpacebar else { return false }
+            let modifiers = key.modifierFlags.intersection([.control, .shift, .alternate, .command])
+            return (modifiers == .control || modifiers == [.control, .shift]) && hasSeveralInputSources
+        }
+
+        override var keyCommands: [UIKeyCommand]? {
+            guard Self.hasSeveralInputSources else { return super.keyCommands }
+            return super.keyCommands?.filter { $0.input != " " || !$0.modifierFlags.contains(.control) }
+        }
+    #endif
 
     // MARK: - Paste on a remote tab
 
@@ -563,3 +639,22 @@ final class LockableTerminalView: TerminalView {
         addInteraction(UIDropInteraction(delegate: delegate))
     }
 }
+
+#if !targetEnvironment(macCatalyst)
+    @available(iOS 17.0, *)
+    @MainActor
+    private final class CursorAccessoryDelegate: NSObject, UITextSelectionDisplayInteractionDelegate {
+        static let shared = CursorAccessoryDelegate()
+    }
+
+    @available(iOS 17.0, *)
+    private final class ClearTextCursorView: UIView, UITextCursorView {
+        var isBlinking = false
+
+        func resetBlinkAnimation() {}
+
+        override func hitTest(_: CGPoint, with _: UIEvent?) -> UIView? {
+            nil
+        }
+    }
+#endif
