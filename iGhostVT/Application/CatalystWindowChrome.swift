@@ -68,6 +68,9 @@ import UIKit
                           let nsWindow = hostWindow(for: scene)
                     else { return }
                     dress(nsWindow)
+                    if opensAlone(scene) {
+                        keepFrame(of: nsWindow)
+                    }
                     // The visual-effect views are not always in the theme
                     // frame at the scene hook; one extra pass after AppKit
                     // finishes attaching them.
@@ -191,6 +194,32 @@ import UIKit
             positionWindowControls(in: nsWindow)
             keepTitlebarBandForContent(nsWindow)
             WindowTranslucency.apply(to: nsWindow)
+        }
+
+        private static let savedFrameName = "TerminalWindow"
+
+        @MainActor
+        private static func opensAlone(_ scene: UIScene) -> Bool {
+            let tabManager = (scene.delegate as? SceneDelegate)?.tabManager
+            return ShortcutBridge.tabManagers().allSatisfy { $0 === tabManager }
+        }
+
+        @MainActor
+        private static func keepFrame(of nsWindow: NSObject) {
+            typealias SetFrame = @convention(c) (AnyObject, Selector, NSString) -> Bool
+            let restore = NSSelectorFromString("setFrameUsingName:")
+            let save = NSSelectorFromString("saveFrameUsingName:")
+            guard nsWindow.responds(to: restore), nsWindow.responds(to: save) else { return }
+            _ = unsafeBitCast(nsWindow.method(for: restore), to: SetFrame.self)(nsWindow, restore, savedFrameName as NSString)
+            for name in ["NSWindowDidResizeNotification", "NSWindowDidMoveNotification"] {
+                NotificationCenter.default.addObserver(
+                    forName: Notification.Name(name),
+                    object: nsWindow,
+                    queue: .main,
+                ) { notification in
+                    _ = (notification.object as? NSObject)?.perform(save, with: savedFrameName)
+                }
+            }
         }
 
         /// The top bar sits in the band AppKit keeps for a title bar (the
