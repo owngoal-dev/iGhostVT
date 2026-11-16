@@ -183,10 +183,12 @@ struct RootView: View {
                     bottomInset
                 }
             }
-            // The phone keeps the terminal above the keyboard itself, in
-            // `bottomInset`; SwiftUI's own avoidance stacked the keyboard on
-            // top of the bar's inset.
-            .ignoresSafeArea(.keyboard, edges: isRegularWidth ? [] : .bottom)
+            .padding(.bottom, isRegularWidth ? keyboard.overlap : 0)
+            // The terminal is kept above the keyboard here, in `bottomInset`
+            // or the padding; SwiftUI's own avoidance stacked the keyboard on
+            // top of the bar's inset, and takes a floating keyboard's height
+            // off the bottom.
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .catalystColumnBackground(WindowTranslucency.isEnabled ? .clear : theme.background(for: colorScheme))
     }
 
