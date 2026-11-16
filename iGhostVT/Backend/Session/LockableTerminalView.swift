@@ -447,14 +447,19 @@ final class LockableTerminalView: TerminalView {
             }.count > 1
         }
 
+        /// Control-Space (or Control-Shift-Space) is the system's to switch
+        /// the keyboard language with — unless Settings handed it back to
+        /// the terminal (`InputSourceSwitch`).
         private static func switchesInputSource(_ key: UIKey) -> Bool {
             guard key.keyCode == .keyboardSpacebar else { return false }
             let modifiers = key.modifierFlags.intersection([.control, .shift, .alternate, .command])
-            return (modifiers == .control || modifiers == [.control, .shift]) && hasSeveralInputSources
+            return (modifiers == .control || modifiers == [.control, .shift])
+                && InputSourceSwitch.isEnabled
+                && hasSeveralInputSources
         }
 
         override var keyCommands: [UIKeyCommand]? {
-            guard Self.hasSeveralInputSources else { return super.keyCommands }
+            guard InputSourceSwitch.isEnabled, Self.hasSeveralInputSources else { return super.keyCommands }
             return super.keyCommands?.filter { $0.input != " " || !$0.modifierFlags.contains(.control) }
         }
     #endif
