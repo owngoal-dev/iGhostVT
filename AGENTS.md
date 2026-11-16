@@ -57,7 +57,16 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026111501, Ghostty cf5519b2 on Zig 0.17).
+  (`upToNextMajor` from 2.2.2026111601, Ghostty cf5519b2 on Zig 0.17).
+  2.2.2026111601, the same binary, stops a hardware keyboard's first keys
+  under an input method reaching the shell: in a fresh process `n` `i`
+  Space under Pinyin sent `nii`, on iOS 26.4 and 27 alike. The
+  calibration flush now forwards a press still down with the event it
+  came in (handed over with none, the input method never claimed it),
+  and each forwarded key waits its own 250 ms for the claim before a raw
+  replay (a flush on the next turn replayed `i` 16 ms after its forward,
+  6 ms before the claim). It also took back the week's Ghostty pin
+  (d4cf6ec2), whose XCFramework build failed.
   2.2.2026111501 keeps Ghostty cf5519b2 and adds one patch (binary
   `upstream.cf5519b22f91-3`, whose slices also carry the compiled
   sources' notices under `Headers/Licenses`): on a surface that opts in —
