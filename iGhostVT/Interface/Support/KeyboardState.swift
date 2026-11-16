@@ -21,6 +21,19 @@ final class KeyboardState: ObservableObject {
     /// own animation, so a layout that follows it moves with the keys.
     @Published private(set) var overlap: CGFloat = 0
 
+    /// The keyboard was announced away from the screen's bottom edge —
+    /// floating, split, or as an empty frame — and `overlap` is the
+    /// accessory bar found docked under it. Only then does a regular-width
+    /// layout keep the terminal above the keyboard itself; otherwise it
+    /// leaves that to SwiftUI's own avoidance, as it always has. That
+    /// avoidance takes a floating keyboard's height off the bottom wherever
+    /// the keys float, but it follows a docked keyboard and the accessory
+    /// bar on every show, which this type does not: on iOS 27 the bar a
+    /// hardware keyboard leaves is announced, after its first show, with
+    /// nothing that places it, and a layout padded by `overlap` alone left
+    /// the bar over the terminal's last rows.
+    @Published private(set) var isUndocked = false
+
     /// Only the accessory bar is up — a hardware keyboard — so the bottom
     /// bar stays and sits on top of it. Read from where the keyboard is
     /// going, never from where it is: a keyboard on its way down is not an
@@ -37,7 +50,7 @@ final class KeyboardState: ObservableObject {
     weak var window: UIWindow? {
         didSet {
             guard window !== oldValue, let lastScreenFrame else { return }
-            (isVisible, overlap) = measure(lastScreenFrame, isSettled: true)
+            (isVisible, overlap, isUndocked) = measure(lastScreenFrame, isSettled: true)
         }
     }
 
@@ -70,21 +83,27 @@ final class KeyboardState: ObservableObject {
         let info = notification.userInfo
         guard let screenFrame = info?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
         lastScreenFrame = screenFrame
-        let (visible, overlap) = measure(screenFrame, isSettled: isSettled)
-        guard visible != isVisible || overlap != self.overlap else { return }
+        let (visible, overlap, undocked) = measure(screenFrame, isSettled: isSettled)
+        guard visible != isVisible || overlap != self.overlap || undocked != isUndocked else { return }
         let duration = info?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
         withAnimation(Self.keyboardAnimation(duration: duration)) {
             isVisible = visible
             self.overlap = overlap
+            isUndocked = undocked
         }
     }
 
-    private func measure(_ screenFrame: CGRect, isSettled: Bool) -> (isVisible: Bool, overlap: CGFloat) {
+    private func measure(
+        _ screenFrame: CGRect,
+        isSettled: Bool,
+    ) -> (isVisible: Bool, overlap: CGFloat, isUndocked: Bool) {
         if isDocked(screenFrame) {
-            return (isSoftwareKeyboard(screenFrame), overlap(of: screenFrame))
+            return (isSoftwareKeyboard(screenFrame), overlap(of: screenFrame), false)
         }
-        guard let bar = dockedAccessoryBar(under: screenFrame, isSettled: isSettled) else { return (false, 0) }
-        return (false, overlap(of: bar))
+        guard let bar = dockedAccessoryBar(under: screenFrame, isSettled: isSettled) else {
+            return (false, 0, false)
+        }
+        return (false, overlap(of: bar), true)
     }
 
     private func isDocked(_ screenFrame: CGRect) -> Bool {
