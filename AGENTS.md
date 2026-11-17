@@ -57,8 +57,23 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026111601, Ghostty cf5519b2 on Zig 0.17).
-  2.2.2026111601, the same binary, stops a hardware keyboard's first keys
+  (`upToNextMajor` from 2.2.2026111701, Ghostty 5ebe501a on Zig 0.17.1).
+  2.2.2026111701 moves from Ghostty cf5519b2 to 5ebe501a, 91 commits
+  (binary `upstream.5ebe501a6342`). Upstream 8ad3f607 stops a column
+  reflow leaving stale prompt copies behind and has the reflow write the
+  prompt's rows blank itself, so the package's 0015 (hold the frame while
+  the shell redraws the prompt) now measures the prompt before the resize;
+  its 0014 test fix brought the patched tree's own `zig build
+  test-lib-vt` to all 7217 passing. The parser's table and the mode list
+  are unchanged; `stream.zig` only reworked CSI digit accumulation,
+  keeping its u16 saturation, so `TerminalStreamTracker` needs nothing.
+  `copy-on-select` now defaults to `primary` on macOS, which the package
+  already sends nowhere (it advertises the selection clipboard and drops
+  its writes), and Catalyst is its own OS tag anyway. Measured against
+  1.6.32 on the virtual iPhones (26.4, 27.0.1), the iPad, the Duo and a
+  macOS 15 VM: render, replay, prompt over rotations, folds and window
+  resizes, synchronized output, keyboard and Pinyin — no difference.
+  2.2.2026111601, the same binary as 2.2.2026111501, stops a hardware keyboard's first keys
   under an input method reaching the shell: in a fresh process `n` `i`
   Space under Pinyin sent `nii`, on iOS 26.4 and 27 alike. The
   calibration flush now forwards a press still down with the event it
