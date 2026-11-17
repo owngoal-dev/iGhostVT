@@ -1276,7 +1276,13 @@ A middle click on a sidebar row or a strip chip closes that tab
 the middle button into a UIKit touch — a recognizer asking for
 `.button(3)` does not fire there, and a terminal with mouse reporting on
 reports nothing — so on the Mac it is an `NSEvent` local monitor reached
-through the runtime, and the recognizer is iPadOS's. The reader is a view
+through the runtime, and the recognizer is iPadOS's. That recognizer
+takes only `.indirectPointer` touches: `buttonMaskRequired = .button(3)`
+does not stop a finger, on iPad or on an iPhone at regular width (the
+Duo's inner display, a large iPhone sideways), and from 1.6.29 to 1.6.32
+a tap on a sidebar row closed the tab — a shell at its prompt at once,
+session and all; a running program, or a remote tab, behind the close
+question. The reader is a view
 behind the row that takes no touches: it answers for a point inside its
 own bounds, inside every clipping ancestor and scroll view (a row scrolled
 out of the list still lies, geometrically, under the footer), and under
