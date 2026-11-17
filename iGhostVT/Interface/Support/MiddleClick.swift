@@ -91,8 +91,14 @@ private final class MiddleClickReaderView: UIView, UIGestureRecognizerDelegate {
             newWindow?.addGestureRecognizer(recognizer)
         }
 
+        /// Only a pointer's touch can be a middle click. `buttonMaskRequired`
+        /// is not enough on its own: on an iPhone laid out at regular width
+        /// (iPhone Duo's inner display, a large iPhone held sideways) a
+        /// finger's tap on a row recognized as a middle click and closed the
+        /// tab it meant to select.
         func gestureRecognizer(_: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-            isClicked(at: touch.location(in: self), hitting: touch.view)
+            touch.type == .indirectPointer
+                && isClicked(at: touch.location(in: self), hitting: touch.view)
         }
 
         func gestureRecognizer(
