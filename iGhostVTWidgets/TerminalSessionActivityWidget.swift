@@ -42,7 +42,6 @@ struct TerminalSessionActivityWidget: Widget {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)
-                    .frame(width: 24, alignment: .leading)
                     .accessibilityLabel(Text(verbatim: AppName.text))
             } compactTrailing: {
                 // Up for remote access alone: the network glyph, not a 0.
@@ -50,14 +49,12 @@ struct TerminalSessionActivityWidget: Widget {
                     Image(systemName: "network")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(Palette.accent)
-                        .frame(width: 24, alignment: .trailing)
                         .accessibilityLabel("Remote access on")
                 } else {
                     Text("\(context.state.totalCount)")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .contentTransition(.numericText())
-                        .frame(width: 24, alignment: .trailing)
                 }
             } minimal: {
                 Image("GhostGlyph")
