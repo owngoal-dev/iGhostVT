@@ -77,7 +77,10 @@ final class RemoteSessionCatalog: ObservableObject {
     /// Whether the device has settled since `date`: answered, failed, or
     /// was found to be out of reach once looking was over.
     func hasSettled(_ hostID: String, since date: Date) -> Bool {
-        if let outcome = outcomes[hostID], outcome.at >= date, asking[hostID] == nil {
+        // Dates are compared with `<` alone, everywhere: the 27.2 SDK makes
+        // Foundation's `Date >=` and `<=` back-deployed, and a build with it
+        // calls the OS's copy on 27.2, which some 27.2 betas do not have.
+        if let outcome = outcomes[hostID], !(outcome.at < date), asking[hostID] == nil {
             return true
         }
         return listing(of: hostID) == .unreachable

@@ -550,7 +550,7 @@ final class RemoteService: RelayLinkHost {
     }
 
     private func expirePairingIfNeeded() {
-        if let window = pairing, window.expiresAt <= Date() {
+        if let window = pairing, !(Date() < window.expiresAt) {
             pairing = nil
         }
     }
