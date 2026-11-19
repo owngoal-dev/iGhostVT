@@ -393,7 +393,9 @@ final class DaemonFileUpload: @unchecked Sendable {
     private func watch(_ pending: PendingReply, state: LinkState?, from sentAt: Date, after delay: TimeInterval) {
         queue.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard !pending.isResolved else { return }
-            let quiet = Date().timeIntervalSince(max(sentAt, state?.lastAnswer ?? sentAt))
+            // Not `max`: on Dates it is `>=`, the back-deployed operator.
+            let lastAnswer = state?.lastAnswer ?? sentAt
+            let quiet = Date().timeIntervalSince(sentAt < lastAnswer ? lastAnswer : sentAt)
             if quiet >= Self.replyTimeout || self == nil {
                 if pending.resolve(nil) {
                     state?.markTimedOut()

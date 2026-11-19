@@ -286,7 +286,7 @@ final class ShortcutDaemonClient: @unchecked Sendable {
             if session.foregroundIsShell == true {
                 return session
             }
-            if Date() >= deadline {
+            if !(Date() < deadline) {
                 return nil
             }
             try await Task.sleep(nanoseconds: 200_000_000)

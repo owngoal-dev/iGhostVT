@@ -367,7 +367,7 @@ struct RunCommandIntent: AppIntent {
                     )
                 }
             }
-            if Date() >= deadline {
+            if !(Date() < deadline) {
                 throw ShortcutError.commandTimedOut
             }
             try await Task.sleep(nanoseconds: 200_000_000)
