@@ -136,11 +136,12 @@ final class TerminalTab: ObservableObject, Identifiable {
     /// itself reported.
     init(
         resumeDaemonSessionID: UInt64? = nil,
+        closesIfSessionIsGone: Bool = false,
         inheritDirectoryFrom: UInt64? = nil,
         startDirectory: String? = nil,
         remoteHostID: String? = nil,
     ) {
-        let daemonSession = DaemonSessionBox(id: resumeDaemonSessionID)
+        let daemonSession = DaemonSessionBox(id: resumeDaemonSessionID, closesIfGone: closesIfSessionIsGone)
         self.daemonSession = daemonSession
         let outputPosition = SessionOutputPosition()
         self.remoteHostID = remoteHostID
@@ -162,6 +163,7 @@ final class TerminalTab: ObservableObject, Identifiable {
                 endpoint: endpoint,
                 shellPath: UserDefaults.standard.string(forKey: "Shell.path"),
                 resumeSessionID: daemonSession.id,
+                reopensLostSession: !daemonSession.closesIfGone,
                 inheritDirectoryFrom: inheritDirectoryFrom,
                 startDirectory: startDirectory,
                 outputPosition: outputPosition,
@@ -623,6 +625,7 @@ final class TerminalTab: ObservableObject, Identifiable {
             let id = transport.currentSessionID
         else { return }
         daemonSession.id = id
+        daemonSession.closesIfGone = false
         // Not `attributes.sessionID` for a remote tab: that is what offers
         // Move to New Window, which hands a local session over by its id.
         if remoteHostID != nil {
@@ -663,9 +666,24 @@ final class ProcessExitRelay: @unchecked Sendable {
 final class DaemonSessionBox: @unchecked Sendable {
     private let lock = NSLock()
     private var _id: UInt64?
+    private var _closesIfGone: Bool
 
-    init(id: UInt64?) {
+    init(id: UInt64?, closesIfGone: Bool = false) {
         _id = id
+        _closesIfGone = closesIfGone
+    }
+
+    var closesIfGone: Bool {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _closesIfGone
+        }
+        set {
+            lock.lock()
+            _closesIfGone = newValue
+            lock.unlock()
+        }
     }
 
     var id: UInt64? {

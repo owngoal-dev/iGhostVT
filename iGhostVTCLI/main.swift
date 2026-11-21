@@ -12,8 +12,9 @@ let usage = """
 usage: ighostvt-cli [--host <host>] list
        ighostvt-cli [--host <host>] capture <sid> [--full]
        ighostvt-cli [--host <host>] send <sid> (text <string> | key <name>)...
-       ighostvt-cli [--host <host>] new [-- <command> [argument ...]]
+       ighostvt-cli [--host <host>] new [<option> ...] [-- <command> [argument ...]]
        ighostvt-cli [--host <host>] kill <sid>
+       ighostvt-cli app attach <sid>
        ighostvt-cli hosts [--nearby]
        ighostvt-cli pair <host> [<code>]
        ighostvt-cli remote [status]
@@ -37,7 +38,27 @@ usage: ighostvt-cli [--host <host>] list
                 send-keys: \(KeyNames.vocabulary)
   new           start a session and print its id, running the shell or the
                 given command; it stays open for iGhostVT to show
+    --cols <n>, --rows <n>
+                its terminal's size until a tab attaches (\(iGhostVTProtocol.defaultColumns) and \(iGhostVTProtocol.defaultRows)
+                when not given); --size <cols>x<rows> gives both
+    --cwd <directory>
+                start there instead of the home; on a host, a full path
+                there
+    --cwd-of <sid>
+                start where that session's shell is now
+    --env <NAME>=<VALUE>
+                set a variable in its environment; may be repeated
+    --shell <path>
+                run that shell as a login shell, with shell integration,
+                where a command after -- is run as it stands
+    --lock (\(iGhostVTSessionAttribute.interactionLock) | \(iGhostVTSessionAttribute.keyboardLock))
+                the lock its tab comes up with
+    --attach    show it in iGhostVT at once, as app attach does; this
+                device only
   kill          close a session and wait for it to exit
+  app attach    show a session of this device in iGhostVT, which must be
+                running: its tab comes to the front, made if no window has
+                one
   --host        run the command on a paired host instead of this device,
                 named by its name, id, or address; IGHOSTVT_HOST does the
                 same. The hosts are the ones iGhostVT is paired with
@@ -85,8 +106,9 @@ enum Command {
     case list
     case capture(sessionID: UInt64, full: Bool)
     case send(sessionID: UInt64, input: [UInt8])
-    case new(command: [String])
+    case new(command: [String], options: NewOptions)
     case kill(sessionID: UInt64)
+    case appAttach(sessionID: UInt64)
     case remote(RemoteCommand)
     case update(checkOnly: Bool)
     case hosts(nearby: Bool)
@@ -98,9 +120,95 @@ enum Command {
     var takesHost: Bool {
         switch self {
         case .list, .capture, .send, .new, .kill: true
-        case .help, .remote, .update, .hosts, .pair, .drop: false
+        case .help, .appAttach, .remote, .update, .hosts, .pair, .drop: false
         }
     }
+}
+
+/// What `new` was asked for besides its command.
+struct NewOptions {
+    static let maximumEnvironmentCount = 64
+    static let maximumEnvironmentByteCount = 16 * 1024
+
+    var columns: UInt16?
+    var rows: UInt16?
+    var directory: String?
+    var directorySessionID: UInt64?
+    var environment: [String: String] = [:]
+    var shell: String?
+    var lock: String?
+    var attaches = false
+}
+
+/// `new`'s options, taken off the front of `arguments`; a later one
+/// replaces an earlier one. What is left is the command.
+func parseNewOptions(_ arguments: inout [String]) throws -> NewOptions {
+    let sizeMistake = CLIError.usage(
+        "The new command takes --cols <1-\(iGhostVTProtocol.maximumColumns)>, --rows <1-\(iGhostVTProtocol.maximumRows)> or --size <cols>x<rows>.",
+    )
+    func count(_ text: Substring, upTo limit: UInt16) throws -> UInt16 {
+        guard let value = UInt16(text), (1 ... limit).contains(value) else { throw sizeMistake }
+        return value
+    }
+    var options = NewOptions()
+    while let option = arguments.first, option.hasPrefix("-"), option != "--" {
+        arguments.removeFirst()
+        if option == "--attach" {
+            options.attaches = true
+            continue
+        }
+        guard ["--cols", "--rows", "--size", "--cwd", "--cwd-of", "--env", "--shell", "--lock"].contains(option) else {
+            throw CLIError.usage("The new command has no option \(option).")
+        }
+        guard !arguments.isEmpty else { throw CLIError.usage("\(option) needs a value.") }
+        let value = arguments.removeFirst()
+        switch option {
+        case "--cols":
+            options.columns = try count(value[...], upTo: iGhostVTProtocol.maximumColumns)
+        case "--rows":
+            options.rows = try count(value[...], upTo: iGhostVTProtocol.maximumRows)
+        case "--size":
+            let parts = value.split(separator: "x", omittingEmptySubsequences: false)
+            guard parts.count == 2 else { throw sizeMistake }
+            options.columns = try count(parts[0], upTo: iGhostVTProtocol.maximumColumns)
+            options.rows = try count(parts[1], upTo: iGhostVTProtocol.maximumRows)
+        case "--cwd":
+            guard !value.isEmpty else { throw CLIError.usage("--cwd takes a directory.") }
+            options.directory = value
+        case "--cwd-of":
+            guard let id = UInt64(value), id > 0 else {
+                throw CLIError.usage("--cwd-of takes a session id. Run `ighostvt-cli list` to see them.")
+            }
+            options.directorySessionID = id
+        case "--env":
+            guard let equals = value.firstIndex(of: "="), equals != value.startIndex else {
+                throw CLIError.usage("--env takes NAME=VALUE.")
+            }
+            options.environment[String(value[..<equals])] = String(value[value.index(after: equals)...])
+        case "--shell":
+            guard value.hasPrefix("/") else { throw CLIError.usage("--shell takes a shell's full path, such as /bin/zsh.") }
+            options.shell = value
+        default:
+            guard [iGhostVTSessionAttribute.interactionLock, iGhostVTSessionAttribute.keyboardLock].contains(value) else {
+                throw CLIError.usage(
+                    "--lock takes \(iGhostVTSessionAttribute.interactionLock) or \(iGhostVTSessionAttribute.keyboardLock).",
+                )
+            }
+            options.lock = value
+        }
+    }
+    guard options.directory == nil || options.directorySessionID == nil else {
+        throw CLIError.usage("The new command takes --cwd or --cwd-of, not both.")
+    }
+    let environmentByteCount = options.environment.reduce(0) { $0 + $1.key.utf8.count + $1.value.utf8.count }
+    guard options.environment.count <= NewOptions.maximumEnvironmentCount,
+          environmentByteCount <= NewOptions.maximumEnvironmentByteCount
+    else {
+        throw CLIError.usage(
+            "The new command takes at most \(NewOptions.maximumEnvironmentCount) --env variables, \(NewOptions.maximumEnvironmentByteCount / 1024) KiB in all.",
+        )
+    }
+    return options
 }
 
 func parseSessionID(_ text: String?, _ what: String) throws -> UInt64 {
@@ -152,6 +260,7 @@ func parse(_ arguments: [String]) throws -> Command {
         return .send(sessionID: id, input: input)
     case "new":
         var command = rest
+        let options = try parseNewOptions(&command)
         if command.first == "--" {
             command.removeFirst()
         }
@@ -162,9 +271,17 @@ func parse(_ arguments: [String]) throws -> Command {
                 "The new command takes at most \(iGhostVTProtocol.maximumCommandArgumentCount) arguments.",
             )
         }
-        return .new(command: command)
+        guard options.shell == nil || command.isEmpty else {
+            throw CLIError.usage("The new command takes --shell or a command, not both.")
+        }
+        return .new(command: command, options: options)
     case "kill":
         return try .kill(sessionID: parseSessionID(rest.first, "kill"))
+    case "app":
+        guard rest.count == 2, rest[0] == "attach" else {
+            throw CLIError.usage("The app command takes attach <sid>.")
+        }
+        return try .appAttach(sessionID: parseSessionID(rest[1], "app attach"))
     case "remote":
         return try .remote(parseRemote(rest))
     case "update":
@@ -284,6 +401,9 @@ do {
             // elsewhere; asked for on the command line, it is a mistake.
             throw CLIError.usage("--host applies to list, capture, send, new and kill.")
         }
+        if case let .new(_, options) = command, options.attaches {
+            throw CLIError.usage("--attach shows a session of this device, not one on a host.")
+        }
     }
     switch command {
     case .help:
@@ -295,10 +415,12 @@ do {
         try Commands.capture(sessionID: sessionID, full: full)
     case let .send(sessionID, input):
         try Commands.send(sessionID: sessionID, input: input)
-    case let .new(command):
-        try Commands.new(command: command)
+    case let .new(command, options):
+        try Commands.new(command: command, options: options)
     case let .kill(sessionID):
         try Commands.kill(sessionID: sessionID)
+    case let .appAttach(sessionID):
+        try Commands.attachInApp(sessionID: sessionID)
     case let .remote(command):
         try RemoteCommands.run(command)
     case let .update(checkOnly):

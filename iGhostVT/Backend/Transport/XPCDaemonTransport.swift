@@ -48,6 +48,7 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
 
     /// Session to reattach to, if this transport is resuming a known one.
     private var resumeSessionID: UInt64?
+    private let reopensLostSession: Bool
     /// The attach of this connect takes the session from whoever holds
     /// it (`connect(takingOver:)`). Confined to `queue`.
     private var takesOver = false
@@ -151,11 +152,13 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
         endpoint: DaemonEndpoint = .local,
         shellPath: String? = nil,
         resumeSessionID: UInt64? = nil,
+        reopensLostSession: Bool = true,
         inheritDirectoryFrom: UInt64? = nil,
         startDirectory: String? = nil,
         outputPosition: SessionOutputPosition? = nil,
     ) {
         self.endpoint = endpoint
+        self.reopensLostSession = reopensLostSession
         self.outputPosition = outputPosition
         // The Settings shell is a path on this device; another device runs
         // its own default.
@@ -903,10 +906,11 @@ final class XPCDaemonTransport: TerminalTransport, @unchecked Sendable {
                         return
                     }
                     noteHeldElsewhere(holder: nil)
-                } else if endpoint.isRemote {
+                } else if endpoint.isRemote || (!reopensLostSession && code == .unknownSession) {
                     // A terminal on another device that is gone ended
                     // there; opening a fresh one would put a tab nobody
-                    // asked for in the host's window. The tab closes.
+                    // asked for in the host's window. The tab closes. So
+                    // does one made for a session the command line named.
                     // A reply with no code is the link going down with the
                     // attach out: it may have reached the host, so a close
                     // asked for meanwhile goes over a link of its own.

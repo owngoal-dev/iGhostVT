@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import notify
 import UIKit
 
 /// Where a foreground intent (or an `ighostvt://` link) meets the windows.
@@ -77,7 +78,7 @@ enum ShortcutBridge {
     /// the frontmost window when no tab has it. A session another window
     /// is showing brings that window forward.
     @discardableResult
-    static func showSession(_ sessionID: UInt64) async throws -> TerminalTab {
+    static func showSession(_ sessionID: UInt64, closesIfSessionIsGone: Bool = false) async throws -> TerminalTab {
         if let (manager, tab) = tab(for: sessionID) {
             manager.activate(tab)
             if let scene = manager.windowScene, !isFrontmost(scene) {
@@ -91,7 +92,45 @@ enum ShortcutBridge {
             return tab
         }
         let manager = try await frontTabManager()
-        return manager.openTab(attachingTo: sessionID)
+        return manager.openTab(attachingTo: sessionID, closesIfSessionIsGone: closesIfSessionIsGone)
+    }
+
+    // MARK: - The command line
+
+    private static var requestedSessionID: UInt64?
+    private static var isHoldingShowRequests = false
+
+    /// `ighostvt-cli app attach`: the id is the notification's state. Any
+    /// process may post it, so the daemon is asked whether the session
+    /// exists, at most four times a second, and a tab made for it never
+    /// opens a shell of its own.
+    static func observeShowRequests() {
+        var token: Int32 = 0
+        notify_register_dispatch(iGhostVTProtocol.showSessionNotification, &token, .main) { token in
+            var sessionID: UInt64 = 0
+            guard notify_get_state(token, &sessionID) == NOTIFY_STATUS_OK, sessionID > 0 else { return }
+            MainActor.assumeIsolated {
+                requestedSessionID = sessionID
+                showRequestedSession()
+            }
+        }
+    }
+
+    private static func showRequestedSession() {
+        guard !isHoldingShowRequests, let sessionID = requestedSessionID else { return }
+        isHoldingShowRequests = true
+        requestedSessionID = nil
+        XPCDaemonTransport.listSessions { rows in
+            guard rows?.contains(where: { $0.id == sessionID }) == true else { return }
+            Task { @MainActor in
+                _ = try? await showSession(sessionID, closesIfSessionIsGone: true)
+            }
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            isHoldingShowRequests = false
+            showRequestedSession()
+        }
     }
 
     /// The frontmost window's active tab's session — what a new tab opened

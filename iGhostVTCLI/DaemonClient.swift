@@ -21,6 +21,7 @@ enum CLIError: Error {
     case versionMismatch
     case refused(iGhostVTReplyCode, String?)
     case sessionLingered(UInt64)
+    case appDidNotAttach
     case runAsRoot
     case remoteAccessOff
     case remoteAccessStuck(String?)
@@ -46,7 +47,7 @@ enum CLIError: Error {
     var exitCode: Int32 {
         switch self {
         case .usage: 64
-        case .daemonUnreachable, .timedOut, .versionMismatch, .relayUnsupported: 69
+        case .daemonUnreachable, .timedOut, .versionMismatch, .relayUnsupported, .appDidNotAttach: 69
         case .hostUnreachable, .hostTimedOut, .hostLost, .hostVersion: 69
         case .runAsRoot, .remoteAsRoot: 77
         case .noPairedHosts, .hostNotPaired, .hostAmbiguous, .hostNotFound: 64
@@ -82,6 +83,8 @@ enum CLIError: Error {
             }
         case let .sessionLingered(id):
             return "Session \(id) did not exit. Try again."
+        case .appDidNotAttach:
+            return "iGhostVT did not show the session. Open iGhostVT, with a window, and try again."
         case .runAsRoot:
             return "The terminal daemon runs for a user, not for root. Run this as that user: sudo -u <user> ighostvt-cli …"
         case .remoteAccessOff:
