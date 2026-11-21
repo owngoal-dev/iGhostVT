@@ -57,6 +57,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         if !AppEdition.isRemoteOnly {
             RemoteAccessActivity.start()
             HostSessionWatcher.shared.start()
+            ShortcutBridge.observeShowRequests()
         }
         return true
     }

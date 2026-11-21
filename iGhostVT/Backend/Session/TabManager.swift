@@ -211,8 +211,8 @@ final class TabManager: ObservableObject {
     /// that this one names the session instead of taking every unattached
     /// one.
     @discardableResult
-    func openTab(attachingTo sessionID: UInt64) -> TerminalTab {
-        adopt(makeTab(resume: sessionID))
+    func openTab(attachingTo sessionID: UInt64, closesIfSessionIsGone: Bool = false) -> TerminalTab {
+        adopt(makeTab(resume: sessionID, closesIfSessionIsGone: closesIfSessionIsGone))
     }
 
     /// A paired device's terminal, picked from the new-tab menu's list of
@@ -371,12 +371,14 @@ final class TabManager: ObservableObject {
     /// window's presenters before the tab joins `tabs`.
     private func makeTab(
         resume daemonSessionID: UInt64? = nil,
+        closesIfSessionIsGone: Bool = false,
         inheritDirectoryFrom sourceSessionID: UInt64? = nil,
         startDirectory: String? = nil,
         remoteHostID: String? = nil,
     ) -> TerminalTab {
         let tab = TerminalTab(
             resumeDaemonSessionID: daemonSessionID,
+            closesIfSessionIsGone: closesIfSessionIsGone,
             inheritDirectoryFrom: sourceSessionID,
             startDirectory: startDirectory,
             remoteHostID: remoteHostID,

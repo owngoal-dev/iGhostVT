@@ -138,6 +138,10 @@ enum iGhostVTProtocol {
     static var updateQuitNotification: String {
         "wiki.qaq.ighostvt.update-quit.\(getuid())"
     }
+
+    /// Posted by `ighostvt-cli app attach`, the session's id as the
+    /// notification's state: a running app shows that session.
+    static let showSessionNotification = "wiki.qaq.ighostvt.show-session"
 }
 
 /// Client-initiated requests. Each one gets exactly one reply.

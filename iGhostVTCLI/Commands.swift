@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import notify
 import XPC
 
 /// What each subcommand does. Every one of them opens a connection, says
@@ -70,16 +71,47 @@ enum Commands {
         } while offset < input.count
     }
 
-    static func new(command: [String]) throws {
+    static func new(command: [String], options: NewOptions) throws {
+        let isRemote = DaemonTarget.hostSelector != nil
+        var directory = options.directory
+        if let given = directory {
+            if isRemote {
+                guard given.hasPrefix("/") else { throw CLIError.usage("--cwd on a host takes a full path there.") }
+            } else {
+                directory = try canonicalDirectory(given)
+            }
+        }
         let client = try DaemonTarget.connect()
         defer { client.cancel() }
+        if let source = options.directorySessionID {
+            // The daemon starts in the home when the session is gone;
+            // asked for by id, a wrong id is a mistake to report.
+            let sessions = try DaemonClient.sessions(in: client.request(.listSessions))
+            guard sessions.contains(where: { $0.id == source }) else {
+                throw CLIError.refused(.unknownSession, nil)
+            }
+        }
         let reply = try client.request(.openSession) { message in
-            // A nominal grid: nothing here is going to display the session,
-            // and whoever attaches sets the real size. The daemon starts the
-            // shell in the session user's home — the CLI names no directory
-            // and inherits none, because it is not a tab beside another one.
-            xpc_dictionary_set_uint64(message, iGhostVTWireKey.columns, UInt64(iGhostVTProtocol.defaultColumns))
-            xpc_dictionary_set_uint64(message, iGhostVTWireKey.rows, UInt64(iGhostVTProtocol.defaultRows))
+            // A nominal grid unless one is given: nothing here is going to
+            // display the session, and whoever attaches sets the real size.
+            xpc_dictionary_set_uint64(message, iGhostVTWireKey.columns, UInt64(options.columns ?? iGhostVTProtocol.defaultColumns))
+            xpc_dictionary_set_uint64(message, iGhostVTWireKey.rows, UInt64(options.rows ?? iGhostVTProtocol.defaultRows))
+            if let directory {
+                xpc_dictionary_set_string(message, iGhostVTWireKey.startDirectory, directory)
+            }
+            if let source = options.directorySessionID {
+                xpc_dictionary_set_uint64(message, iGhostVTWireKey.inheritDirectoryFrom, source)
+            }
+            if !options.environment.isEmpty {
+                let environment = xpc_dictionary_create(nil, nil, 0)
+                for (name, value) in options.environment {
+                    xpc_dictionary_set_string(environment, name, value)
+                }
+                xpc_dictionary_set_value(message, iGhostVTWireKey.environment, environment)
+            }
+            if let shell = options.shell {
+                xpc_dictionary_set_string(message, iGhostVTWireKey.shell, shell)
+            }
             guard !command.isEmpty else { return }
             let arguments = xpc_array_create(nil, 0)
             for argument in command {
@@ -88,17 +120,78 @@ enum Commands {
             xpc_dictionary_set_value(message, iGhostVTWireKey.command, arguments)
         }
         let sessionID = xpc_dictionary_get_uint64(reply, iGhostVTWireKey.sessionID)
-        if client is RemoteDaemonClient {
+        if let lock = options.lock {
+            try client.request(.setSessionAttributes) { message in
+                xpc_dictionary_set_uint64(message, iGhostVTWireKey.sessionID, sessionID)
+                let attributes = xpc_dictionary_create(nil, nil, 0)
+                xpc_dictionary_set_string(attributes, iGhostVTSessionAttribute.lock, lock)
+                xpc_dictionary_set_value(message, iGhostVTWireKey.attributes, attributes)
+            }
+        }
+        if isRemote || options.attaches {
             // A new session is attached to whoever opened it. This device's
             // daemon lets go the moment the CLI leaves; a host holds a
             // device's sessions for a while after its link drops, as for a
-            // phone that will be back — so this one is let go of in words,
-            // or another device would find it in use for that while.
+            // phone that will be back, and the app here cannot attach to
+            // one this connection still holds — so it is let go of in words.
             try client.request(.detachSession) {
                 xpc_dictionary_set_uint64($0, iGhostVTWireKey.sessionID, sessionID)
             }
         }
         print(sessionID)
+        fflush(stdout)
+        if options.attaches {
+            try attachInApp(sessionID: sessionID, client: client)
+        }
+    }
+
+    private static func canonicalDirectory(_ path: String) throws -> String {
+        guard let resolved = realpath(path, nil) else { throw CLIError.usage("No directory at \(path).") }
+        defer { free(resolved) }
+        var info = stat()
+        guard stat(resolved, &info) == 0, info.st_mode & S_IFMT == S_IFDIR else {
+            throw CLIError.usage("No directory at \(path).")
+        }
+        return String(cString: resolved)
+    }
+
+    static func attachInApp(sessionID: UInt64) throws {
+        let client = try DaemonTarget.connect()
+        defer { client.cancel() }
+        try attachInApp(sessionID: sessionID, client: client)
+    }
+
+    /// The app is told by a notification whose state is the id. A state
+    /// holds one id, and another `app attach` can replace it before the app
+    /// reads it, so it is posted again until the session is attached.
+    private static func attachInApp(sessionID: UInt64, client: DaemonRequester) throws {
+        func session() throws -> SessionSummary {
+            let sessions = try DaemonClient.sessions(in: client.request(.listSessions))
+            guard let session = sessions.first(where: { $0.id == sessionID }) else {
+                throw CLIError.refused(.unknownSession, nil)
+            }
+            return session
+        }
+        _ = try session()
+        var token: Int32 = 0
+        guard notify_register_check(iGhostVTProtocol.showSessionNotification, &token) == NOTIFY_STATUS_OK else {
+            throw CLIError.appDidNotAttach
+        }
+        defer { notify_cancel(token) }
+        let deadline = Date().addingTimeInterval(5)
+        var nextPost = Date.distantPast
+        while true {
+            if Date() >= nextPost {
+                notify_set_state(token, sessionID)
+                notify_post(iGhostVTProtocol.showSessionNotification)
+                nextPost = Date().addingTimeInterval(1.5)
+            }
+            usleep(100_000)
+            if try session().isAttached {
+                return
+            }
+            guard Date() < deadline else { throw CLIError.appDidNotAttach }
+        }
     }
 
     static func kill(sessionID: UInt64) throws {
