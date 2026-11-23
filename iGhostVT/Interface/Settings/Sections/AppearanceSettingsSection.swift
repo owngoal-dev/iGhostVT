@@ -14,7 +14,7 @@ import SwiftUI
 struct AppearanceSettingsSection: View {
     @ObservedObject private var theme = AppTheme.shared
     @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system.rawValue
-    /// Read by `TerminalTab` when a surface is made; open tabs keep theirs.
+    /// Every tab's size; a change moves open tabs too (`TabFontSize`).
     @AppStorage(TerminalFontSize.key) private var terminalFontSize = TerminalFontSize.default
 
     private var appearanceTitle: String {
@@ -82,7 +82,7 @@ struct AppearanceSettingsSection: View {
             Text("Display")
                 .font(DS.Font.caption)
         } footer: {
-            Text("Text size applies to new tabs.")
+            Text("Every tab follows Text Size. A tab you make bigger or smaller keeps the difference until you choose Actual Size.")
                 .font(DS.Font.detail)
         }
     }

@@ -23,10 +23,12 @@ enum InterfaceTextSize {
     }
 }
 
-/// The font size a new terminal opens at. Only *new* surfaces read it: an
-/// open tab keeps whatever size the user pinched or ⌘-zoomed it to, and the
-/// library seeds that zoom from the surface's own size, so the first pinch
-/// continues from here instead of jumping.
+/// Settings ▸ Text Size: every terminal's size. A tab differs from it only
+/// by its own offset (`TabFontSize`), which a pinch, ⌘+ / ⌘− or the tab's
+/// menu moves and Actual Size clears; a change here moves every open tab
+/// by the same step, offsets kept. Nothing but Settings writes it — a zoom
+/// once stepped it too, so zooming one tab changed the size every later tab
+/// opened at, and Actual Size put the tab and Settings at two sizes.
 enum TerminalFontSize {
     static let key = "Terminal.fontSize"
 
@@ -43,25 +45,24 @@ enum TerminalFontSize {
     /// where the ends are.
     static let range = 4 ... 64
 
-    /// The stored size, clamped, as the surface configuration wants it.
-    static var preferred: Float {
-        Float(stored)
-    }
-
-    private static var stored: Int {
+    /// The stored size, clamped.
+    static var base: Int {
         let value = UserDefaults.standard.object(forKey: key) as? Int ?? `default`
-        return min(max(value, range.lowerBound), range.upperBound)
+        return clamped(value)
     }
 
-    /// View ▸ Bigger / Smaller: the active surface zooms by one point and
-    /// the preference follows it, so the next tab opens at the same size.
-    static func stepPreferred(by delta: Int) {
-        let value = min(max(stored + delta, range.lowerBound), range.upperBound)
-        UserDefaults.standard.set(value, forKey: key)
+    /// The base as the surface configuration wants it: what the generated
+    /// ghostty config says, so Ghostty's own `reset_font_size` lands on it.
+    static var preferred: Float {
+        Float(base)
     }
 
-    /// View ▸ Actual Size: back to the platform default.
-    static func resetPreferred() {
-        UserDefaults.standard.removeObject(forKey: key)
+    /// A tab's size: the base moved by the tab's offset, inside `range`.
+    static func size(offset: Int) -> Float {
+        Float(clamped(base + offset))
+    }
+
+    private static func clamped(_ value: Int) -> Int {
+        min(max(value, range.lowerBound), range.upperBound)
     }
 }

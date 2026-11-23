@@ -12749,6 +12749,171 @@
         }
       }
     },
+    "Every tab follows Text Size. A tab you make bigger or smaller keeps the difference until you choose Actual Size." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتبع كل علامات التبويب «حجم النص». وتحتفظ علامة التبويب التي تكبّرها أو تصغّرها بالفرق إلى أن تختار «الحجم الفعلي»."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Tabs folgen der „Textgröße“. Ein Tab, den Sie vergrößern oder verkleinern, behält den Unterschied, bis Sie „Originalgröße“ wählen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every tab follows Text Size. A tab you make bigger or smaller keeps the difference until you choose Actual Size."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las pestañas siguen el «Tamaño del texto». Una pestaña que amplíes o reduzcas conserva la diferencia hasta que elijas «Tamaño real»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les onglets suivent la « Taille du texte ». Un onglet que vous agrandissez ou réduisez garde l’écart jusqu’à ce que vous choisissiez « Taille réelle »."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutte le schede seguono la “Dimensione del testo”. Una scheda che ingrandisci o rimpicciolisci mantiene la differenza finché non scegli “Dimensioni reali”."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのタブが「文字サイズ」に従います。大きくしたり小さくしたりしたタブは、「実際のサイズ」を選ぶまでその差を保ちます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 탭이 ‘텍스트 크기’를 따릅니다. 크게 하거나 작게 한 탭은 ‘실제 크기’를 선택할 때까지 그 차이를 유지합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas as abas seguem o “Tamanho do texto”. Uma aba que você aumentar ou diminuir mantém a diferença até você escolher “Tamanho real”."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все вкладки следуют параметру «Размер текста». Вкладка, которую вы сделали крупнее или мельче, сохраняет разницу, пока вы не выберете «Реальный размер»."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mọi tab đều theo “Cỡ chữ”. Tab bạn làm lớn hơn hoặc nhỏ hơn sẽ giữ phần chênh lệch cho đến khi bạn chọn “Kích thước thực”."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有标签页都跟随“文字大小”。单独放大或缩小的标签页会保持这个差值，直到你选择“实际大小”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有標籤頁都跟隨「文字大小」。單獨放大或縮小的標籤頁會保留這個差距，直到你選擇「實際大小」。"
+          }
+        }
+      }
+    },
+    "Every tab follows the terminal size. A tab you make bigger or smaller keeps the difference until you choose Actual Size. The interface size scales every label and control." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتبع كل علامات التبويب حجم الطرفية. وتحتفظ علامة التبويب التي تكبّرها أو تصغّرها بالفرق إلى أن تختار «الحجم الفعلي». ويغيّر حجم الواجهة مقاس كل نص وعنصر تحكم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Tabs folgen der Terminalgröße. Ein Tab, den Sie vergrößern oder verkleinern, behält den Unterschied, bis Sie „Originalgröße“ wählen. Die Oberflächengröße skaliert jede Beschriftung und jedes Bedienelement."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every tab follows the terminal size. A tab you make bigger or smaller keeps the difference until you choose Actual Size. The interface size scales every label and control."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las pestañas siguen el tamaño de terminal. Una pestaña que amplíes o reduzcas conserva la diferencia hasta que elijas «Tamaño real». El tamaño de la interfaz escala todas las etiquetas y controles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les onglets suivent la taille du terminal. Un onglet que vous agrandissez ou réduisez garde l’écart jusqu’à ce que vous choisissiez « Taille réelle ». La taille de l’interface met à l’échelle chaque libellé et chaque commande."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutte le schede seguono la dimensione del terminale. Una scheda che ingrandisci o rimpicciolisci mantiene la differenza finché non scegli “Dimensioni reali”. La dimensione dell’interfaccia ridimensiona ogni etichetta e controllo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのタブがターミナルのサイズに従います。大きくしたり小さくしたりしたタブは、「実際のサイズ」を選ぶまでその差を保ちます。インターフェイスのサイズは、すべてのラベルとコントロールを拡大縮小します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 탭이 터미널 크기를 따릅니다. 크게 하거나 작게 한 탭은 ‘실제 크기’를 선택할 때까지 그 차이를 유지합니다. 인터페이스 크기는 모든 레이블과 컨트롤을 확대하거나 축소합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas as abas seguem o tamanho do terminal. Uma aba que você aumentar ou diminuir mantém a diferença até você escolher “Tamanho real”. O tamanho da interface redimensiona todos os rótulos e controles."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все вкладки следуют размеру терминала. Вкладка, которую вы сделали крупнее или мельче, сохраняет разницу, пока вы не выберете «Реальный размер». Размер интерфейса масштабирует все подписи и элементы управления."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mọi tab đều theo cỡ chữ Terminal. Tab bạn làm lớn hơn hoặc nhỏ hơn sẽ giữ phần chênh lệch cho đến khi bạn chọn “Kích thước thực”. Cỡ giao diện áp dụng cho mọi nhãn và điều khiển."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有标签页都跟随终端大小。单独放大或缩小的标签页会保持这个差值，直到你选择“实际大小”。界面大小会缩放所有标签和控件。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有標籤頁都跟隨終端機大小。單獨放大或縮小的標籤頁會保留這個差距，直到你選擇「實際大小」。介面大小會縮放所有標籤和控制項。"
+          }
+        }
+      }
+    },
     "Exit Tab Overview" : {
       "comment" : "Menu item: closes the tab overview",
       "extractionState" : "manual",
@@ -12913,6 +13078,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已展開"
+          }
+        }
+      }
+    },
+    "Experimental Features" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ميزات تجريبية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimentelle Funktionen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimental Features"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciones experimentales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fonctionnalités expérimentales"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funzioni sperimentali"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実験的な機能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실험적 기능"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos Experimentais"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспериментальные функции"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tính năng thử nghiệm"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试验性功能"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "試驗性功能"
           }
         }
       }
@@ -22208,88 +22455,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在 ${applicationName} 中新增終端機標籤頁"
-          }
-        }
-      }
-    },
-    "New terminals open at the terminal size; a tab that is already open keeps the size it was zoomed to. The interface size scales every label and control." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُفتح الطرفيات الجديدة بحجم الطرفية؛ أما علامة التبويب المفتوحة مسبقاً فتحتفظ بالحجم الذي كُبِّرت إليه. ويغيّر حجم الواجهة مقاس كل نص وعنصر تحكم."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Terminals öffnen in der Terminalgröße; ein bereits geöffneter Tab behält die Größe, auf die er gezoomt wurde. Die Oberflächengröße skaliert jede Beschriftung und jedes Bedienelement."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New terminals open at the terminal size; a tab that is already open keeps the size it was zoomed to. The interface size scales every label and control."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los terminales nuevos se abren con el tamaño de terminal; una pestaña ya abierta conserva el tamaño al que se amplió. El tamaño de la interfaz escala todas las etiquetas y controles."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les nouveaux terminaux s’ouvrent à la taille du terminal ; un onglet déjà ouvert conserve la taille à laquelle il a été zoomé. La taille de l’interface met à l’échelle chaque libellé et chaque commande."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I nuovi terminali si aprono alla dimensione del terminale; una scheda già aperta mantiene la dimensione a cui è stata ingrandita. La dimensione dell’interfaccia ridimensiona ogni etichetta e controllo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新しいターミナルはターミナルのサイズで開きます。すでに開いているタブは、ズームしたサイズのままです。インターフェイスのサイズは、すべてのラベルとコントロールを拡大縮小します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "새 터미널은 터미널 크기로 열리며, 이미 열려 있는 탭은 확대한 크기를 유지합니다. 인터페이스 크기는 모든 레이블과 컨트롤을 확대하거나 축소합니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Novos terminais são abertos no tamanho do terminal; uma aba já aberta mantém o tamanho para o qual foi ampliada. O tamanho da interface redimensiona todos os rótulos e controles."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Новые терминалы открываются с размером терминала; уже открытая вкладка сохраняет размер, до которого её увеличили. Размер интерфейса масштабирует все подписи и элементы управления."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal mới sẽ mở ở cỡ chữ Terminal; tab đang mở vẫn giữ cỡ chữ đã phóng. Cỡ giao diện áp dụng cho mọi nhãn và điều khiển."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新终端以终端大小打开；已打开的标签页保持缩放后的大小。界面大小会缩放所有标签和控件。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新終端機以終端機大小開啟；已開啟的標籤頁會保留縮放後的大小。介面大小會縮放所有標籤和控制項。"
           }
         }
       }
@@ -32832,6 +32997,170 @@
         }
       }
     },
+    "Smooth Scrolling" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التمرير السلس"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanftes Scrollen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth Scrolling"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazamiento suave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défilement fluide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorrimento fluido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スムーズスクロール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부드러운 스크롤"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolagem suave"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавная прокрутка"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộn mượt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平滑滚动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平滑捲動"
+          }
+        }
+      }
+    },
+    "Smooth Scrolling moves the text pixel by pixel as you scroll, and lines it up on a row when you stop. Off, it moves a row at a time." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«التمرير السلس» يحرّك النص بكسلًا بكسلًا أثناء التمرير، ويحاذيه مع صف عند التوقف. وعند إيقافه، يتحرك النص صفًا واحدًا في كل مرة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Sanftes Scrollen“ bewegt den Text beim Scrollen pixelweise und richtet ihn an einer Zeile aus, sobald Sie anhalten. Ist es aus, bewegt sich der Text zeilenweise."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth Scrolling moves the text pixel by pixel as you scroll, and lines it up on a row when you stop. Off, it moves a row at a time."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Desplazamiento suave» mueve el texto píxel a píxel mientras te desplazas y lo alinea con una fila cuando te detienes. Desactivado, el texto se mueve fila a fila."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Défilement fluide » déplace le texte pixel par pixel pendant le défilement et l’aligne sur une ligne quand vous vous arrêtez. Désactivé, le texte défile ligne par ligne."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Scorrimento fluido” sposta il testo pixel per pixel mentre scorri e lo allinea a una riga quando ti fermi. Se è disattivato, il testo scorre una riga alla volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「スムーズスクロール」では、スクロール中はテキストが1ピクセルずつ動き、止めると行に揃います。オフのときは1行ずつ動きます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘부드러운 스크롤’은 스크롤하는 동안 텍스트를 픽셀 단위로 움직이고, 멈추면 행에 맞춰 정렬합니다. 끄면 한 행씩 움직입니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Rolagem suave” move o texto pixel a pixel enquanto você rola e o alinha a uma linha quando você para. Desativada, o texto se move uma linha por vez."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Плавная прокрутка» сдвигает текст попиксельно во время прокрутки и выравнивает его по строке, когда вы останавливаетесь. Если она выключена, текст сдвигается построчно."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Cuộn mượt” di chuyển văn bản theo từng điểm ảnh khi bạn cuộn và căn theo hàng khi bạn dừng. Khi tắt, văn bản di chuyển từng hàng một."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“平滑滚动”会在滚动时逐像素移动文字，停下后对齐到整行。关闭后，文字逐行移动。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「平滑捲動」會在捲動時逐像素移動文字，停下後對齊到整列。關閉後，文字逐列移動。"
+          }
+        }
+      }
+    },
     "Source" : {
       "localizations" : {
         "ar" : {
@@ -34820,89 +35149,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文字大小"
-          }
-        }
-      }
-    },
-    "Text size applies to new tabs." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يُطبَّق حجم النص على علامات التبويب الجديدة."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Textgröße gilt für neue Tabs."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text size applies to new tabs."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El tamaño del texto se aplica a las pestañas nuevas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La taille du texte s’applique aux nouveaux onglets."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La dimensione del testo si applica alle nuove schede."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文字サイズは新しいタブに適用されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "텍스트 크기는 새로운 탭에 적용됩니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O tamanho do texto vale para novas abas."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размер текста применяется к новым вкладкам."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cỡ chữ áp dụng cho các tab mới."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文字大小将应用于新标签页。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文字大小會套用至新標籤頁。"
           }
         }
       }

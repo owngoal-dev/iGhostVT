@@ -67,6 +67,12 @@ final class TabAttributes: ObservableObject {
     /// switches to it.
     @Published var lock: TabLock?
 
+    /// Points this tab's text is bigger (or, below zero, smaller) than
+    /// Settings ▸ Text Size (`TabFontSize`). Kept in the session beside the
+    /// lock, so a relaunch, a move to another window or another device
+    /// taking the session finds it again.
+    @Published var fontOffset = 0
+
     /// The daemon session the tab holds, once it holds one. Not a choice
     /// the user makes — the one fact about the session the context menu
     /// needs (Move to New Window waits for it), kept here so the menu still
