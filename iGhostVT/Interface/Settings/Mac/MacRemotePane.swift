@@ -808,24 +808,6 @@ import SwiftUI
         }
     }
 
-    /// A small round glyph button set after a line of text, the text's own
-    /// size and on its baseline (the caller's `HStack` aligns them).
-    private struct MacInlineIconButton: View {
-        let symbol: String
-        let label: LocalizedStringKey
-        let action: () -> Void
-
-        var body: some View {
-            Button(action: action) {
-                Image(systemName: symbol)
-                    .foregroundColor(.secondary)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel(label)
-        }
-    }
-
     /// "3 Devices" with the button that opens the list in a sheet.
     private struct MacSheetLink: View {
         let count: Int
@@ -895,17 +877,6 @@ import SwiftUI
         func keepsPopover() -> some View {
             if #available(macCatalyst 16.4, *) {
                 presentationCompactAdaptation(.popover)
-            } else {
-                self
-            }
-        }
-
-        /// The sheet as big as its content: a plain sheet on the Mac is a
-        /// fixed form sheet much larger than a short list.
-        @ViewBuilder
-        func fittedSheet() -> some View {
-            if #available(macCatalyst 18.0, *) {
-                presentationSizing(.fitted)
             } else {
                 self
             }

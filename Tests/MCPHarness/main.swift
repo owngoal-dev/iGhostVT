@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import Network
 
 private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
     if !condition() {
@@ -201,10 +202,10 @@ final class FakeAuthority: ConsentAuthority {
 }
 
 let authority = FakeAuthority()
-let oauth = OAuthStore(issuer: issuer, stateURL: stateFile, authority: authority)
+let oauth = OAuthStore(stateURL: stateFile, authority: authority)
 let backend = MockBackend()
 let mcp = MCPHandler(backend: backend, allowAllSessions: false)
-let router = MCPRouter(oauth: oauth, mcp: mcp)
+let router = MCPRouter(oauth: oauth, mcp: mcp, port: 18765)
 expect(authority.reports(settlingOn: [0]) == [0], "a fresh store must report no authorized clients")
 
 // 1. Discovery metadata
@@ -216,9 +217,52 @@ let asm = router.handle(makeRequest("GET", "/.well-known/oauth-authorization-ser
 expect(asm.status == 200, "auth server metadata should return 200")
 expect((jsonBody(asm)["registration_endpoint"] as? String) == "\(issuer)/register", "registration_endpoint mismatch")
 
+// 1b. The issuer is the server as the request reached it, and only by a
+// name of its own: another device on the network names it by `.local` or
+// by address; a DNS name pointed at it (rebinding) is turned away.
+for host in ["mac.local:18765", "192.168.1.5:18765", "[fe80::1]:18765", "localhost:18765", "Mac.Local."] {
+    let reply = router.handle(makeRequest("GET", "/.well-known/oauth-authorization-server", headers: ["Host": host]))
+    expect(reply.status == 200, "Host \(host) must be served")
+    expect((jsonBody(reply)["issuer"] as? String) == "http://\(host)", "issuer must follow Host \(host)")
+    let resource = router.handle(makeRequest("GET", "/.well-known/oauth-protected-resource", headers: ["Host": host]))
+    expect((jsonBody(resource)["resource"] as? String) == "http://\(host)/mcp", "resource must follow Host \(host)")
+}
+for host in ["evil.example", "evil.example:18765", "local", ".local", "mac.local:port", "[fe80::1", "a:b:c"] {
+    let reply = router.handle(makeRequest("GET", "/health", headers: ["Host": host]))
+    expect(reply.status == 421, "Host \(host) must be refused")
+}
+let lanUnauth = router.handle(makeJSONRequest(
+    "POST",
+    "/mcp",
+    headers: ["Host": "mac.local:18765"],
+    json: ["jsonrpc": "2.0", "id": 1, "method": "ping"],
+))
+expect(lanUnauth.status == 401, "unauthenticated /mcp over the LAN must return 401")
+let lanAuth = lanUnauth.headers.first { $0.0.lowercased() == "www-authenticate" }?.1 ?? ""
+expect(
+    lanAuth.contains("resource_metadata=\"http://mac.local:18765/.well-known/oauth-protected-resource\""),
+    "401 must name the metadata by the request's Host",
+)
+
 // 2. Origin CSRF guard
 let badOrigin = router.handle(makeRequest("GET", "/health", headers: ["Origin": "https://evil.example"]))
 expect(badOrigin.status == 403, "cross-origin request must be 403")
+for origin in ["http://mac.local:18765", "http://192.168.1.5:18765", "http://[::1]:18765", "http://127.0.0.1:5173"] {
+    let reply = router.handle(makeRequest("GET", "/health", headers: ["Origin": origin, "Host": "mac.local:18765"]))
+    expect(reply.status == 200, "the server's own origin \(origin) must be allowed")
+}
+for origin in ["null", "file:///", "http://evil.local.example", "chrome-extension://abc"] {
+    let reply = router.handle(makeRequest("GET", "/health", headers: ["Origin": origin]))
+    expect(reply.status == 403, "origin \(origin) must be refused")
+}
+
+// 2b. Only this device and the local network are served.
+for address in ["127.0.0.1", "192.168.1.9", "10.0.0.2", "172.20.1.1", "169.254.3.4", "::1", "fe80::1", "fd00::5", "::ffff:192.168.1.9"] {
+    expect(RemoteNetwork.isLocal(.hostPort(host: NWEndpoint.Host(address), port: 1)), "\(address) is on the local network")
+}
+for address in ["8.8.8.8", "100.100.1.1", "2001:4860:4860::8888", "::ffff:8.8.8.8"] {
+    expect(!RemoteNetwork.isLocal(.hostPort(host: NWEndpoint.Host(address), port: 1)), "\(address) is not on the local network")
+}
 
 // 3. Unauthenticated /mcp returns 401 with resource_metadata
 let unauth = router.handle(makeJSONRequest("POST", "/mcp", json: ["jsonrpc": "2.0", "id": 1, "method": "ping"]))
@@ -429,7 +473,7 @@ let parsed = DaemonShellBackend.extractMarker(from: "hello world\n__MARKER__:42\
 expect(parsed?.output == "hello world" && parsed?.exitCode == 42, "marker extraction failed")
 
 // 8. End-to-end TCP loopback smoke test via LocalHTTPServer
-let liveServer = LocalHTTPServer(host: "127.0.0.1", port: 0) { req in
+let liveServer = LocalHTTPServer(port: 0) { req in
     router.handle(req)
 }
 try! liveServer.start()

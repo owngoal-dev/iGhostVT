@@ -46,7 +46,7 @@ build() {
         -I "$ROOT/Shared/XPCShim" -I "$ROOT/Shared/CoreCryptoShim" \
         "$ROOT/Shared/Protocol/iGhostVTProtocol.swift" \
         "$ROOT/Shared/Protocol/iGhostVTXPC.swift" \
-        $(find "$ROOT/Shared/Wire" "$ROOT/Shared/Remote" "$ROOT/Tests/RemoteLab" -name '*.swift' | sort) \
+        $(find "$ROOT/Shared/Wire" "$ROOT/Shared/Network" "$ROOT/Shared/Remote" "$ROOT/Tests/RemoteLab" -name '*.swift' | sort) \
         "$ROOT/iGhostVT/Backend/Zmodem/ZmodemCRC.swift" \
         "$ROOT/iGhostVT/Backend/Zmodem/ZmodemFrame.swift" \
         "$ROOT/iGhostVT/Backend/Zmodem/ZmodemTransfer.swift" \

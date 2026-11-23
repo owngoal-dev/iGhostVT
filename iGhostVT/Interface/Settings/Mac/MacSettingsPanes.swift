@@ -338,6 +338,7 @@ import SwiftUI
         @AppStorage(SmoothScrolling.key) private var smoothScrolling = SmoothScrolling.defaultValue
         @StateObject private var mcp = MCPServerModel()
         @State private var window: UIWindow?
+        @State private var isShowingMCP = false
 
         var body: some View {
             MacSettingsForm {
@@ -372,16 +373,25 @@ import SwiftUI
             }
         }
 
-        /// The MCP server's switch, Copy Address and Forget; while this pane
-        /// is up it holds the consent window, and each client that asks is
-        /// put to the person here (`MCPServerModel`).
+        /// The MCP server's switch, and while it is on the button that opens
+        /// its address and authorized apps in a sheet (`MacMCPServerSheet`);
+        /// while this pane is up — the sheet included — it holds the consent
+        /// window, and each client that asks is put to the person here
+        /// (`MCPServerModel`).
         private var mcpRow: some View {
             MacSettingsRow("MCP") {
-                MacCheckbox(
-                    String(localized: "Local MCP Server"),
-                    isOn: Binding(get: { mcp.status.isEnabled }, set: { mcp.setEnabled($0) }),
-                )
-                .disabled(mcp.status.isUnavailable)
+                HStack(alignment: .firstTextBaseline, spacing: DS.Padding.s) {
+                    MacCheckbox(
+                        String(localized: "MCP Server"),
+                        isOn: Binding(get: { mcp.status.isEnabled }, set: { mcp.setEnabled($0) }),
+                    )
+                    .disabled(mcp.status.isUnavailable)
+                    if mcp.status.isEnabled {
+                        MacInlineIconButton(symbol: "arrow.up.right.circle.fill", label: "MCP Server") {
+                            isShowingMCP = true
+                        }
+                    }
+                }
                 .background(WindowReader(window: $window))
                 .onAppear {
                     mcp.setWindow(window)
@@ -390,18 +400,16 @@ import SwiftUI
                 .onChange(of: window) { mcp.setWindow($0) }
                 .onDisappear { mcp.pageDisappeared() }
             } details: {
-                MacSettingsNote(
-                    """
-                    Lets AI apps on this device use your terminals. Keep this page \
-                    open while you connect a new app, so you can approve it.
-                    """,
-                )
-                if mcp.status.isEnabled {
-                    Button("Copy Address") { mcp.copyEndpoint() }
-                        .padding(.top, DS.Padding.s)
-                    if mcp.status.authorizedClients > 0 {
-                        Button("Forget Authorized Apps") { mcp.forgetClients() }
-                    }
+                MacSettingsNote(MCPServerModel.note)
+            }
+            .sheet(isPresented: $isShowingMCP) {
+                MacMCPServerSheet(model: mcp)
+            }
+            // Turned off from elsewhere — the CLI, another window — the
+            // sheet has nothing left to show.
+            .onChange(of: mcp.status.isEnabled) { enabled in
+                if !enabled {
+                    isShowingMCP = false
                 }
             }
         }

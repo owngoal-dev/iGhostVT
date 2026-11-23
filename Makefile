@@ -318,13 +318,13 @@ harness:
 	xcrun --sdk macosx swiftc -swift-version 5 -I "$(XPC_SHIM_DIR)" -I "$(CORECRYPTO_SHIM_DIR)" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \
-		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/RemoteHarness" -name '*.swift' | sort) \
+		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Network" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/RemoteHarness" -name '*.swift' | sort) \
 		-o "$$harness_dir/remote-harness" && \
 	"$$harness_dir/remote-harness" && \
 	xcrun --sdk macosx swiftc -swift-version 5 -I "$(XPC_SHIM_DIR)" -I "$(CORECRYPTO_SHIM_DIR)" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \
-		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/PairedHosts" -name '*.swift' | sort) \
+		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Network" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/PairedHosts" -name '*.swift' | sort) \
 		-o "$$harness_dir/paired-hosts" && \
 	"$$harness_dir/paired-hosts" && \
 	xcrun --sdk macosx swiftc -swift-version 5 \
@@ -366,6 +366,7 @@ harness:
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \
 		"$(ROOT_DIR)/Shared/Screen/ScreenRenderer.swift" \
 		"$(ROOT_DIR)/Shared/Screen/KeyNames.swift" \
+		"$(ROOT_DIR)/Shared/Network/RemoteNetwork.swift" \
 		$$(find "$(ROOT_DIR)/iGhostVTMCP" -name '*.swift' ! -name 'main.swift' | sort) \
 		"$(ROOT_DIR)/Tests/MCPHarness/main.swift" \
 		-o "$$harness_dir/mcp-harness" && \
@@ -388,7 +389,7 @@ relay-harness:
 	xcrun --sdk macosx swiftc -swift-version 5 -I "$(XPC_SHIM_DIR)" -I "$(CORECRYPTO_SHIM_DIR)" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \
-		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/RelayHarness" -name '*.swift' | sort) \
+		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Network" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/RelayHarness" -name '*.swift' | sort) \
 		"$(ROOT_DIR)/iGhostVTRemote/RelayLink.swift" \
 		"$(ROOT_DIR)/iGhostVTRemote/RemoteLog.swift" \
 		-o "$$harness_dir/relay-harness" && \
@@ -404,7 +405,7 @@ relay-weak-network:
 	xcrun --sdk macosx swiftc -swift-version 5 -I "$(XPC_SHIM_DIR)" -I "$(CORECRYPTO_SHIM_DIR)" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
 		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \
-		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/RelayHarness" -name '*.swift' | sort) \
+		$$(find "$(ROOT_DIR)/Shared/Wire" "$(ROOT_DIR)/Shared/Network" "$(ROOT_DIR)/Shared/Remote" "$(ROOT_DIR)/Tests/RelayHarness" -name '*.swift' | sort) \
 		"$(ROOT_DIR)/iGhostVTRemote/RelayLink.swift" \
 		"$(ROOT_DIR)/iGhostVTRemote/RemoteLog.swift" \
 		-o "$$harness_dir/relay-harness" && \

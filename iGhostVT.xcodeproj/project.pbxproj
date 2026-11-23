@@ -215,6 +215,11 @@
 			path = Shared/Wire;
 			sourceTree = "<group>";
 		};
+		AA000000000000000000050F /* Shared/Network */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared/Network;
+			sourceTree = "<group>";
+		};
 		AA000000000000000000050C /* Shared/Remote */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shared/Remote;
@@ -275,6 +280,7 @@
 				AA0000000000000000000504 /* iGhostVTWidgets */,
 				AA0000000000000000000505 /* Shared/Activity */,
 				AA0000000000000000000502 /* Shared/Protocol */,
+				AA000000000000000000050F /* Shared/Network */,
 				AA000000000000000000050C /* Shared/Remote */,
 				AA0000000000000000000509 /* Shared/Screen */,
 				AA000000000000000000050B /* Shared/Wire */,
@@ -332,6 +338,7 @@
 				AA0000000000000000000505 /* Shared/Activity */,
 				AA0000000000000000000509 /* Shared/Screen */,
 				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050F /* Shared/Network */,
 				AA000000000000000000050C /* Shared/Remote */,
 			);
 			name = iGhostVT;
@@ -432,6 +439,7 @@
 				AA0000000000000000000508 /* iGhostVTCLI */,
 				AA0000000000000000000509 /* Shared/Screen */,
 				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050F /* Shared/Network */,
 				AA000000000000000000050C /* Shared/Remote */,
 			);
 			name = "ighostvt-cli";
@@ -452,6 +460,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				AA000000000000000000050F /* Shared/Network */,
 				AA0000000000000000000502 /* Shared/Protocol */,
 				AA000000000000000000050E /* iGhostVTMCP */,
 				AA0000000000000000000509 /* Shared/Screen */,
@@ -478,6 +487,7 @@
 				AA0000000000000000000506 /* iGhostVTDaemonShared */,
 				AA000000000000000000050A /* iGhostVTRemote */,
 				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050F /* Shared/Network */,
 				AA000000000000000000050C /* Shared/Remote */,
 			);
 			name = "ighostvtd-remote";
@@ -508,6 +518,7 @@
 				AA0000000000000000000505 /* Shared/Activity */,
 				AA0000000000000000000509 /* Shared/Screen */,
 				AA000000000000000000050B /* Shared/Wire */,
+				AA000000000000000000050F /* Shared/Network */,
 				AA000000000000000000050C /* Shared/Remote */,
 				AA000000000000000000050D /* GhostRemote */,
 			);

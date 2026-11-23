@@ -7,25 +7,25 @@ import XPC
 ///
 /// The switch is a file (`flagPath`), as remote access's is: present means
 /// on, read at launch and written by `setMCPServer`. The server is spawned
-/// beside this executable, drops to the session user, listens on loopback
-/// only (`MCPConsent.port`), and connects back over XPC for everything it
-/// does — admitted for being this child, never by its path, so a copy run by
-/// hand reaches nothing. It holds one connection for as long as it runs,
-/// which keeps the daemon resident, and exits when that connection goes.
+/// beside this executable, drops to the session user, serves this device
+/// and the local network (`MCPConsent.port`), and connects back over XPC
+/// for everything it does — admitted for being this child, never by its
+/// path, so a copy run by hand reaches nothing. It holds one connection for
+/// as long as it runs, which keeps the daemon resident, and exits when that
+/// connection goes.
 ///
 /// **Consent is the app's, in Settings.** The server's OAuth consent page is
-/// served on the same port anything on the device can reach, so a form there
-/// proves nothing: any process could fetch the page and post its own
-/// approval. Instead the server asks here (`beginMCPConsent`) and waits for
-/// the answer (`mcpConsentState`), and only the app may answer
-/// (`answerMCPConsent`) — and only while its settings page is up
+/// served on the same port anything on the device or the local network can
+/// reach, so a form there proves nothing: anything could fetch the page and
+/// post its own approval. Instead the server asks here (`beginMCPConsent`)
+/// and waits for the answer (`mcpConsentState`), and only the app may
+/// answer (`answerMCPConsent`) — and only while its settings page is up
 /// (`setMCPConsentWindow`). With no window open a request is refused before
 /// anyone is asked, so nothing running in the background can raise one.
 /// Each request carries a code the consent page shows too, so the person can
 /// tell their client's request from one raised beside it. The server also
 /// says how many clients hold a token (`reportMCPClients`), which the
-/// status carries so Settings offers Forget only when there is someone to
-/// forget.
+/// status carries so Settings can say how many there are.
 ///
 /// Nothing here reads more of a message than its operation and the fields
 /// named above; the state is a handful of small entries.

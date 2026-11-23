@@ -3,10 +3,11 @@ import Dispatch
 import Foundation
 
 /// `ighostvt-mcp`: the MCP server `MCPSupervisor` in the daemon's proxy runs
-/// while Settings ▸ Advanced ▸ Local MCP Server is on. It listens on loopback only
-/// (`MCPConsent.port`), drops to the session user first on the device, and
-/// exits when the daemon goes — run by hand it is not the daemon's child, the
-/// daemon admits none of its connections, and it exits at once.
+/// while Settings ▸ Advanced ▸ MCP Server is on. It listens on every address
+/// (`MCPConsent.port`) and serves this device and the local network only,
+/// drops to the session user first on the device, and exits when the daemon
+/// goes — run by hand it is not the daemon's child, the daemon admits none of
+/// its connections, and it exits at once.
 private struct MCPConfig {
     var port: UInt16 = MCPConsent.port
     var ephemeral = false
@@ -21,9 +22,9 @@ private func usageText() -> String {
     usage: ighostvt-mcp serve [--forget] [--port <port>] [--state-file <path> | --ephemeral]
            ighostvt-mcp revoke-all [--state-file <path>]
 
-    The MCP server iGhostVT runs while Settings, Advanced, Local MCP Server is on.
-    It listens on 127.0.0.1 only, and a client is let in only when the
-    iGhostVT app allows it.
+    The MCP server iGhostVT runs while Settings, Advanced, MCP Server is on.
+    It serves this device and the local network, and a client is let in only
+    when the iGhostVT app allows it.
 
     options:
       --forget               Forget every authorized client before serving
@@ -152,12 +153,14 @@ private func run() -> Int32 {
         return 69
     }
 
-    let host = "127.0.0.1"
-    let issuer = "http://\(host):\(config.port)"
     let backend = DaemonShellBackend()
-    let oauth = OAuthStore(issuer: issuer, stateURL: stateURL, authority: backend)
-    let router = MCPRouter(oauth: oauth, mcp: MCPHandler(backend: backend, allowAllSessions: false))
-    let server = LocalHTTPServer(host: host, port: config.port) { request in
+    let oauth = OAuthStore(stateURL: stateURL, authority: backend)
+    let router = MCPRouter(
+        oauth: oauth,
+        mcp: MCPHandler(backend: backend, allowAllSessions: false),
+        port: config.port,
+    )
+    let server = LocalHTTPServer(port: config.port) { request in
         router.handle(request)
     }
     do {
@@ -166,7 +169,7 @@ private func run() -> Int32 {
         logStderr("error: failed to start MCP HTTP server: \(error.localizedDescription)")
         return 69
     }
-    logStderr("listening on http://\(host):\(server.boundPort)/mcp")
+    logStderr("listening on port \(server.boundPort), path /mcp")
 
     signal(SIGINT, SIG_IGN)
     signal(SIGTERM, SIG_IGN)

@@ -484,12 +484,13 @@ iPhone and iPad keep `HostUpdateFlow`'s alerts for one device.
 
 ## The MCP server
 
-`ighostvt-mcp` lets an AI app on the same device (FlowDown, say) drive
-terminals over MCP: Streamable HTTP at `MCPConsent.endpoint`
-(`http://127.0.0.1:18765/mcp`), OAuth 2.1 with dynamic client registration
-and PKCE, and the tools `shell_exec` and `session_*`, which reach only the
-sessions it opened (attribute `mcp=1`). Settings ▸ Advanced ▸ MCP (the Mac's
-Advanced pane) turns it on; it is off by default, and Ghost Remote has none.
+`ighostvt-mcp` lets an AI app — on this device or another one on the local
+network (FlowDown, say) — drive terminals over MCP: Streamable HTTP on port
+`MCPConsent.port` (18765) at `/mcp`, OAuth 2.1 with dynamic client
+registration and PKCE, and the tools `shell_exec` and `session_*`, which
+reach only the sessions it opened (attribute `mcp=1`). Settings ▸ Advanced ▸
+MCP (the Mac's Advanced pane) turns it on; it is off by default, and Ghost
+Remote has none.
 
 - **The daemon's child, nothing else.** `MCPSupervisor` in the proxy keeps
   the switch as a file only it can write, as remote access does, and spawns
@@ -497,40 +498,66 @@ Advanced pane) turns it on; it is off by default, and Ghost Remote has none.
   `Contents/MacOS` on the Mac). `PeerAuthenticator` admits it for being that
   child — pid and path — and never by its path or signing identifier, which
   `make check` holds: a copy run by hand reaches nothing. The server drops to
-  mobile on the device before it reads a byte, binds loopback only, keeps its
-  OAuth state in the session user's `Library/Application Support/iGhostVT`,
-  and holds one daemon connection for as long as it runs — that keeps the
-  daemon resident, and its loss makes the server exit, so a daemon that comes
-  back never meets an orphan on the port. `PeerRelay` lets it send the
-  session operations, its two consent questions and its client count,
-  never the management operations, `shutdown` or `hostUpdate`.
-- **Forget shows only when there is someone to forget.** The server tells
-  the proxy how many clients hold a token (`reportMCPClients`) as it starts
-  and whenever that changes, `mcpStatus` carries it, and Settings offers
-  Forget Authorized Apps only above zero — a Forget with nothing behind it
-  restarted the server and changed nothing anyone could see. The switch
-  reads Local MCP Server, the address is never shown — Copy Address puts it
-  on the clipboard — and the footer names no client app.
+  mobile on the device before it reads a byte, keeps its OAuth state in the
+  session user's `Library/Application Support/iGhostVT`, and holds one
+  daemon connection for as long as it runs — that keeps the daemon resident,
+  and its loss makes the server exit, so a daemon that comes back never
+  meets an orphan on the port. `PeerRelay` lets it send the session
+  operations, its two consent questions and its client count, never the
+  management operations, `shutdown` or `hostUpdate`.
+- **This device and the local network, by their own names.** Since 1.6.39
+  the server listens on every address (it was loopback only), off tunnels
+  and cellular, and serves a peer only when `RemoteNetwork.isLocal` says it
+  is on the local network or this device — the rule remote access uses,
+  which is why that file lives in `Shared/Network`, joined by the MCP
+  target. OAuth discovery has to name the server the way the client reached
+  it, so the issuer is `http://` plus each request's `Host` as sent
+  (`MCPRouter`), and only a name the server is reached by on its own is
+  taken — an IP address, `localhost`, or a `.local` name; any other `Host`
+  (a DNS name pointed at the device: rebinding) is answered 421 before
+  anything is read, and `Origin` is held to the same names. Settings hands
+  out `http://<LocalHostName>.local:18765/mcp` (`MCPServerAddress`, read
+  from configd by `dlsym`, since SystemConfiguration's header keeps it to
+  macOS), falling back to the device's address on the network, beneath
+  `http://127.0.0.1:18765/mcp` for an app on the device itself. The link is
+  plain HTTP: a token crosses the network in the clear, and the consent
+  below is what decides who gets one.
+- **Settings shows the address and the count, and forgets all at once.**
+  The server tells the proxy how many clients hold a token
+  (`reportMCPClients`) as it starts and whenever that changes, and
+  `mcpStatus` carries it. On iPhone and iPad the section lists the two
+  addresses — a tap copies one, and the text can still be selected
+  (`MCPAddressText`) — Authorized Apps with the count, and Forget All above
+  zero; on the Mac the switch is followed by a button that opens the same in
+  a sheet (`MacMCPServerSheet`), where a click copies. There is no forgetting one app: nothing
+  tells one client from another. The switch reads MCP Server, and the
+  footer names no client app.
 - **Consent is the app's, while Settings is open.** The OAuth consent page
-  is served on a port anything on the device can reach — an App Store app
-  included — so a form there proves nothing: the first version of this
-  server took `POST /authorize decision=approve`, and any local process
-  registered itself, fetched the page, posted its own approval and had
-  `shell_exec`. Now the server asks the proxy (`beginMCPConsent`) and polls
-  (`mcpConsentState`); only the app may answer (`answerMCPConsent`), and only
-  while its settings page is up, which holds the consent window
-  (`setMCPConsentWindow`: renewed every 30 s, lapsing three minutes after the
-  last renewal — long enough to switch to the client and back — and closed,
-  refusing what waits, as the page goes). With no window open a request is
-  refused before anyone is asked, so nothing in the background can raise one.
-  Each request carries a six-digit code that the consent page and the app's
-  alert both show, so the person allows their client's request and not one
-  raised beside it. The page polls `/authorize/status` with its own script
-  (a CSP nonce) and is sent to the client's redirect with the code, or with
-  `access_denied`; its Cancel is the only thing the form still posts.
-- `LocalHTTPServer` names the port once, in the required local endpoint: named
-  again in `NWListener(using:on:)` the listener failed with EINVAL, and the
-  fixed port never bound.
+  is served on a port anything on the device or the local network can
+  reach — an App Store app included — so a form there proves nothing: the
+  first version of this server took `POST /authorize decision=approve`, and
+  any local process registered itself, fetched the page, posted its own
+  approval and had `shell_exec`. Now the server asks the proxy
+  (`beginMCPConsent`) and polls (`mcpConsentState`); only the app may
+  answer (`answerMCPConsent`), and only while its settings page is up,
+  which holds the consent window (`setMCPConsentWindow`: renewed every
+  30 s, lapsing three minutes after the last renewal — long enough to
+  switch to the client and back — and closed, refusing what waits, as the
+  page goes; the Mac's sheet is part of the page). With no window open a
+  request is refused before anyone is asked, so nothing in the background
+  can raise one. Each request carries a six-digit code that the consent
+  page and the app's alert both show, so the person allows their client's
+  request and not one raised beside it. The page polls `/authorize/status`
+  with its own script (a CSP nonce) and is sent to the client's redirect
+  with the code, or with `access_denied`; its Cancel is the only thing the
+  form still posts. Its colours are custom properties on `:root`, which
+  dark mode changes: a dark rule written before a base rule of the same
+  specificity loses to it, and 1.6.38's page drew white text on a white
+  card.
+- `LocalHTTPServer` names the port once, in `NWListener(using:on:)`. The
+  loopback-only listener named it in a required local endpoint instead;
+  named in both places the listener failed with EINVAL, and the fixed port
+  never bound.
 
 ## Ghost Remote
 
@@ -610,8 +637,9 @@ iOS first deletes this bundle's `.savedState` through `SceneRestorationReset`
 `iGhostVTCLI/` builds `ighostvt-cli`, a second *client* of the daemon —
 one-shot commands (`list`, `capture`, `send`, `new`, `kill`), never an
 interactive attach, so it neither holds a session nor touches the terminal
-it was run from. It compiles `Shared/Protocol/`, and `Shared/Remote/` and
-`Shared/Wire/` for `--host` (below), and nothing else the daemon uses: its
+it was run from. It compiles `Shared/Protocol/`, and `Shared/Remote/`,
+`Shared/Network/` and `Shared/Wire/` for `--host` (below), and nothing else
+the daemon uses: its
 own XPC client (`DaemonClient`), the `capture` screen model
 (`ScreenRenderer`), and the `send` key vocabulary (`KeyNames`). `ighostvtd`
 depends on it, so every `-scheme ighostvtd` build produces it beside

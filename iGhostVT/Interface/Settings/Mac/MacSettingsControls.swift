@@ -21,22 +21,27 @@ import SwiftUI
     /// lines a label up with a stepper or a popup button, which have none.
     struct MacSettingsRow<Control: View, Details: View>: View {
         let label: LocalizedStringKey
+        let labelWidth: CGFloat
         @ViewBuilder let control: () -> Control
         @ViewBuilder let details: () -> Details
 
+        /// `labelWidth` is narrower in a sheet, which can be no wider than
+        /// the settings window it hangs from.
         init(
             _ label: LocalizedStringKey,
+            labelWidth: CGFloat = Self.paneLabelWidth,
             @ViewBuilder control: @escaping () -> Control,
             @ViewBuilder details: @escaping () -> Details,
         ) {
             self.label = label
+            self.labelWidth = labelWidth
             self.control = control
             self.details = details
         }
 
         /// Wide enough for the longest label in any language the app
         /// ships; a longer one wraps rather than pushing the controls.
-        static var labelWidth: CGFloat {
+        static var paneLabelWidth: CGFloat {
             150
         }
 
@@ -49,22 +54,26 @@ import SwiftUI
                 HStack(alignment: .center, spacing: Self.spacing) {
                     Text(label)
                         .multilineTextAlignment(.trailing)
-                        .frame(width: Self.labelWidth, alignment: .trailing)
+                        .frame(width: labelWidth, alignment: .trailing)
                     control()
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 VStack(alignment: .leading, spacing: DS.Padding.s) {
                     details()
                 }
-                .padding(.leading, Self.labelWidth + Self.spacing)
+                .padding(.leading, labelWidth + Self.spacing)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
 
     extension MacSettingsRow where Details == EmptyView {
-        init(_ label: LocalizedStringKey, @ViewBuilder control: @escaping () -> Control) {
-            self.init(label, control: control, details: { EmptyView() })
+        init(
+            _ label: LocalizedStringKey,
+            labelWidth: CGFloat = Self.paneLabelWidth,
+            @ViewBuilder control: @escaping () -> Control,
+        ) {
+            self.init(label, labelWidth: labelWidth, control: control, details: { EmptyView() })
         }
     }
 
@@ -81,6 +90,37 @@ import SwiftUI
                 .font(DS.Font.detail)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// A small round glyph button set after a line of text, the text's own
+    /// size and on its baseline (the caller's `HStack` aligns them).
+    struct MacInlineIconButton: View {
+        let symbol: String
+        let label: LocalizedStringKey
+        let action: () -> Void
+
+        var body: some View {
+            Button(action: action) {
+                Image(systemName: symbol)
+                    .foregroundColor(.secondary)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(label)
+        }
+    }
+
+    extension View {
+        /// The sheet as big as its content: a plain sheet on the Mac is a
+        /// fixed form sheet much larger than a short list.
+        @ViewBuilder
+        func fittedSheet() -> some View {
+            if #available(macCatalyst 18.0, *) {
+                presentationSizing(.fitted)
+            } else {
+                self
+            }
         }
     }
 
