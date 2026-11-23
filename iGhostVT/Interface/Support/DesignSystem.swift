@@ -74,6 +74,8 @@ enum DS {
         case heroPrompt
         /// A line of a file drawn as code: a log entry, a configuration.
         case code
+        /// Code at the size of the text around it: an address to read off.
+        case codeBody
         /// The metadata under a line of code: a timestamp, a tag.
         case codeCaption
 
@@ -81,7 +83,7 @@ enum DS {
         var style: UIFont.TextStyle {
             switch self {
             case .title: .headline
-            case .control, .controlEmphasis, .body: .body
+            case .control, .controlEmphasis, .body, .codeBody: .body
             case .label, .labelEmphasis: .subheadline
             case .detail, .code: .footnote
             case .caption, .captionEmphasis: .caption1
@@ -103,7 +105,7 @@ enum DS {
 
         var design: SwiftUI.Font.Design {
             switch self {
-            case .heroPrompt, .code, .codeCaption: .monospaced
+            case .heroPrompt, .code, .codeBody, .codeCaption: .monospaced
             default: .default
             }
         }

@@ -178,6 +178,26 @@ final class FakeAuthority: ConsentAuthority {
     func consentState(of id: UInt64) throws -> MCPConsentState {
         states[id] ?? .expired
     }
+
+    private let reportLock = NSLock()
+    private var reported: [Int] = []
+
+    func authorizedClientsChanged(to count: Int) {
+        reportLock.withLock { reported.append(count) }
+    }
+
+    /// The counts told so far, once they are `expected` or two seconds on:
+    /// the store tells them from a queue of its own.
+    func reports(settlingOn expected: [Int]) -> [Int] {
+        let deadline = Date().addingTimeInterval(2)
+        while true {
+            let now = reportLock.withLock { reported }
+            if now == expected || Date() > deadline {
+                return now
+            }
+            usleep(10000)
+        }
+    }
 }
 
 let authority = FakeAuthority()
@@ -185,6 +205,7 @@ let oauth = OAuthStore(issuer: issuer, stateURL: stateFile, authority: authority
 let backend = MockBackend()
 let mcp = MCPHandler(backend: backend, allowAllSessions: false)
 let router = MCPRouter(oauth: oauth, mcp: mcp)
+expect(authority.reports(settlingOn: [0]) == [0], "a fresh store must report no authorized clients")
 
 // 1. Discovery metadata
 let prm = router.handle(makeRequest("GET", "/.well-known/oauth-protected-resource"))
@@ -324,6 +345,7 @@ let refreshed = router.handle(makeFormRequest("POST", "/token", form: [
 expect(refreshed.status == 200, "refresh_token grant must succeed")
 let newAccessToken = jsonBody(refreshed)["access_token"] as! String
 expect(newAccessToken != accessToken, "refresh must rotate access_token")
+expect(authority.reports(settlingOn: [0, 1]) == [0, 1], "a token must report one authorized client, and a refresh no change")
 
 // 6. Authenticated MCP calls + session isolation
 let authHeader = ["Authorization": "Bearer \(newAccessToken)"]
@@ -400,6 +422,7 @@ let afterRevoke = router.handle(makeJSONRequest("POST", "/mcp", headers: authHea
     "method": "ping",
 ]))
 expect(afterRevoke.status == 401, "revoked token must return 401")
+expect(authority.reports(settlingOn: [0, 1, 0]) == [0, 1, 0], "revoking the last token must report no authorized clients")
 
 // 7. Marker parsing check
 let parsed = DaemonShellBackend.extractMarker(from: "hello world\n__MARKER__:42\n", marker: "__MARKER__")

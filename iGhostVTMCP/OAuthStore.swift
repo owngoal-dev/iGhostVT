@@ -12,6 +12,9 @@ protocol ConsentAuthority: AnyObject {
     /// Throws when no one can be asked: the app's settings page is closed.
     func beginConsent(clientName: String, redirect: String) throws -> (id: UInt64, code: String)
     func consentState(of id: UInt64) throws -> MCPConsentState
+    /// How many clients hold a token; told as the server starts and
+    /// whenever it changes, from a queue of the store's own.
+    func authorizedClientsChanged(to count: Int)
 }
 
 extension DaemonShellBackend: ConsentAuthority {}
@@ -78,12 +81,20 @@ final class OAuthStore {
     private var tokens: [TokenRecord] = []
     private var pendingConsents: [String: PendingConsent] = [:]
     private var authCodes: [String: AuthCode] = [:]
+    /// The count the authority was last told, and the queue that tells it,
+    /// so reports leave in the order the changes were made and never under
+    /// the lock.
+    private var reportedClientCount: Int?
+    private let reportQueue = DispatchQueue(label: "wiki.qaq.ighostvt.mcp.clients")
 
     init(issuer: String, stateURL: URL?, authority: ConsentAuthority) {
         self.issuer = issuer.hasSuffix("/") ? String(issuer.dropLast()) : issuer
         self.stateURL = stateURL
         self.authority = authority
         loadState()
+        lock.lock()
+        reportClientCountLocked()
+        lock.unlock()
     }
 
     /// In the home of the user the server runs as — on the device it has
@@ -513,6 +524,7 @@ final class OAuthStore {
     }
 
     private func saveStateLocked() {
+        reportClientCountLocked()
         guard let stateURL else { return }
         let dir = stateURL.deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -522,6 +534,17 @@ final class OAuthStore {
         if FileManager.default.createFile(atPath: tmp.path, contents: data, attributes: [.posixPermissions: 0o600]) {
             _ = rename(tmp.path, stateURL.path)
         }
+    }
+
+    /// Clients with a token that can still be refreshed — what Settings
+    /// calls authorized apps.
+    private func reportClientCountLocked() {
+        let now = Date().timeIntervalSince1970
+        let count = Set(tokens.filter { $0.refreshExpiresAt > now }.map(\.clientID)).count
+        guard count != reportedClientCount else { return }
+        reportedClientCount = count
+        let authority = authority
+        reportQueue.async { authority.authorizedClientsChanged(to: count) }
     }
 
     private func pruneExpiredLocked() {

@@ -392,19 +392,21 @@ import SwiftUI
             } details: {
                 MacSettingsNote(
                     """
-                    Lets AI apps on this device, such as FlowDown, run commands in \
-                    your terminals. When an app asks to connect, approve it here, \
-                    while this page is open.
+                    Lets AI apps on this device use your terminals. Keep this page \
+                    open while you connect a new app, so you can approve it.
                     """,
                 )
                 if mcp.status.isEnabled {
                     HStack(spacing: DS.Padding.s) {
                         Text(verbatim: MCPConsent.endpoint)
+                            .font(DS.Font.codeBody)
                             .textSelection(.enabled)
                         Button("Copy") { mcp.copyEndpoint() }
                     }
                     .padding(.top, DS.Padding.s)
-                    Button("Forget Authorized Apps") { mcp.forgetClients() }
+                    if mcp.status.authorizedClients > 0 {
+                        Button("Forget Authorized Apps") { mcp.forgetClients() }
+                    }
                 }
             }
         }

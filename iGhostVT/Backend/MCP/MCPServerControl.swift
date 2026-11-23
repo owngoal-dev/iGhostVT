@@ -5,6 +5,8 @@ import Foundation
 struct MCPServerStatus: Equatable, Sendable {
     var isEnabled = false
     var state: MCPServerState = .off
+    /// Clients holding a token, as the server last said.
+    var authorizedClients = 0
     /// The daemon could not be asked at all.
     var isUnavailable = false
 }
@@ -125,6 +127,7 @@ enum MCPServerControl {
         return MCPServerStatus(
             isEnabled: xpc_dictionary_get_bool(reply, iGhostVTWireKey.enabled),
             state: string(iGhostVTWireKey.mcpState, in: reply).flatMap(MCPServerState.init(rawValue:)) ?? .off,
+            authorizedClients: Int(clamping: xpc_dictionary_get_uint64(reply, iGhostVTWireKey.mcpClients)),
         )
     }
 

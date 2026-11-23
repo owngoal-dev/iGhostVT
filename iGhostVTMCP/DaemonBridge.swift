@@ -446,6 +446,16 @@ final class DaemonShellBackend: ShellBackend {
         }
     }
 
+    /// Best effort: a count lost here is put right by the next change, or
+    /// the next start.
+    func authorizedClientsChanged(to count: Int) {
+        _ = try? withConnection { connection, queue in
+            try send(.reportMCPClients, on: connection, queue: queue) { message in
+                xpc_dictionary_set_uint64(message, iGhostVTWireKey.mcpClients, UInt64(max(0, count)))
+            }
+        }
+    }
+
     /// The connection the server holds for as long as it runs: it keeps the
     /// daemon resident, and its loss — the daemon gone, or this process not
     /// its child — is the server's cue to exit, so a daemon that comes back

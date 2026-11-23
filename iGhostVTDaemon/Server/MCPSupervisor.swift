@@ -22,7 +22,10 @@ import XPC
 /// (`setMCPConsentWindow`). With no window open a request is refused before
 /// anyone is asked, so nothing running in the background can raise one.
 /// Each request carries a code the consent page shows too, so the person can
-/// tell their client's request from one raised beside it.
+/// tell their client's request from one raised beside it. The server also
+/// says how many clients hold a token (`reportMCPClients`), which the
+/// status carries so Settings offers Forget only when there is someone to
+/// forget.
 ///
 /// Nothing here reads more of a message than its operation and the fields
 /// named above; the state is a handful of small entries.
@@ -57,6 +60,10 @@ final class MCPSupervisor {
     private var respawnScheduled = false
     /// The next start wipes the clients and tokens the server kept.
     private var forgetOnNextStart = false
+
+    /// What the server last reported (`reportMCPClients`); zero once
+    /// Forget is asked, before the restarted server says so itself.
+    private var authorizedClients: UInt64 = 0
 
     private var windowOpenUntil: Double = 0
     private var requests: [UInt64: Request] = [:]
@@ -176,7 +183,10 @@ final class MCPSupervisor {
             xpc_dictionary_set_string(reply, iGhostVTWireKey.mcpConsent, state.rawValue)
         case .forgetMCPClients:
             forgetClients()
+            authorizedClients = 0
             fillStatus(reply)
+        case .reportMCPClients:
+            authorizedClients = xpc_dictionary_get_uint64(message, iGhostVTWireKey.mcpClients)
         default:
             return Self.refuse(reply, .invalidRequest, "Not an MCP operation.")
         }
@@ -185,7 +195,7 @@ final class MCPSupervisor {
     }
 
     static func isMCPOperation(_ code: UInt64) -> Bool {
-        (iGhostVTOperation.mcpStatus.rawValue ... iGhostVTOperation.forgetMCPClients.rawValue).contains(code)
+        (iGhostVTOperation.mcpStatus.rawValue ... iGhostVTOperation.reportMCPClients.rawValue).contains(code)
     }
 
     private static func may(_ sender: Sender, send operation: iGhostVTOperation) -> Bool {
@@ -194,7 +204,7 @@ final class MCPSupervisor {
             true
         case .setMCPServer, .setMCPConsentWindow, .mcpConsentRequests, .answerMCPConsent, .forgetMCPClients:
             sender == .app
-        case .beginMCPConsent, .mcpConsentState:
+        case .beginMCPConsent, .mcpConsentState, .reportMCPClients:
             sender == .server
         default:
             false
@@ -207,6 +217,7 @@ final class MCPSupervisor {
         xpc_dictionary_set_bool(reply, iGhostVTWireKey.enabled, enabled)
         xpc_dictionary_set_string(reply, iGhostVTWireKey.mcpState, state.rawValue)
         xpc_dictionary_set_uint64(reply, iGhostVTWireKey.port, UInt64(MCPConsent.port))
+        xpc_dictionary_set_uint64(reply, iGhostVTWireKey.mcpClients, authorizedClients)
     }
 
     private func fillRequests(_ reply: xpc_object_t, now: Double) {
