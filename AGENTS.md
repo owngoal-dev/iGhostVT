@@ -841,7 +841,35 @@ device's new-tab menu names the terminal word for word as this one does,
 on one line — the process under it read as noise in a list of agents that
 all run the same binary. Whenever a device holds a terminal, Open All
 sits right under its New Terminal and attaches every one not already open
-here — greyed once all are, gone when the device holds none.
+here — greyed once all are, gone when the device holds none. The
+`fontoffset` key is the tab's own text size against the device's Settings
+▸ Text Size, signed points (absent at zero): an offset, so a session
+zoomed on the Mac opens on the phone as much bigger than the phone's
+setting. It follows the lock's rules — taken on a reattach, the tab's sent
+when it changed with no link — and a pinch reaches the session at most
+twice a second. Since a request replaces the whole dictionary, a tab
+keeps every key it does not own (`sessionOtherAttributes`) and sends it
+back with its own; an app from before 1.6.36 does not, so a session held
+by one loses its offset at the next retitle. That is a size, and accepted.
+
+**Text size is the setting plus the tab's offset** (`TerminalFontSize`,
+`TabFontSize`). Settings ▸ Text Size is every terminal's size and moves
+every open tab when it changes; a pinch, ⌘+ / ⌘−, or the tab menu's Text
+Size moves only that tab's offset, and Actual Size clears it — none of
+them writes the setting. (Up to 1.6.35 ⌘+ stepped the setting from its
+own value while the pinch did not, and ⌘0 put the tab at the size it was
+opened at and the setting at the platform default.) A live surface is
+only ever resized through `set_font_size`: the surface option's
+`fontSize` is part of its identity, and changed on a mounted view it
+rebuilds the surface, grid and scrollback gone — so the option is the
+size the tab was made at, and a surface made later from it is brought to
+the tab's size on its first report (`reportingSurface`). A zoom the
+surface makes by itself — a pinch, or Ghostty's own binding when the
+app's shortcut is off — is read back off the size it reports; the sizes
+asked of it are remembered until they come back, because reports arrive
+a turn late and coalesced, and the stepper tapped twice would otherwise
+hear its first size as a zoom. A change of the setting also rewrites each
+tab's generated config, so Ghostty's own `reset_font_size` lands on it.
 
 `uploadFile` (op 15) puts a file on the daemon's device for a shell there
 to read: what a drop on a *remote* tab pastes, since no path on the app's
@@ -1313,9 +1341,10 @@ spawned shell (`tcgetpgrp == childPID`, `foregroundIsShell`), and a connected
 tab whose shell is at its prompt closes on the spot (`hasRunningProgram`). A
 detached tab's last report is stale, so it still asks; an unknown state reads
 as running. On the regular-width bar the trailing ⋯ button opens this same
-menu for the active tab with New Tab and New Window at its head — the
-strip has no + of its own, except on the Mac, where one sits beside the
-sidebar toggle while the sidebar is hidden.
+menu for the active tab with New Tab and New Window at its head, and
+while the sidebar is hidden a `+` sits beside the sidebar toggle — on
+every regular-width layout since 1.6.36 (the Mac's only, before, so an
+iPad with its sidebar hidden had New Tab inside ⋯ alone).
 
 A middle click on a sidebar row or a strip chip closes that tab
 (`onMiddleClick`), through the same `requestClose`. Catalyst never turns
@@ -1469,9 +1498,10 @@ not reported yet — the control stays the plain button it replaced, and ⌘T
 is always `.activeTab` regardless. The ⋯ menu's New Tab is the same view
 with a `Label`, so it becomes a submenu; that matters because on a phone
 with tabs open the bar shows the title capsule and ⋯ is the only new-tab
-control on screen. The sidebar row, the compact bar's `+`, the switcher's
-dashed card and that entry are the four; a device group's `+` in the
-Mac's sidebar is the same control, scoped to that device.
+control on screen. The sidebar row, the compact bar's `+`, the strip's
+`+` while the sidebar is hidden, the switcher's dashed card and that
+entry are the five; a device group's `+` in the Mac's sidebar is the same
+control, scoped to that device.
 
 Paired devices (remote access) follow, each with New Terminal, the
 terminals it has open, and the directories this app's tabs were in on that
@@ -1656,7 +1686,7 @@ in the menu. ghostty's own bindings on the same chords (`goto_tab`,
 `new_tab`, `close_surface`…) are actions the library does not surface, so
 a key that is off is a dead key, not a ghostty feature — except font
 size and clear screen, which ghostty performs itself either way (the app
-fronts them so the size preference follows), and the four find keys
+fronts them so the tab's font offset follows), and the four find keys
 (⌘F, ⌘G, ⇧⌘G, ⌘E), which are ghostty's own default bindings and reach the
 same find bar through the search delegate.
 One list feeds both the Mac's menu bar and the iPad's hold-⌘ overlay, and it
@@ -1676,9 +1706,9 @@ Window), and with the last window the app: the Mac goes through AppKit's
 `terminate:` (`AppTermination`, the same call the relocation alert's Quit
 makes) so `applicationWillTerminate` runs as for ⌘Q, iPad destroys the
 scene, and a phone is sent home. The
-font commands run ghostty's own `increase_font_size` actions on the active
-surface and step `TerminalFontSize` alongside — they pre-empt the ⌘+/⌘−
-press the library would otherwise have forwarded to ghostty itself. Menu
+font commands step the active tab's offset (`TabFontSize`), greyed at the
+library's ends and Actual Size at zero — they pre-empt the ⌘+/⌘− press
+the library would otherwise have forwarded to ghostty itself. Menu
 titles are hand-entered in `Localizable.xcstrings` (eleven languages,
 `extractionState: manual`), and two keys made of the same words collide in
 the catalog's generated symbols, which is why the menu's entry is keyed

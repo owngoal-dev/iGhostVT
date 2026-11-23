@@ -26,11 +26,13 @@ final class TerminalTab: ObservableObject, Identifiable {
     let customConfiguration: String
     let store: TerminalSessionStore
     let search: TerminalSearch
+    /// The tab's text size: Settings ▸ Text Size and the tab's own offset.
+    let fontSize: TabFontSize
 
-    /// What the user has set on this tab — its lock, for now. Observed on
+    /// What the user has set on this tab — its lock and its font offset. Observed on
     /// its own (`TabAttributes`), so the views that show or change it are
     /// not re-evaluated on every retitle the way views of the tab are.
-    let attributes = TabAttributes()
+    let attributes: TabAttributes
     /// A touch landed on the locked surface (`LockableTerminalView.onLockedTouch`):
     /// the pane shows the lock's caption again. Not published state — a
     /// stream of moments — so nothing re-renders for it.
@@ -83,6 +85,15 @@ final class TerminalTab: ObservableObject, Identifiable {
     private var isLockUnsent = false
     /// The title the daemon's session holds, as far as this tab knows.
     private var sessionTitle: String?
+    /// The font offset the session holds, as far as this tab knows, and
+    /// whether a change to it found no connection — the lock's rules.
+    private var sessionFontOffset = 0
+    private var isFontOffsetUnsent = false
+    /// Whatever else the session holds — keys a later release, the CLI or
+    /// another device's app put there. A request replaces the whole
+    /// dictionary, so they ride along with every one this tab sends.
+    private var sessionOtherAttributes: [String: String] = [:]
+    private var fontOffsetObservation: AnyCancellable?
     private var titleSyncObservation: AnyCancellable?
 
     /// The paired device this tab's shell runs on (remote access), `nil`
@@ -154,6 +165,9 @@ final class TerminalTab: ObservableObject, Identifiable {
             terminalConfiguration: GhosttyAppConfiguration.terminal,
         )
         terminal = state
+        let tabAttributes = TabAttributes()
+        attributes = tabAttributes
+        fontSize = TabFontSize(terminal: state, attributes: tabAttributes)
         search = TerminalSearch(terminal: state)
         // Built before the store exists (the factory closure cannot capture
         // `self` mid-init), armed right after: the exit the transport
@@ -202,7 +216,7 @@ final class TerminalTab: ObservableObject, Identifiable {
         }
         terminal.configuration = TerminalSurfaceOptions(
             backend: .inMemory(store.session),
-            fontSize: TerminalFontSize.preferred,
+            fontSize: fontSize.initialSize,
             resizeThrottleMilliseconds: Self.resizeThrottle(isShellInForeground: false),
             scrollBehavior: SmoothScrolling.behavior,
         )
@@ -343,6 +357,14 @@ final class TerminalTab: ObservableObject, Identifiable {
         // The lock lives in the daemon's session as well, so a relaunch —
         // or a crash, which runs no termination code — finds it again: an
         // attach states what the session kept, and the tab adopts it.
+        // A pinch moves the offset a point at a time; the session hears the
+        // newest at most twice a second.
+        fontOffsetObservation = attributes.$fontOffset
+            .removeDuplicates()
+            .throttle(for: .milliseconds(500), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] offset in
+                self?.storeFontOffsetInSession(offset)
+            }
         store.onSessionAttributes = { [weak self] attributes, isResumed in
             self?.adoptSessionAttributes(attributes, isResumed: isResumed)
         }
@@ -384,23 +406,47 @@ final class TerminalTab: ObservableObject, Identifiable {
     /// changes — hence the value handed in rather than `self.lock`.
     private func storeLockInSession(_ lock: TabLock?) {
         guard lock != sessionLock || isLockUnsent else { return }
-        let title = titleForSession
-        guard store.setSessionAttributes(Self.sessionAttributes(lock: lock, title: title)) else {
+        let fontOffset = isFontOffsetUnsent ? attributes.fontOffset : sessionFontOffset
+        if !storeAttributesInSession(lock: lock, fontOffset: fontOffset) {
             isLockUnsent = true
-            return
         }
-        sessionLock = lock
-        sessionTitle = title
-        isLockUnsent = false
+    }
+
+    /// Sends the tab's font offset to the session unless it already holds
+    /// it; the same rules as the lock.
+    private func storeFontOffsetInSession(_ fontOffset: Int) {
+        guard fontOffset != sessionFontOffset || isFontOffsetUnsent else { return }
+        let lock = isLockUnsent ? self.lock : sessionLock
+        if !storeAttributesInSession(lock: lock, fontOffset: fontOffset) {
+            isFontOffsetUnsent = true
+        }
     }
 
     /// Sends the tab's title to the session unless it already holds it. A
-    /// request replaces the whole dictionary, so the lock rides along.
+    /// request replaces the whole dictionary, so the lock and the font
+    /// offset ride along — the session's own, while a change of the tab's
+    /// is still waiting for the next attach.
     private func storeTitleInSession() {
+        guard titleForSession != sessionTitle, !isLockUnsent, !isFontOffsetUnsent else { return }
+        storeAttributesInSession(lock: sessionLock, fontOffset: sessionFontOffset)
+    }
+
+    /// One request with everything the session should hold; on success it
+    /// holds exactly that, and nothing is left unsent.
+    @discardableResult
+    private func storeAttributesInSession(lock: TabLock?, fontOffset: Int) -> Bool {
         let title = titleForSession
-        guard title != sessionTitle, !isLockUnsent else { return }
-        guard store.setSessionAttributes(Self.sessionAttributes(lock: sessionLock, title: title)) else { return }
+        var attributes = sessionOtherAttributes
+        attributes[iGhostVTSessionAttribute.lock] = lock?.sessionAttribute
+        attributes[iGhostVTSessionAttribute.title] = title
+        attributes[iGhostVTSessionAttribute.fontOffset] = fontOffset == 0 ? nil : String(fontOffset)
+        guard store.setSessionAttributes(attributes) else { return false }
+        sessionLock = lock
         sessionTitle = title
+        sessionFontOffset = fontOffset
+        isLockUnsent = false
+        isFontOffsetUnsent = false
+        return true
     }
 
     /// The reported title, as the tab shows it, cut well inside the
@@ -410,34 +456,45 @@ final class TerminalTab: ObservableObject, Identifiable {
         return title.isEmpty ? nil : String(title.prefix(256))
     }
 
-    private static func sessionAttributes(lock: TabLock?, title: String?) -> [String: String] {
-        var attributes: [String: String] = [:]
-        attributes[iGhostVTSessionAttribute.lock] = lock?.sessionAttribute
-        attributes[iGhostVTSessionAttribute.title] = title
-        return attributes
-    }
-
-    /// A reattached session hands back the lock it kept, and the tab takes
-    /// it — unless the user changed the lock while there was no link, in
-    /// which case the tab's is the newer and goes to the session instead.
-    /// A freshly opened session holds nothing, so it gets the tab's.
+    /// A reattached session hands back the lock and the font offset it
+    /// kept, and the tab takes them — unless the user changed one while
+    /// there was no link, in which case the tab's is the newer and goes to
+    /// the session instead. A freshly opened session holds nothing, so it
+    /// gets the tab's.
     private func adoptSessionAttributes(_ attributes: [String: String], isResumed: Bool) {
         let held = TabLock(sessionAttribute: attributes[iGhostVTSessionAttribute.lock])
+        let heldFontOffset = attributes[iGhostVTSessionAttribute.fontOffset].flatMap(Int.init) ?? 0
         sessionLock = held
         sessionTitle = attributes[iGhostVTSessionAttribute.title]
+        sessionFontOffset = heldFontOffset
+        sessionOtherAttributes = attributes.filter { !Self.ownedAttributeKeys.contains($0.key) }
         defer { storeTitleInSession() }
-        guard isResumed, !isLockUnsent else {
+        if isResumed, !isLockUnsent {
+            if lock != held {
+                AppLog.info(
+                    .tabs,
+                    "tab \(id) takes the lock its session kept: \(held?.sessionAttribute ?? "none")",
+                )
+                lock = held
+            }
+        } else {
             storeLockInSession(lock)
-            return
         }
-        if lock != held {
-            AppLog.info(
-                .tabs,
-                "tab \(id) takes the lock its session kept: \(held?.sessionAttribute ?? "none")",
-            )
-            lock = held
+        if isResumed, !isFontOffsetUnsent {
+            if self.attributes.fontOffset != heldFontOffset {
+                AppLog.info(.tabs, "tab \(id) takes the font offset its session kept: \(heldFontOffset)")
+            }
+            fontSize.adopt(offset: heldFontOffset)
+        } else {
+            storeFontOffsetInSession(self.attributes.fontOffset)
         }
     }
+
+    private static let ownedAttributeKeys: Set<String> = [
+        iGhostVTSessionAttribute.lock,
+        iGhostVTSessionAttribute.title,
+        iGhostVTSessionAttribute.fontOffset,
+    ]
 
     /// The fastest a retitle reaches the tab's views.
     private static let retitleInterval: DispatchQueue.SchedulerTimeType.Stride = .milliseconds(250)
@@ -515,10 +572,6 @@ final class TerminalTab: ObservableObject, Identifiable {
         daemonSession.id != nil || store.status == .connected
     }
 
-    /// Milliseconds between grid sizes handed to the surface during a live
-    /// resize: none for a shell at its prompt, 128 for a program in front of
-    /// it — a step above the library's 96 for full-repaint TUIs, enough for an
-    /// A12Z iPad; 200 was tried and taken back as too long a blank strip.
     /// Settings ▸ Advanced ▸ Smooth Scrolling, flipped while this tab is
     /// open.
     private func applyScrollBehavior(_ behavior: TerminalScrollBehavior) {
@@ -527,6 +580,10 @@ final class TerminalTab: ObservableObject, Identifiable {
         terminal.attachedPlatformView?.configuration.scrollBehavior = behavior
     }
 
+    /// Milliseconds between grid sizes handed to the surface during a live
+    /// resize: none for a shell at its prompt, 128 for a program in front of
+    /// it — a step above the library's 96 for full-repaint TUIs, enough for an
+    /// A12Z iPad; 200 was tried and taken back as too long a blank strip.
     private static func resizeThrottle(isShellInForeground: Bool) -> Double {
         isShellInForeground ? 0 : 128
     }

@@ -274,9 +274,9 @@ import SwiftUI
                 } details: {
                     MacSettingsNote(
                         """
-                        New terminals open at the terminal size; a tab that is already \
-                        open keeps the size it was zoomed to. The interface size scales \
-                        every label and control.
+                        Every tab follows the terminal size. A tab you make bigger or \
+                        smaller keeps the difference until you choose Actual Size. The \
+                        interface size scales every label and control.
                         """,
                     )
                 }

@@ -28,6 +28,9 @@ struct TabContextMenu: View {
     let tabManager: TabManager
     let window: UIWindow?
     @ObservedObject private var attributes: TabAttributes
+    /// Settings ▸ Text Size, so the size Text Size names follows it; it
+    /// changes only in Settings, never with output.
+    @AppStorage(TerminalFontSize.key) private var baseFontSize = TerminalFontSize.default
 
     init(tab: TerminalTab, tabManager: TabManager, window: UIWindow?) {
         self.tab = tab
@@ -60,6 +63,7 @@ struct TabContextMenu: View {
             Label("Find…", systemImage: "magnifyingglass")
         }
         .disabled(tab.isCoveredByStatusAlert)
+        textSizeMenu
         // What happens to the tab — its lock, its window — then Close Tab
         // in a section of its own, last.
         Divider()
@@ -90,6 +94,38 @@ struct TabContextMenu: View {
             }
             Divider()
         }
+    }
+
+    /// The tab's own size, a point at a time, and back to Settings ▸ Text
+    /// Size: its offset (`TabFontSize`), never the setting. The size the
+    /// tab is at heads the list.
+    private var textSizeMenu: some View {
+        Menu {
+            Text(verbatim: fontSizeDescription)
+            Button(action: { tab.fontSize.step(by: 1) }) {
+                Label("Bigger", systemImage: "plus.magnifyingglass")
+            }
+            .disabled(!tab.fontSize.canStep(by: 1))
+            Button(action: { tab.fontSize.step(by: -1) }) {
+                Label("Smaller", systemImage: "minus.magnifyingglass")
+            }
+            .disabled(!tab.fontSize.canStep(by: -1))
+            Button(action: { tab.fontSize.reset() }) {
+                Label("Actual Size", systemImage: "1.magnifyingglass")
+            }
+            .disabled(attributes.fontOffset == 0)
+        } label: {
+            Label("Text Size", systemImage: "textformat.size")
+        }
+    }
+
+    /// Read off the setting and the offset, which are what this view
+    /// observes; the surface's own size would not redraw the menu.
+    private var fontSizeDescription: String {
+        String.localizedStringWithFormat(
+            NSLocalizedString("%lld pt", comment: "A font size in points"),
+            min(max(baseFontSize + attributes.fontOffset, TerminalFontSize.range.lowerBound), TerminalFontSize.range.upperBound),
+        )
     }
 
     private func find() {
