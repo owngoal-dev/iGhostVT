@@ -57,7 +57,35 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026111701, Ghostty 5ebe501a on Zig 0.17.1).
+  (`upToNextMajor` from 2.2.2026112301, Ghostty 5ebe501a on Zig 0.17.1).
+  2.2.2026112301 keeps the Ghostty pin and adds one engine patch, 0023
+  (binary `upstream.5ebe501a6342-2`), and changes how a precision scroll
+  ends. On iOS a lift UIKit takes for a stop (slower than about 250 pt/s)
+  goes on to the row ahead at the finger's speed, where it slid back to
+  the nearer row from rest; while the hidden scroll view moves only the
+  render thread draws (a wakeup's frame is owed until it rests, since the
+  main thread's synchronous draw stood the picture still for a frame and
+  could land ahead of an older one), the surface's display link runs to
+  the end of the deceleration so the display keeps one rate, and
+  `scrollViewDidScroll` waits up to 6.5 ms for 0023 to say the frame
+  holding that step reached the layer, so the text moves in UIKit's own
+  commit, one frame less behind the finger. The AppKit view's snap after
+  a trackpad scroll now sets off at the scroll's speed, but this app's Mac
+  build is Catalyst, the UIKit view: there, as with an iPad's trackpad or
+  mouse, the snap waits out the pan's `idleDelay` (0.12 s), by when the
+  scroll's speed has faded (`velocityStaleAfter`, 0.1 s), so it eases in
+  and out from rest — where the cubic ease-out it used set off at three
+  times its average speed. 2.2.2026112201 added
+  `TerminalSurfaceOptions.scrollBehavior` — `.settlesOnRow` (the
+  library's default), `.restsAnywhere`, `.rowAtATime` — and a read-only
+  cell reader on `TerminalSurface`, which nothing here uses. This app
+  never takes the library's default: every surface is built with
+  `SmoothScrolling.behavior` — `.rowAtATime` unless Settings ▸ Advanced ▸
+  Experimental Features ▸ Smooth Scrolling is on, then `.settlesOnRow` —
+  and `TerminalTab` writes a flip into open tabs the way it writes the
+  resize throttle (the behavior is outside a surface's identity, so it
+  switches the live surface and rebuilds nothing). Pixel scrolling was
+  on from 1.6.29 to 1.6.35; 1.6.36 put it behind the switch, off.
   2.2.2026111701 moves from Ghostty cf5519b2 to 5ebe501a, 91 commits
   (binary `upstream.5ebe501a6342`). Upstream 8ad3f607 stops a column
   reflow leaving stale prompt copies behind and has the reflow write the
@@ -332,7 +360,10 @@ Activities and the Remote Access link — in Ghost Remote, which has no
 sessions of its own and so no Background Activities, Remote Access leads,
 since it must show there without scrolling; Keyboard puts Accessory Keys before Shortcuts. Default Shell and New
 Session at Launch (not in Ghost Remote, whose launch never starts a shell
-on a paired device) sit under About ▸ Advanced, and there is no Interface
+on a paired device) sit under About ▸ Advanced, beside Experimental
+Features — what works but is not yet on by default, each a switch that
+starts off (today Smooth Scrolling, `SmoothScrolling`); the Mac's
+Advanced pane has the same row — and there is no Interface
 stepper — on iOS the chrome follows Dynamic Type, and a step stored by an
 older build is ignored there (`InterfaceTextSizeModifier`); the Mac keeps
 the stepper because Catalyst ignores Dynamic Type. The Mac's window
@@ -810,7 +841,35 @@ device's new-tab menu names the terminal word for word as this one does,
 on one line — the process under it read as noise in a list of agents that
 all run the same binary. Whenever a device holds a terminal, Open All
 sits right under its New Terminal and attaches every one not already open
-here — greyed once all are, gone when the device holds none.
+here — greyed once all are, gone when the device holds none. The
+`fontoffset` key is the tab's own text size against the device's Settings
+▸ Text Size, signed points (absent at zero): an offset, so a session
+zoomed on the Mac opens on the phone as much bigger than the phone's
+setting. It follows the lock's rules — taken on a reattach, the tab's sent
+when it changed with no link — and a pinch reaches the session at most
+twice a second. Since a request replaces the whole dictionary, a tab
+keeps every key it does not own (`sessionOtherAttributes`) and sends it
+back with its own; an app from before 1.6.36 does not, so a session held
+by one loses its offset at the next retitle. That is a size, and accepted.
+
+**Text size is the setting plus the tab's offset** (`TerminalFontSize`,
+`TabFontSize`). Settings ▸ Text Size is every terminal's size and moves
+every open tab when it changes; a pinch, ⌘+ / ⌘−, or the tab menu's Text
+Size moves only that tab's offset, and Actual Size clears it — none of
+them writes the setting. (Up to 1.6.35 ⌘+ stepped the setting from its
+own value while the pinch did not, and ⌘0 put the tab at the size it was
+opened at and the setting at the platform default.) A live surface is
+only ever resized through `set_font_size`: the surface option's
+`fontSize` is part of its identity, and changed on a mounted view it
+rebuilds the surface, grid and scrollback gone — so the option is the
+size the tab was made at, and a surface made later from it is brought to
+the tab's size on its first report (`reportingSurface`). A zoom the
+surface makes by itself — a pinch, or Ghostty's own binding when the
+app's shortcut is off — is read back off the size it reports; the sizes
+asked of it are remembered until they come back, because reports arrive
+a turn late and coalesced, and the stepper tapped twice would otherwise
+hear its first size as a zoom. A change of the setting also rewrites each
+tab's generated config, so Ghostty's own `reset_font_size` lands on it.
 
 `uploadFile` (op 15) puts a file on the daemon's device for a shell there
 to read: what a drop on a *remote* tab pastes, since no path on the app's
@@ -1282,9 +1341,10 @@ spawned shell (`tcgetpgrp == childPID`, `foregroundIsShell`), and a connected
 tab whose shell is at its prompt closes on the spot (`hasRunningProgram`). A
 detached tab's last report is stale, so it still asks; an unknown state reads
 as running. On the regular-width bar the trailing ⋯ button opens this same
-menu for the active tab with New Tab and New Window at its head — the
-strip has no + of its own, except on the Mac, where one sits beside the
-sidebar toggle while the sidebar is hidden.
+menu for the active tab with New Tab and New Window at its head, and
+while the sidebar is hidden a `+` sits beside the sidebar toggle — on
+every regular-width layout since 1.6.36 (the Mac's only, before, so an
+iPad with its sidebar hidden had New Tab inside ⋯ alone).
 
 A middle click on a sidebar row or a strip chip closes that tab
 (`onMiddleClick`), through the same `requestClose`. Catalyst never turns
@@ -1438,9 +1498,10 @@ not reported yet — the control stays the plain button it replaced, and ⌘T
 is always `.activeTab` regardless. The ⋯ menu's New Tab is the same view
 with a `Label`, so it becomes a submenu; that matters because on a phone
 with tabs open the bar shows the title capsule and ⋯ is the only new-tab
-control on screen. The sidebar row, the compact bar's `+`, the switcher's
-dashed card and that entry are the four; a device group's `+` in the
-Mac's sidebar is the same control, scoped to that device.
+control on screen. The sidebar row, the compact bar's `+`, the strip's
+`+` while the sidebar is hidden, the switcher's dashed card and that
+entry are the five; a device group's `+` in the Mac's sidebar is the same
+control, scoped to that device.
 
 Paired devices (remote access) follow, each with New Terminal, the
 terminals it has open, and the directories this app's tabs were in on that
@@ -1625,7 +1686,7 @@ in the menu. ghostty's own bindings on the same chords (`goto_tab`,
 `new_tab`, `close_surface`…) are actions the library does not surface, so
 a key that is off is a dead key, not a ghostty feature — except font
 size and clear screen, which ghostty performs itself either way (the app
-fronts them so the size preference follows), and the four find keys
+fronts them so the tab's font offset follows), and the four find keys
 (⌘F, ⌘G, ⇧⌘G, ⌘E), which are ghostty's own default bindings and reach the
 same find bar through the search delegate.
 One list feeds both the Mac's menu bar and the iPad's hold-⌘ overlay, and it
@@ -1645,9 +1706,9 @@ Window), and with the last window the app: the Mac goes through AppKit's
 `terminate:` (`AppTermination`, the same call the relocation alert's Quit
 makes) so `applicationWillTerminate` runs as for ⌘Q, iPad destroys the
 scene, and a phone is sent home. The
-font commands run ghostty's own `increase_font_size` actions on the active
-surface and step `TerminalFontSize` alongside — they pre-empt the ⌘+/⌘−
-press the library would otherwise have forwarded to ghostty itself. Menu
+font commands step the active tab's offset (`TabFontSize`), greyed at the
+library's ends and Actual Size at zero — they pre-empt the ⌘+/⌘− press
+the library would otherwise have forwarded to ghostty itself. Menu
 titles are hand-entered in `Localizable.xcstrings` (eleven languages,
 `extractionState: manual`), and two keys made of the same words collide in
 the catalog's generated symbols, which is why the menu's entry is keyed

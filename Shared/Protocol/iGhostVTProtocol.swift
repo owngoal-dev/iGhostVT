@@ -308,6 +308,11 @@ enum iGhostVTSessionAttribute {
     /// part), so another device's new-tab menu names the terminal the way
     /// this one does; absent while the session has reported none.
     static let title = "title"
+    /// Points the tab's text differs from the device's Text Size setting,
+    /// signed (`2`, `-1`); absent at zero. An offset rather than a size, so
+    /// a device whose setting differs keeps the difference, not a size
+    /// chosen for another screen.
+    static let fontOffset = "fontoffset"
 }
 
 /// Daemon-initiated pushes on an attached connection. These carry no reply.

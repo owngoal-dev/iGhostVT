@@ -323,10 +323,13 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
         case #selector(selectTab(_:)):
             guard hasActiveTab, let index = Self.tabIndex(of: sender) else { return false }
             return tab(atCommandIndex: index) != nil
+        case #selector(increaseFontSize(_:)):
+            return hasActiveTab && activeTab?.fontSize.canStep(by: 1) == true
+        case #selector(decreaseFontSize(_:)):
+            return hasActiveTab && activeTab?.fontSize.canStep(by: -1) == true
+        case #selector(resetFontSize(_:)):
+            return hasActiveTab && activeTab?.attributes.fontOffset != 0
         case #selector(exportTabText(_:)),
-             #selector(increaseFontSize(_:)),
-             #selector(decreaseFontSize(_:)),
-             #selector(resetFontSize(_:)),
              #selector(clearScreen(_:)),
              #selector(showNextTab(_:)),
              #selector(showPreviousTab(_:)),
@@ -469,30 +472,19 @@ final class TerminalWindow: UIWindow, AppCommandResponder {
         interface.toggleSwitcher()
     }
 
-    /// Ghostty's own font actions on the active surface — the same ones the
-    /// pinch drives — with the preference stepped alongside, so the next tab
-    /// opens at the size this one was just zoomed to.
+    /// The active tab a point bigger or smaller, or back to Settings ▸
+    /// Text Size: its offset (`TabFontSize`), never the setting, so no
+    /// other tab and no later one changes with it.
     func increaseFontSize(_: Any?) {
-        guard let tab = activeTab else { return }
-        if tab.terminal.performBindingAction("increase_font_size:1") {
-            TerminalFontSize.stepPreferred(by: 1)
-        }
+        activeTab?.fontSize.step(by: 1)
     }
 
     func decreaseFontSize(_: Any?) {
-        guard let tab = activeTab else { return }
-        if tab.terminal.performBindingAction("decrease_font_size:1") {
-            TerminalFontSize.stepPreferred(by: -1)
-        }
+        activeTab?.fontSize.step(by: -1)
     }
 
-    /// The surface goes back to the size it was configured with; the
-    /// preference goes back to the platform default.
     func resetFontSize(_: Any?) {
-        guard let tab = activeTab else { return }
-        if tab.terminal.performBindingAction("reset_font_size") {
-            TerminalFontSize.resetPreferred()
-        }
+        activeTab?.fontSize.reset()
     }
 
     func clearScreen(_: Any?) {

@@ -42,20 +42,20 @@ struct TabStripBar: View {
                 if !showsSidebar {
                     SidebarToggleButton(showsSidebar: $showsSidebar)
                         .barGlass(in: Circle())
-                    #if targetEnvironment(macCatalyst)
-                        // The sidebar took its New Tab row with it, and on
-                        // the Mac a new tab is a choice of where — the
-                        // popover — which deserves a control in sight, not
-                        // an item inside ⋯.
-                        NewTabMenu(tabManager: tabManager) {
-                            Image(systemName: "plus")
-                                .font(DS.Font.control)
-                                .frame(width: Self.controlSize, height: Self.controlSize)
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .barGlass(in: Circle())
-                    #endif
+                    // The sidebar took its New Tab row with it, and a new
+                    // tab is a choice of where — the Mac's popover, the
+                    // menu of directories elsewhere — which deserves a
+                    // control in sight, not an item inside ⋯. An iPad, a
+                    // Duo's inner display and a large iPhone held sideways
+                    // had only ⋯ until this was there too.
+                    NewTabMenu(tabManager: tabManager) {
+                        Image(systemName: "plus")
+                            .font(DS.Font.control)
+                            .frame(width: Self.controlSize, height: Self.controlSize)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .barGlass(in: Circle())
                 }
 
                 if tabManager.tabs.isEmpty {
