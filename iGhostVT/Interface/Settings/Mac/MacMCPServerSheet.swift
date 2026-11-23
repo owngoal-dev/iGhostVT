@@ -8,9 +8,10 @@ import SwiftUI
 #if targetEnvironment(macCatalyst)
 
     /// The MCP server's sheet in the Mac's Advanced pane, laid out as the
-    /// pane is: the address, with the button that copies it, and how many
-    /// apps are authorized, with Forget All — all of them at once, since
-    /// nothing tells one client from another.
+    /// pane is: the addresses — this Mac's, then the local network's, each
+    /// copied by a click — and how many apps are authorized, with Forget
+    /// All — all of them at once, since nothing tells one client from
+    /// another.
     struct MacMCPServerSheet: View {
         @ObservedObject var model: MCPServerModel
         @Environment(\.dismiss) private var dismiss
@@ -20,13 +21,10 @@ import SwiftUI
                 Text("MCP Server")
                     .font(DS.Font.labelEmphasis)
                 MacSettingsRow("Address", labelWidth: Self.labelWidth) {
-                    HStack(alignment: .firstTextBaseline, spacing: DS.Padding.s) {
-                        Text(verbatim: model.address)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .textSelection(.enabled)
-                        MacInlineIconButton(symbol: "doc.on.doc", label: "Copy Address") {
-                            model.copyAddress()
+                    VStack(alignment: .leading, spacing: DS.Padding.xs) {
+                        ForEach(model.addresses, id: \.self) { address in
+                            MCPAddressText(address: address) { model.copy(address) }
+                                .help("Click to Copy")
                         }
                     }
                 }

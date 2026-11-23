@@ -1,21 +1,26 @@
 import Darwin
 import Foundation
 
-/// The MCP server's address as Settings hands it out: this device's
-/// `.local` name, which every device on the local network resolves — this
-/// one included — and which stays the same as its addresses change; its
-/// address on the network when it has no such name; the loopback address
-/// when it is on none.
+/// The MCP server's addresses as Settings hands them out: the loopback
+/// address, for an app on this device, and the one other devices use —
+/// this device's `.local` name, which every device on the local network
+/// resolves and which stays the same as its addresses change, or its
+/// address on the network when it has no such name. A device on no
+/// network has only the first.
 enum MCPServerAddress {
-    static var url: String {
+    static var all: [String] {
+        [url(host: "127.0.0.1")] + (networkHost().map { [url(host: $0)] } ?? [])
+    }
+
+    private static func url(host: String) -> String {
         "http://\(host):\(MCPConsent.port)/mcp"
     }
 
-    static var host: String {
+    private static func networkHost() -> String? {
         if let name = localHostName() {
             return name.lowercased() + ".local"
         }
-        return RemoteNetwork.localIPv4() ?? "127.0.0.1"
+        return RemoteNetwork.localIPv4()
     }
 
     /// The Bonjour name (System Settings' Local hostname), from configd.

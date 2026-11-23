@@ -518,16 +518,18 @@ Remote has none.
   anything is read, and `Origin` is held to the same names. Settings hands
   out `http://<LocalHostName>.local:18765/mcp` (`MCPServerAddress`, read
   from configd by `dlsym`, since SystemConfiguration's header keeps it to
-  macOS), falling back to the device's address on the network. The link is
+  macOS), falling back to the device's address on the network, beneath
+  `http://127.0.0.1:18765/mcp` for an app on the device itself. The link is
   plain HTTP: a token crosses the network in the clear, and the consent
   below is what decides who gets one.
 - **Settings shows the address and the count, and forgets all at once.**
   The server tells the proxy how many clients hold a token
   (`reportMCPClients`) as it starts and whenever that changes, and
-  `mcpStatus` carries it. On iPhone and iPad the section lists the address
-  with a copy button, Authorized Apps with the count, and Forget All above
+  `mcpStatus` carries it. On iPhone and iPad the section lists the two
+  addresses — a tap copies one, and the text can still be selected
+  (`MCPAddressText`) — Authorized Apps with the count, and Forget All above
   zero; on the Mac the switch is followed by a button that opens the same in
-  a sheet (`MacMCPServerSheet`). There is no forgetting one app: nothing
+  a sheet (`MacMCPServerSheet`), where a click copies. There is no forgetting one app: nothing
   tells one client from another. The switch reads MCP Server, and the
   footer names no client app.
 - **Consent is the app's, while Settings is open.** The OAuth consent page

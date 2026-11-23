@@ -17,7 +17,7 @@ final class MCPServerModel: ObservableObject {
     @Published private(set) var status = MCPServerStatus()
     /// Read again with the status: the address on the network can change
     /// while the page is up.
-    @Published private(set) var address = MCPServerAddress.url
+    @Published private(set) var addresses = MCPServerAddress.all
 
     private var loop: Task<Void, Never>?
     private weak var window: UIWindow?
@@ -77,16 +77,15 @@ final class MCPServerModel: ObservableObject {
         }
     }
 
-    func copyAddress() {
-        refreshAddress()
+    func copy(_ address: String) {
         UIPasteboard.general.string = address
         CopiedIndicator.present(in: window)
     }
 
     private func refreshAddress() {
-        let current = MCPServerAddress.url
-        if current != address {
-            address = current
+        let current = MCPServerAddress.all
+        if current != addresses {
+            addresses = current
         }
     }
 
@@ -126,9 +125,9 @@ final class MCPServerModel: ObservableObject {
 }
 
 /// Settings ▸ Advanced ▸ MCP on iPhone and iPad: the switch, and while
-/// it is on the address with its copy button, how many apps are
-/// authorized, and Forget All — all of them at once, since nothing tells
-/// one client from another.
+/// it is on the addresses — this device's, then the local network's, each
+/// copied by a tap — how many apps are authorized, and Forget All — all of
+/// them at once, since nothing tells one client from another.
 struct MCPServerSection: View {
     @ObservedObject var model: MCPServerModel
 
@@ -137,21 +136,10 @@ struct MCPServerSection: View {
             Toggle("MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
                 .disabled(model.status.isUnavailable)
             if model.status.isEnabled {
-                HStack(spacing: DS.Padding.m) {
-                    Text(verbatim: model.address)
+                ForEach(model.addresses, id: \.self) { address in
+                    MCPAddressText(address: address) { model.copy(address) }
                         .font(.system(.footnote, design: .monospaced))
                         .foregroundColor(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                    Spacer(minLength: 0)
-                    Button {
-                        model.copyAddress()
-                    } label: {
-                        Image(systemName: "doc.on.doc")
-                    }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("Copy Address")
                 }
                 HStack {
                     Text("Authorized Apps")
@@ -179,4 +167,23 @@ extension MCPServerModel {
     Lets AI apps on this device and on your local network use your terminals. \
     Keep this page open while you connect a new app, so you can approve it.
     """
+}
+
+/// An address that copies itself when tapped or clicked, and can still be
+/// selected by hand.
+struct MCPAddressText: View {
+    let address: String
+    let copy: () -> Void
+
+    var body: some View {
+        Text(verbatim: address)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: copy)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Copy Address")
+    }
 }
