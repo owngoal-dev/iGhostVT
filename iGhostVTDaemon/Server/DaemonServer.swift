@@ -38,6 +38,10 @@ final class DaemonServer {
         queue: controlQueue,
         executablePath: Self.siblingPath(RemoteSupervisor.executableName),
     )
+    private lazy var mcp = MCPSupervisor(
+        queue: controlQueue,
+        executablePath: Self.siblingPath(MCPSupervisor.executableName),
+    )
 
     private var listener: xpc_connection_t?
     private var peers: [UInt64: PeerRelay] = [:]
@@ -63,6 +67,11 @@ final class DaemonServer {
             guard let remote else { return nil }
             return (remote.helperProcessID, remote.executablePath)
         }
+        let mcp = mcp
+        authenticator.mcpServer = { [weak mcp] in
+            guard let mcp else { return nil }
+            return (mcp.serverProcessID, mcp.executablePath)
+        }
         guard let listener = iGhostVTProtocol.serviceName.withCString({
             ighostvtCreateMachServiceListener(
                 $0,
@@ -81,6 +90,7 @@ final class DaemonServer {
         }
         xpc_connection_activate(listener)
         remote.startIfEnabled()
+        mcp.startIfEnabled()
         DaemonLog.server.info(
             "listening on \(iGhostVTProtocol.serviceName, privacy: .public), pid \(getpid())",
         )
@@ -105,9 +115,11 @@ final class DaemonServer {
             connection: event,
             clientPID: clientPID,
             isRemoteHelper: admission.isRemoteHelper,
+            mcpSender: admission.isMCPServer ? .server : (admission.isApp ? .app : .otherClient),
             queue: controlQueue,
             supervisor: supervisor,
             remote: remote,
+            mcp: mcp,
         ) { [weak self] peer in
             self?.peerInvalidated(peer)
         }
@@ -116,7 +128,8 @@ final class DaemonServer {
         DaemonLog.server.info("peer \(clientPID) connected as \(peerID), \(self.peers.count) peer(s)")
         DaemonFileLog.log(
             "peer \(clientPID) connected as peer \(peerID)"
-                + (admission.isRemoteHelper ? " (remote helper)" : "") + ", \(peers.count) peer(s)",
+                + (admission.isRemoteHelper ? " (remote helper)" : "")
+                + (admission.isMCPServer ? " (MCP server)" : "") + ", \(peers.count) peer(s)",
         )
     }
 

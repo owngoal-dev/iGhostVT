@@ -56,6 +56,13 @@
 			remoteGlobalIDString = AA0000000000000000000608;
 			remoteInfo = GhostRemoteWidgets;
 		};
+		AA0000000000000000000C06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000609;
+			remoteInfo = "ighostvt-mcp";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -93,6 +100,7 @@
 		AA000000000000000000030B /* GhostRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GhostRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000000000000000000030C /* GhostRemoteWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GhostRemoteWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000000000000000000030D /* zstd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = zstd.c; sourceTree = "<group>"; };
+		AA000000000000000000030E /* ighostvt-mcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "ighostvt-mcp"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -220,6 +228,11 @@
 			path = GhostRemote;
 			sourceTree = "<group>";
 		};
+		AA000000000000000000050E /* iGhostVTMCP */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = iGhostVTMCP;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +270,7 @@
 				AA0000000000000000000506 /* iGhostVTDaemonShared */,
 				AA0000000000000000000507 /* iGhostVTIO */,
 				AA0000000000000000000508 /* iGhostVTCLI */,
+				AA000000000000000000050E /* iGhostVTMCP */,
 				AA000000000000000000050A /* iGhostVTRemote */,
 				AA0000000000000000000504 /* iGhostVTWidgets */,
 				AA0000000000000000000505 /* Shared/Activity */,
@@ -285,6 +299,7 @@
 				AA0000000000000000000306 /* ighostvtd */,
 				AA0000000000000000000308 /* ighostvtd-io */,
 				AA0000000000000000000309 /* ighostvt-cli */,
+				AA000000000000000000030E /* ighostvt-mcp */,
 				AA000000000000000000030A /* ighostvtd-remote */,
 				AA0000000000000000000307 /* iGhostVTWidgets.appex */,
 				AA000000000000000000030B /* GhostRemote.app */,
@@ -342,6 +357,7 @@
 				AA0000000000000000000D02 /* PBXTargetDependency */,
 				AA0000000000000000000D03 /* PBXTargetDependency */,
 				AA0000000000000000000D04 /* PBXTargetDependency */,
+				AA0000000000000000000D06 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000502 /* Shared/Protocol */,
@@ -423,6 +439,28 @@
 			);
 			productName = "ighostvt-cli";
 			productReference = AA0000000000000000000309 /* ighostvt-cli */;
+			productType = "com.apple.product-type.tool";
+		};
+		AA0000000000000000000609 /* ighostvt-mcp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000000000000000000090A /* Build configuration list for PBXNativeTarget "ighostvt-mcp" */;
+			buildPhases = (
+				AA0000000000000000000713 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000502 /* Shared/Protocol */,
+				AA000000000000000000050E /* iGhostVTMCP */,
+				AA0000000000000000000509 /* Shared/Screen */,
+			);
+			name = "ighostvt-mcp";
+			packageProductDependencies = (
+			);
+			productName = "ighostvt-mcp";
+			productReference = AA000000000000000000030E /* ighostvt-mcp */;
 			productType = "com.apple.product-type.tool";
 		};
 		AA0000000000000000000606 /* ighostvtd-remote */ = {
@@ -576,6 +614,7 @@
 				AA0000000000000000000602 /* ighostvtd */,
 				AA0000000000000000000604 /* ighostvtd-io */,
 				AA0000000000000000000605 /* ighostvt-cli */,
+				AA0000000000000000000609 /* ighostvt-mcp */,
 				AA0000000000000000000606 /* ighostvtd-remote */,
 				AA0000000000000000000603 /* iGhostVTWidgets */,
 				AA0000000000000000000607 /* GhostRemote */,
@@ -734,6 +773,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000713 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -762,6 +808,11 @@
 			isa = PBXTargetDependency;
 			target = AA0000000000000000000608 /* GhostRemoteWidgets */;
 			targetProxy = AA0000000000000000000C05 /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000D06 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000609 /* ighostvt-mcp */;
+			targetProxy = AA0000000000000000000C06 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1074,6 +1125,32 @@
 			};
 			name = Release;
 		};
+		AA0000000000000000000B13 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_NAME = "ighostvt-mcp";
+				SUPPORTED_PLATFORMS = "iphoneos macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000B14 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_NAME = "ighostvt-mcp";
+				SUPPORTED_PLATFORMS = "iphoneos macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AA0000000000000000000B0D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1302,6 +1379,15 @@
 			buildConfigurations = (
 				AA0000000000000000000B11 /* Debug */,
 				AA0000000000000000000B12 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000000000000000000090A /* Build configuration list for PBXNativeTarget "ighostvt-mcp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000B13 /* Debug */,
+				AA0000000000000000000B14 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

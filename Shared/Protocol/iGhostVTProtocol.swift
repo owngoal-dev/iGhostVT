@@ -294,6 +294,37 @@ enum iGhostVTOperation: UInt64, Sendable {
     /// comes back; the helper drops a relayed device that has sent nothing
     /// for `RemoteAccess.deviceSilenceLimit`.
     case ping = 32
+
+    // The MCP server, `ighostvt-mcp`, which `MCPSupervisor` in the proxy
+    // runs while its switch is on. The proxy answers every one of these
+    // itself — none reaches io, the remote helper or the network — and it
+    // decides who may send which: the switch, the consent window and the
+    // answers are the app's alone (a person in Settings), the two consent
+    // questions the server's alone, and the status anyone's.
+
+    /// `enabled`, `mcpState`, `port`.
+    case mcpStatus = 40
+    /// `enabled`: turns the server on or off; answered like `mcpStatus`.
+    case setMCPServer = 41
+    /// `open`: whether the app's settings page with the server on it is in
+    /// front. Only while it is may a client ask for consent; an open window
+    /// lapses `MCPConsent.windowSeconds` after it was last opened, so an app
+    /// that died with the page up leaves nothing open for long.
+    case setMCPConsentWindow = 42
+    /// The consent requests waiting for an answer: `requests`, each with
+    /// `requestID`, `clientName`, `redirect`, `consentCode`, `expiresAt`.
+    case mcpConsentRequests = 43
+    /// `requestID`, `allow`.
+    case answerMCPConsent = 44
+    /// `clientName`, `redirect`: a client asks for consent. Answered with
+    /// `requestID` and `consentCode`, or `operationFailed` while no window
+    /// is open or too many requests are waiting.
+    case beginMCPConsent = 45
+    /// `requestID`: answered with `mcpConsent` (`MCPConsentState`).
+    case mcpConsentState = 46
+    /// Forgets every client the server authorized: the server is restarted
+    /// and wipes what it kept before it listens again.
+    case forgetMCPClients = 47
 }
 
 /// The attribute keys and values the app keeps on a session
@@ -545,6 +576,16 @@ enum iGhostVTWireKey {
     /// which updates through its package manager. Absent from an older
     /// host, and while the helper has not read its own signature yet.
     static let selfUpdating = "selfupd"
+    static let mcpState = "mcpstate"
+    static let open = "open"
+    static let requests = "requests"
+    static let requestID = "reqid"
+    static let clientName = "client"
+    static let redirect = "redirect"
+    static let consentCode = "consentcode"
+    static let expiresAt = "expires"
+    static let allow = "allow"
+    static let mcpConsent = "consent"
 }
 
 /// Where the Mac's own update stands, as `hostUpdate` reports it.
@@ -572,6 +613,43 @@ enum HostUpdateState: String, Sendable {
         default: false
         }
     }
+}
+
+/// The MCP server's state, as `mcpStatus` reports it.
+enum MCPServerState: String, Sendable {
+    case off
+    /// On, and the server is being started (or restarted after it exited).
+    case starting
+    case running
+}
+
+/// Where a consent request stands (`mcpConsentState`).
+enum MCPConsentState: String, Sendable {
+    case pending
+    case allowed
+    case denied
+    /// Unanswered when it ran out, or unknown — the window closed, the
+    /// proxy restarted, or it was never asked.
+    case expired
+}
+
+/// The MCP server's fixed facts, shared by the proxy, the server and the app.
+enum MCPConsent {
+    /// Loopback only; the server binds nothing else.
+    static let port: UInt16 = 18765
+    static var endpoint: String {
+        "http://127.0.0.1:\(port)/mcp"
+    }
+
+    /// How long an opened consent window stays open without being opened
+    /// again; the app renews it while the page stays up.
+    static let windowSeconds: Double = 180
+    /// How long a request waits for an answer.
+    static let requestSeconds: Double = 300
+    /// Requests waiting at once; a client asking more is refused.
+    static let maximumPendingRequests = 4
+    /// The longest client name and redirect the proxy keeps.
+    static let maximumFieldLength = 256
 }
 
 /// The remote helper's state, as `remoteStatus` reports it.

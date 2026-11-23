@@ -336,12 +336,16 @@ import SwiftUI
         @AppStorage(DetailedTerminalLog.key) private var verboseTerminalLog = false
         @AppStorage(ZmodemSetting.key) private var zmodemEnabled = ZmodemSetting.defaultValue
         @AppStorage(SmoothScrolling.key) private var smoothScrolling = SmoothScrolling.defaultValue
+        @StateObject private var mcp = MCPServerModel()
+        @State private var window: UIWindow?
 
         var body: some View {
             MacSettingsForm {
                 MacSettingsRow("File Transfer") {
                     MacCheckbox(String(localized: "ZMODEM File Transfer"), isOn: $zmodemEnabled)
                 }
+                Divider()
+                mcpRow
                 Divider()
                 MacSettingsRow("Experimental Features") {
                     MacCheckbox(String(localized: "Smooth Scrolling"), isOn: $smoothScrolling)
@@ -364,6 +368,43 @@ import SwiftUI
                     logFile(AppLog.currentFile ?? AppLog.journalDirectory, label: "Open App Log")
                 } details: {
                     logFile(URL(fileURLWithPath: iGhostVTProtocol.daemonLogPath), label: "Open Helper Log")
+                }
+            }
+        }
+
+        /// The MCP server's switch, its address and Forget; while this pane
+        /// is up it holds the consent window, and each client that asks is
+        /// put to the person here (`MCPServerModel`).
+        private var mcpRow: some View {
+            MacSettingsRow("MCP") {
+                MacCheckbox(
+                    String(localized: "MCP Server"),
+                    isOn: Binding(get: { mcp.status.isEnabled }, set: { mcp.setEnabled($0) }),
+                )
+                .disabled(mcp.status.isUnavailable)
+                .background(WindowReader(window: $window))
+                .onAppear {
+                    mcp.setWindow(window)
+                    mcp.pageAppeared()
+                }
+                .onChange(of: window) { mcp.setWindow($0) }
+                .onDisappear { mcp.pageDisappeared() }
+            } details: {
+                MacSettingsNote(
+                    """
+                    Lets AI apps on this device, such as FlowDown, run commands in \
+                    your terminals. When an app asks to connect, approve it here, \
+                    while this page is open.
+                    """,
+                )
+                if mcp.status.isEnabled {
+                    HStack(spacing: DS.Padding.s) {
+                        Text(verbatim: MCPConsent.endpoint)
+                            .textSelection(.enabled)
+                        Button("Copy") { mcp.copyEndpoint() }
+                    }
+                    .padding(.top, DS.Padding.s)
+                    Button("Forget Authorized Apps") { mcp.forgetClients() }
                 }
             }
         }

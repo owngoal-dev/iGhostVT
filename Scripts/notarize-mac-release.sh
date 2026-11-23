@@ -40,6 +40,7 @@ version="${tag#v}"
 asset="iGhostVT-${version}-macos.zip"
 notarized="iGhostVT-${version}-macos-notarized.zip"
 cli_identifier="wiki.qaq.ighostvt-cli"
+mcp_identifier="wiki.qaq.ighostvt-mcp"
 
 command -v gh >/dev/null || die "gh is required"
 command -v ditto >/dev/null || die "ditto is required"
@@ -131,11 +132,17 @@ resign "$app/Contents/MacOS/ighostvtd-io"
 [[ ! -e "$app/Contents/MacOS/ighostvtd-remote" ]] || resign "$app/Contents/MacOS/ighostvtd-remote"
 resign "$app/Contents/MacOS/ighostvtd"
 resign "$app/Contents/MacOS/ighostvt-cli"
+[[ ! -e "$app/Contents/MacOS/ighostvt-mcp" ]] || resign "$app/Contents/MacOS/ighostvt-mcp"
 resign "$app"
 codesign --verify --deep --strict "$app"
 codesign --display --verbose=2 "$app/Contents/MacOS/ighostvt-cli" 2>&1 \
     | grep -x "Identifier=$cli_identifier" >/dev/null \
     || die "ighostvt-cli lost its identifier $cli_identifier; the daemon would refuse it"
+if [[ -e "$app/Contents/MacOS/ighostvt-mcp" ]]; then
+    codesign --display --verbose=2 "$app/Contents/MacOS/ighostvt-mcp" 2>&1 \
+        | grep -x "Identifier=$mcp_identifier" >/dev/null \
+        || die "ighostvt-mcp lost its identifier $mcp_identifier"
+fi
 
 # MARK: - Notarization
 

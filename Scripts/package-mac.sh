@@ -33,6 +33,7 @@ daemon_binary="${2:?missing daemon binary}"
 daemon_io_binary="${3:?missing daemon io binary}"
 # Built beside io by the ighostvtd scheme, which depends on both.
 remote_binary="$(dirname "$daemon_io_binary")/ighostvtd-remote"
+mcp_binary="$(dirname "$daemon_io_binary")/ighostvt-mcp"
 cli_binary="${4:?missing cli binary}"
 agent_plist="${5:?missing agent plist}"
 app_entitlements="${6:?missing app entitlements}"
@@ -45,6 +46,7 @@ sign_identity="${10:?missing signing identity}"
 # after its file, and PeerAuthenticator's macOS branch requires this exact
 # string — the two are one contract.
 cli_identifier="wiki.qaq.ighostvt-cli"
+mcp_identifier="wiki.qaq.ighostvt-mcp"
 
 # The bundled agent is looked up by file name through
 # SMAppService.agent(plistName:); MacLaunchAgent.swift names the same file.
@@ -67,6 +69,7 @@ test -f "$app_bundle/Contents/Resources/Licenses.json" || die "$app_bundle has n
 test -f "$daemon_binary" || die "$daemon_binary was not built"
 test -f "$daemon_io_binary" || die "$daemon_io_binary was not built"
 test -f "$remote_binary" || die "$remote_binary was not built"
+test -f "$mcp_binary" || die "$mcp_binary was not built"
 test -f "$cli_binary" || die "$cli_binary was not built"
 test -f "$agent_plist" || die "$agent_plist is missing"
 test -f "$app_entitlements" || die "$app_entitlements is missing"
@@ -98,6 +101,7 @@ install -m 0755 "$daemon_binary" "$staged_app/Contents/MacOS/ighostvtd"
 install -m 0755 "$daemon_io_binary" "$staged_app/Contents/MacOS/ighostvtd-io"
 install -m 0755 "$remote_binary" "$staged_app/Contents/MacOS/ighostvtd-remote"
 install -m 0755 "$cli_binary" "$staged_app/Contents/MacOS/ighostvt-cli"
+install -m 0755 "$mcp_binary" "$staged_app/Contents/MacOS/ighostvt-mcp"
 install -d -m 0755 "$staged_app/Contents/Library/LaunchAgents"
 install -m 0644 "$agent_plist" "$staged_app/Contents/Library/LaunchAgents/$agent_plist_name"
 plutil -lint "$staged_app/Contents/Library/LaunchAgents/$agent_plist_name" >/dev/null
@@ -171,6 +175,7 @@ sign "$staged_app/Contents/MacOS/ighostvtd" --entitlements "$daemon_entitlements
 # and the Hardened Runtime is all it needs. It is signed under its own
 # identifier because that is what the daemon admits it by.
 sign "$staged_app/Contents/MacOS/ighostvt-cli" --identifier "$cli_identifier"
+sign "$staged_app/Contents/MacOS/ighostvt-mcp" --identifier "$mcp_identifier"
 sign "$staged_app" --entitlements "$app_entitlements"
 
 echo "==> verifying"
@@ -182,6 +187,11 @@ codesign --display --entitlements - "$staged_app/Contents/MacOS/ighostvtd-io" >/
 codesign --display --verbose=2 "$staged_app/Contents/MacOS/ighostvt-cli" 2>&1 \
     | grep -x "Identifier=$cli_identifier" >/dev/null || {
     echo "error: ighostvt-cli was not signed as $cli_identifier; the daemon will refuse it" >&2
+    exit 65
+}
+codesign --display --verbose=2 "$staged_app/Contents/MacOS/ighostvt-mcp" 2>&1 \
+    | grep -x "Identifier=$mcp_identifier" >/dev/null || {
+    echo "error: ighostvt-mcp was not signed as $mcp_identifier" >&2
     exit 65
 }
 

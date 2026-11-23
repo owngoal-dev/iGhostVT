@@ -214,10 +214,16 @@ check:
 		grep -F "ighostvtd" <<<"$$targets" >/dev/null || { echo "error: the ighostvtd target is missing from the project" >&2; exit 65; }; \
 		grep -F "ighostvtd-io" <<<"$$targets" >/dev/null || { echo "error: the ighostvtd-io target is missing from the project" >&2; exit 65; }; \
 		grep -F "ighostvt-cli" <<<"$$targets" >/dev/null || { echo "error: the ighostvt-cli target is missing from the project" >&2; exit 65; }; \
+		grep -F "ighostvt-mcp" <<<"$$targets" >/dev/null || { echo "error: the ighostvt-mcp target is missing from the project" >&2; exit 65; }; \
 		grep -F "ighostvtd-remote" <<<"$$targets" >/dev/null || { echo "error: the ighostvtd-remote target is missing from the project" >&2; exit 65; }
 	@grep -qF 'wiki.qaq.ighostvt-cli' "$(ROOT_DIR)/iGhostVTDaemon/Server/PeerAuthenticator.swift" \
 		&& grep -qF 'wiki.qaq.ighostvt-cli' "$(MAC_PACKAGER)" \
 		|| { echo "error: the CLI's signing identifier must match in PeerAuthenticator.swift and package-mac.sh" >&2; exit 65; }
+	@# The MCP server is admitted for being the daemon's child (MCPSupervisor),
+	@# never by its path or signature: anything that admitted a copy run by hand
+	@# would let a client in without the app's consent.
+	@! grep -qF -e 'wiki.qaq.ighostvt-mcp' -e 'iGhostVT.app/ighostvt-mcp' "$(ROOT_DIR)/iGhostVTDaemon/Server/PeerAuthenticator.swift" "$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
+		|| { echo "error: ighostvt-mcp must not be admitted by path or signing identifier (PeerAuthenticator.swift, iGhostVTProtocol.clientPaths)" >&2; exit 65; }
 	@! grep -rnE '[A-Za-z0-9] \([A-Z0-9]{10}\)' "$(ROOT_DIR)/Scripts" "$(ROOT_DIR)/Makefile" "$(ROOT_DIR)/Packaging" \
 		|| { echo "error: a signing identity ('Name (TEAMID)') is hardcoded above — identities come from the keychain or MAC_ZIP_IDENTITY/MAC_UPDATE_IDENTITY, never the repo" >&2; exit 65; }
 	@test -f "$(XPC_SHIM_DIR)/module.modulemap" -a -f "$(XPC_SHIM_DIR)/shim.h" \
@@ -228,7 +234,7 @@ check:
 	if (( $${floor%%.*} < 16 )); then \
 		hits="$$(grep -rnE '\bXPC_(TYPE|ERROR|ARRAY_APPEND)[A-Z_0-9]*' --include='*.swift' \
 			"$(ROOT_DIR)/iGhostVT" "$(ROOT_DIR)/iGhostVTDaemon" "$(ROOT_DIR)/iGhostVTDaemonShared" \
-			"$(ROOT_DIR)/iGhostVTIO" "$(ROOT_DIR)/iGhostVTCLI" "$(ROOT_DIR)/iGhostVTWidgets" \
+			"$(ROOT_DIR)/iGhostVTIO" "$(ROOT_DIR)/iGhostVTCLI" "$(ROOT_DIR)/iGhostVTMCP" "$(ROOT_DIR)/iGhostVTWidgets" \
 			"$(ROOT_DIR)/Shared" "$(ROOT_DIR)/Tests" || true)"; \
 		if [[ -n "$$hits" ]]; then \
 			echo "error: an SDK XPC macro is named in Swift below — that links /usr/lib/swift/libswiftXPC.dylib, which iOS $$floor does not have, and dyld kills the process at launch. Use iGhostVTXPC (Shared/Protocol/iGhostVTXPC.swift):" >&2; \
@@ -242,7 +248,7 @@ check:
 	@# 1.6.0–1.6.2 answered nothing while an update downloaded.
 	@hits="$$(grep -rnE 'xpc_(dictionary|array)_set_(double|date|uuid|fd)|xpc_(double|date|uuid|fd|shmem)_create' --include='*.swift' \
 		"$(ROOT_DIR)/iGhostVT" "$(ROOT_DIR)/iGhostVTDaemon" "$(ROOT_DIR)/iGhostVTDaemonShared" \
-		"$(ROOT_DIR)/iGhostVTIO" "$(ROOT_DIR)/iGhostVTCLI" "$(ROOT_DIR)/Shared" || true)"; \
+		"$(ROOT_DIR)/iGhostVTIO" "$(ROOT_DIR)/iGhostVTCLI" "$(ROOT_DIR)/iGhostVTMCP" "$(ROOT_DIR)/Shared" || true)"; \
 	if [[ -n "$$hits" ]]; then \
 		echo "error: an XPC type IOCodec does not carry is put into a message below — the frame is dropped whole between io and the proxy:" >&2; \
 		echo "$$hits" >&2; \
@@ -355,6 +361,15 @@ harness:
 		"$(ROOT_DIR)/Tests/TabGrouping/main.swift" \
 		-o "$$harness_dir/tab-grouping" && \
 	"$$harness_dir/tab-grouping" && \
+	xcrun --sdk macosx swiftc -swift-version 5 -I "$(XPC_SHIM_DIR)" \
+		"$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
+		"$(ROOT_DIR)/Shared/Protocol/iGhostVTXPC.swift" \
+		"$(ROOT_DIR)/Shared/Screen/ScreenRenderer.swift" \
+		"$(ROOT_DIR)/Shared/Screen/KeyNames.swift" \
+		$$(find "$(ROOT_DIR)/iGhostVTMCP" -name '*.swift' ! -name 'main.swift' | sort) \
+		"$(ROOT_DIR)/Tests/MCPHarness/main.swift" \
+		-o "$$harness_dir/mcp-harness" && \
+	"$$harness_dir/mcp-harness" && \
 	$(MAKE) --no-print-directory relay-harness
 
 # The relay end to end (Tests/RelayHarness): the Go server under Relay/ built
@@ -419,7 +434,8 @@ deb: build
 		"$(DAEMON_BINARY)" \
 		"$(DAEMON_IO_BINARY)" \
 		"$(PRODUCTS_DIR)/ighostvtd-remote" \
-		"$(CLI_BINARY)"
+		"$(CLI_BINARY)" \
+		"$(PRODUCTS_DIR)/ighostvt-mcp"
 	CONFIGURATION="$(CONFIGURATION)" "$(DEB_PACKAGER)" \
 		"$(APP_BUNDLE)" \
 		"$(DAEMON_BINARY)" \

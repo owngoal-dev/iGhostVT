@@ -36,11 +36,28 @@ final class PeerAuthenticator {
         /// spawned — admitted for being that child, and limited by
         /// `PeerRelay` to the session operations.
         var isRemoteHelper = false
+        /// The peer is `ighostvt-mcp`, the child `MCPSupervisor` spawned —
+        /// admitted the same way, and limited by `PeerRelay` to the session
+        /// operations and its two consent questions.
+        var isMCPServer = false
+        /// The peer is the app itself, not the CLI beside it: the one client
+        /// that may answer an MCP consent request, because only it has a
+        /// person in front of Settings.
+        var isApp = false
     }
 
     /// The remote helper's pid (0 when none) and the path it was spawned
     /// from. Set by `DaemonServer`.
     var remoteHelper: (() -> (pid: pid_t, path: String)?)?
+    /// The MCP server's, likewise.
+    var mcpServer: (() -> (pid: pid_t, path: String)?)?
+
+    /// Both platforms name the app's executable `iGhostVT` (the bundle's
+    /// own on the device, `Contents/MacOS/iGhostVT` on the Mac) and the
+    /// CLI `ighostvt-cli`; asked only of a peer already admitted.
+    private static func isAppExecutable(_ path: String) -> Bool {
+        path.hasSuffix("/iGhostVT")
+    }
 
     func authenticate(_ connection: xpc_connection_t) -> Admission? {
         var token = audit_token_t()
@@ -69,6 +86,15 @@ final class PeerAuthenticator {
             }
             return Admission(pid: pid, isRemoteHelper: true)
         }
+        if let server = mcpServer?(), server.pid > 0, pid == server.pid {
+            guard let clientPath = RuntimeEnvironment.executablePath(pid: pid),
+                  RuntimeEnvironment.canonicalPath(clientPath) == RuntimeEnvironment.canonicalPath(server.path)
+            else {
+                deny(pid, "the MCP server's pid with another executable")
+                return nil
+            }
+            return Admission(pid: pid, isMCPServer: true)
+        }
 
         #if os(macOS)
             // The daemon runs as the logged-in user and spawns as that same
@@ -83,7 +109,7 @@ final class PeerAuthenticator {
                 return nil
             }
             guard let verdict = MacPeerPolicy.shared.judge(clientPath: clientPath, token: &token) else {
-                return Admission(pid: pid)
+                return Admission(pid: pid, isApp: Self.isAppExecutable(clientPath))
             }
             deny(pid, verdict)
             return nil
@@ -107,7 +133,7 @@ final class PeerAuthenticator {
                     continue
                 }
                 if clientPath == installedPath {
-                    return Admission(pid: pid)
+                    return Admission(pid: pid, isApp: Self.isAppExecutable(clientPath))
                 }
             }
             deny(
