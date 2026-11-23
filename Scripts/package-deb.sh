@@ -20,6 +20,7 @@ daemon_io_binary="$3"
 # ighostvtd scheme depends on both), and signed with its own, client-sized
 # entitlements.
 remote_binary="$(dirname "$daemon_io_binary")/ighostvtd-remote"
+mcp_binary="$(dirname "$daemon_io_binary")/ighostvt-mcp"
 remote_entitlements="$repository_root/Packaging/iGhostVTRemote.entitlements"
 # The command-line client. It ships *inside* the app bundle, beside the app
 # binary, because the daemon admits a peer by its executable path and one
@@ -47,6 +48,7 @@ depends="${16}"
 [[ -x "$daemon_binary" ]] || { echo "error: daemon binary is missing" >&2; exit 66; }
 [[ -x "$daemon_io_binary" ]] || { echo "error: daemon io binary is missing" >&2; exit 66; }
 [[ -x "$remote_binary" ]] || { echo "error: remote helper binary is missing" >&2; exit 66; }
+[[ -x "$mcp_binary" ]] || { echo "error: mcp binary is missing" >&2; exit 66; }
 [[ -x "$cli_binary" ]] || { echo "error: cli binary is missing" >&2; exit 66; }
 for input in "$control_template" "$app_entitlements" "$daemon_entitlements" \
     "$cli_entitlements" "$appex_entitlements" "$launch_plist" "$remote_entitlements"; do
@@ -65,7 +67,7 @@ esac
 depends_pattern='^[A-Za-z0-9][-A-Za-z0-9+.,()~<>= _]*$'
 [[ "$depends" =~ $depends_pattern ]] || { echo "error: invalid Depends: $depends" >&2; exit 64; }
 
-for native_binary in "$daemon_binary" "$daemon_io_binary" "$remote_binary" "$cli_binary"; do
+for native_binary in "$daemon_binary" "$daemon_io_binary" "$remote_binary" "$cli_binary" "$mcp_binary"; do
     native_dependencies="$(otool -L "$native_binary")"
     if grep -q 'libvroot' <<<"$native_dependencies"; then
         echo "error: native daemon/client already resolves physical paths; unexpected vroot dependency" >&2
@@ -120,6 +122,8 @@ installed_daemon_io="$installed_root/usr/libexec/ighostvtd-io"
 installed_remote="$installed_root/usr/libexec/ighostvtd-remote"
 installed_cli="$installed_app/ighostvt-cli"
 installed_cli_link="$installed_root/usr/bin/ighostvt-cli"
+installed_mcp="$installed_app/ighostvt-mcp"
+installed_mcp_link="$installed_root/usr/bin/ighostvt-mcp"
 installed_plist="$installed_root/Library/LaunchDaemons/wiki.qaq.ighostvtd.plist"
 mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")" "$(dirname "$installed_plist")"
 /usr/bin/ditto "$app_bundle" "$installed_app"
@@ -127,12 +131,14 @@ mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")
 /usr/bin/ditto "$daemon_io_binary" "$installed_daemon_io"
 /usr/bin/ditto "$remote_binary" "$installed_remote"
 /usr/bin/ditto "$cli_binary" "$installed_cli"
+/usr/bin/ditto "$mcp_binary" "$installed_mcp"
 # A relative link, and it has to stay one: under roothide the bootstrap's
 # /Applications is reached through the jbroot this boot, and an absolute
 # /Applications/... would resolve against iOS's own. The kernel reports the
 # target it executed, so PeerAuthenticator sees the bundle path either way.
 mkdir -p "$(dirname "$installed_cli_link")"
 ln -sfn ../../Applications/iGhostVT.app/ighostvt-cli "$installed_cli_link"
+ln -sfn ../../Applications/iGhostVT.app/ighostvt-mcp "$installed_mcp_link"
 sed -e "s|@PREFIX@|$install_prefix|g" "$launch_plist" >"$installed_plist"
 # The daemon recovers its install root by stripping this suffix off its own
 # executable path, so the plist has to launch it by the path it is installed
@@ -143,7 +149,7 @@ sed -e "s|@PREFIX@|$install_prefix|g" "$launch_plist" >"$installed_plist"
 }
 rm -rf "$installed_app/_CodeSignature"
 rm -f "$installed_app/embedded.mobileprovision"
-chmod 0755 "$installed_daemon" "$installed_daemon_io" "$installed_remote" "$installed_cli"
+chmod 0755 "$installed_daemon" "$installed_daemon_io" "$installed_remote" "$installed_cli" "$installed_mcp"
 chmod 0644 "$installed_plist"
 
 strip_and_check_private_paths() {
@@ -168,6 +174,7 @@ strip_and_check_private_paths "$installed_daemon"
 strip_and_check_private_paths "$installed_daemon_io"
 strip_and_check_private_paths "$installed_remote"
 strip_and_check_private_paths "$installed_cli"
+strip_and_check_private_paths "$installed_mcp"
 
 # The bash and zsh shell integration, which is what makes a session report
 # its title, its working directory, and its command boundaries. libghostty-spm
@@ -203,6 +210,7 @@ ldid -S"$daemon_entitlements" -Cadhoc "$installed_daemon_io"
 # The client marker and the mach lookup, and nothing else — see the
 # entitlements file for why `no-sandbox` is not among them.
 ldid -S"$cli_entitlements" -Cadhoc "$installed_cli"
+ldid -S"$cli_entitlements" -Cadhoc "$installed_mcp"
 ldid -S"$remote_entitlements" -Cadhoc "$installed_remote"
 ldid -e "$installed_app/$app_executable" >"$app_signed_entitlements"
 
@@ -342,6 +350,14 @@ require_true "$cli_signed_entitlements" wiki.qaq.ighostvt.client
     exit 65
 }
 require_unprivileged "$cli_signed_entitlements" ighostvt-cli
+mcp_signed_entitlements="$scratch/mcp-entitlements.plist"
+ldid -e "$installed_mcp" >"$mcp_signed_entitlements"
+require_true "$mcp_signed_entitlements" wiki.qaq.ighostvt.client
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.exception.mach-lookup.global-name:0' "$mcp_signed_entitlements")" == wiki.qaq.ighostvt.service ]] || {
+    echo "error: ighostvt-mcp is missing the daemon mach lookup entitlement" >&2
+    exit 65
+}
+require_unprivileged "$mcp_signed_entitlements" ighostvt-mcp
 # The process the network talks to carries nothing that widens what it can
 # do: the client marker and the daemon's mach name, as the CLI.
 ldid -e "$installed_remote" >"$remote_signed_entitlements"
@@ -407,6 +423,8 @@ grep -F ".$install_prefix/usr/libexec/ighostvtd-io" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/usr/libexec/ighostvtd-remote" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/Applications/iGhostVT.app/ighostvt-cli" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/usr/bin/ighostvt-cli -> ../../Applications/iGhostVT.app/ighostvt-cli" <<<"$contents" >/dev/null
+grep -F ".$install_prefix/Applications/iGhostVT.app/ighostvt-mcp" <<<"$contents" >/dev/null
+grep -F ".$install_prefix/usr/bin/ighostvt-mcp -> ../../Applications/iGhostVT.app/ighostvt-mcp" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/Library/LaunchDaemons/wiki.qaq.ighostvtd.plist" <<<"$contents" >/dev/null
 [[ -z "$integration_source" ]] || grep -F ".$install_prefix/usr/share/ighostvt/shell-integration/zsh/.zshenv" <<<"$contents" >/dev/null
 

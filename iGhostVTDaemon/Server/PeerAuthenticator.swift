@@ -205,6 +205,7 @@ final class PeerAuthenticator {
         private static let clients = [
             Client(identifier: "wiki.qaq.iGhostVT", executableName: "iGhostVT"),
             Client(identifier: "wiki.qaq.ighostvt-cli", executableName: "ighostvt-cli"),
+            Client(identifier: "wiki.qaq.ighostvt-mcp", executableName: "ighostvt-mcp"),
         ]
 
         /// One client's admission test: the signature it must satisfy, and

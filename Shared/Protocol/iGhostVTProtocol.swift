@@ -31,6 +31,7 @@ enum iGhostVTProtocol {
     static let clientPaths = [
         "/Applications/iGhostVT.app/iGhostVT",
         "/Applications/iGhostVT.app/ighostvt-cli",
+        "/Applications/iGhostVT.app/ighostvt-mcp",
     ]
 
     /// The most `data` one message may carry. A hard cap on a single frame —
