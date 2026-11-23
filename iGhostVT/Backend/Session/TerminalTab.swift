@@ -169,6 +169,7 @@ final class TerminalTab: ObservableObject, Identifiable {
         attributes = tabAttributes
         fontSize = TabFontSize(terminal: state, attributes: tabAttributes)
         search = TerminalSearch(terminal: state)
+        state.onOpenURL = { link, _ in TerminalLinkOpener.open(link) }
         // Built before the store exists (the factory closure cannot capture
         // `self` mid-init), armed right after: the exit the transport
         // observes must reach the store that presents it.

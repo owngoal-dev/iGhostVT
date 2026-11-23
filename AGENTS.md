@@ -67,7 +67,15 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   touch menu leads with Open Link (`terminal.openLink`) when a link lies
   under the press or where the selection began. A long press now selects
   the word under the finger, a drag before the lift extends it, and the
-  lift opens the selection menu. `LockableTerminalView` already offered an
+  lift opens the selection menu. None of it opens anything unless the host
+  takes the link: Ghostty's own opener opens nothing on iOS and refuses
+  every link it finds on Catalyst, and a tap whose link was not taken
+  falls back to the keyboard toggle. Every tab therefore sets
+  `TerminalViewState.onOpenURL` (`TerminalLinkOpener`): an http or https
+  link goes to the system's browser, and anything else — a file path, an
+  OSC 8 target in `tel:` or another app's scheme, which a program chose —
+  goes back to Ghostty and opens nothing. Before this a ⌘-click on the Mac
+  opened nothing either. `LockableTerminalView` already offered an
   Open Link of its own for a selection that is one web link, put back
   together across the rows a program broke it over; when both apply, its
   own takes the library's place, so the menu never lists two.
