@@ -119,21 +119,10 @@ struct MCPServerSection: View {
 
     var body: some View {
         Section {
-            Toggle("MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
+            Toggle("Local MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
                 .disabled(model.status.isUnavailable)
             if model.status.isEnabled {
-                Button { model.copyEndpoint() } label: {
-                    HStack {
-                        Text("Address")
-                        Spacer(minLength: 12)
-                        Text(verbatim: MCPConsent.endpoint)
-                            .font(DS.Font.codeBody)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                }
-                .foregroundColor(.primary)
+                Button("Copy Address") { model.copyEndpoint() }
                 if model.status.authorizedClients > 0 {
                     Button("Forget Authorized Apps", role: .destructive) { model.forgetClients() }
                 }

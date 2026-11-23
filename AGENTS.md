@@ -508,8 +508,9 @@ Advanced pane) turns it on; it is off by default, and Ghost Remote has none.
   the proxy how many clients hold a token (`reportMCPClients`) as it starts
   and whenever that changes, `mcpStatus` carries it, and Settings offers
   Forget Authorized Apps only above zero — a Forget with nothing behind it
-  restarted the server and changed nothing anyone could see. The footer
-  names no client app.
+  restarted the server and changed nothing anyone could see. The switch
+  reads Local MCP Server, the address is never shown — Copy Address puts it
+  on the clipboard — and the footer names no client app.
 - **Consent is the app's, while Settings is open.** The OAuth consent page
   is served on a port anything on the device can reach — an App Store app
   included — so a form there proves nothing: the first version of this

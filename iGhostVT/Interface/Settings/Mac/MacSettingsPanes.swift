@@ -372,13 +372,13 @@ import SwiftUI
             }
         }
 
-        /// The MCP server's switch, its address and Forget; while this pane
+        /// The MCP server's switch, Copy Address and Forget; while this pane
         /// is up it holds the consent window, and each client that asks is
         /// put to the person here (`MCPServerModel`).
         private var mcpRow: some View {
             MacSettingsRow("MCP") {
                 MacCheckbox(
-                    String(localized: "MCP Server"),
+                    String(localized: "Local MCP Server"),
                     isOn: Binding(get: { mcp.status.isEnabled }, set: { mcp.setEnabled($0) }),
                 )
                 .disabled(mcp.status.isUnavailable)
@@ -397,13 +397,8 @@ import SwiftUI
                     """,
                 )
                 if mcp.status.isEnabled {
-                    HStack(spacing: DS.Padding.s) {
-                        Text(verbatim: MCPConsent.endpoint)
-                            .font(DS.Font.codeBody)
-                            .textSelection(.enabled)
-                        Button("Copy") { mcp.copyEndpoint() }
-                    }
-                    .padding(.top, DS.Padding.s)
+                    Button("Copy Address") { mcp.copyEndpoint() }
+                        .padding(.top, DS.Padding.s)
                     if mcp.status.authorizedClients > 0 {
                         Button("Forget Authorized Apps") { mcp.forgetClients() }
                     }
