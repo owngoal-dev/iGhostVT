@@ -35,6 +35,9 @@ final class MCPRouter {
         case ("POST", "/authorize"):
             return oauth.handleAuthorizePost(request)
 
+        case ("GET", "/authorize/status"):
+            return oauth.handleAuthorizeStatus(request)
+
         case ("POST", "/token"):
             return oauth.handleToken(request)
 

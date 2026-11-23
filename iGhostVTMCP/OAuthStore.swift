@@ -3,6 +3,19 @@ import Darwin
 import Foundation
 import Security
 
+/// Who decides a consent request. The page this server serves cannot: it is
+/// on a port anything on the device can reach, and a process can fetch it
+/// and post an approval as easily as a person can. The daemon's proxy holds
+/// the request instead, and only the iGhostVT app — while its settings page
+/// is open — answers it (`MCPSupervisor`).
+protocol ConsentAuthority: AnyObject {
+    /// Throws when no one can be asked: the app's settings page is closed.
+    func beginConsent(clientName: String, redirect: String) throws -> (id: UInt64, code: String)
+    func consentState(of id: UInt64) throws -> MCPConsentState
+}
+
+extension DaemonShellBackend: ConsentAuthority {}
+
 /// Minimalist OAuth 2.1 authorization server for MCP (RFC 9728, RFC 8414,
 /// RFC 7591 Dynamic Client Registration, Authorization Code + PKCE S256,
 /// and Refresh Tokens).
@@ -32,6 +45,9 @@ final class OAuthStore {
         var codeChallenge: String
         var scope: String
         var expiresAt: TimeInterval
+        /// The proxy's request, which the app answers.
+        var requestID: UInt64
+        var consentCode: String
     }
 
     private struct AuthCode {
@@ -55,7 +71,7 @@ final class OAuthStore {
 
     let issuer: String
     private let stateURL: URL?
-    private let staticToken: String?
+    private let authority: ConsentAuthority
 
     private let lock = NSLock()
     private var clients: [String: ClientRecord] = [:]
@@ -63,21 +79,21 @@ final class OAuthStore {
     private var pendingConsents: [String: PendingConsent] = [:]
     private var authCodes: [String: AuthCode] = [:]
 
-    init(issuer: String, stateURL: URL?, staticToken: String? = nil) {
+    init(issuer: String, stateURL: URL?, authority: ConsentAuthority) {
         self.issuer = issuer.hasSuffix("/") ? String(issuer.dropLast()) : issuer
         self.stateURL = stateURL
-        self.staticToken = staticToken?.isEmpty == false ? staticToken : nil
+        self.authority = authority
         loadState()
     }
 
+    /// In the home of the user the server runs as — on the device it has
+    /// dropped to mobile by the time this is read — never a fixed path.
     static var defaultStateURL: URL {
-        #if os(macOS)
-            let base = FileManager.default.homeDirectoryForCurrentUser
-                .appendingPathComponent("Library/Application Support/iGhostVT", isDirectory: true)
-        #else
-            let base = URL(fileURLWithPath: "/var/mobile/Library/Application Support/iGhostVT", isDirectory: true)
-        #endif
-        return base.appendingPathComponent("mcp-oauth.json")
+        let home = getpwuid(getuid()).flatMap { $0.pointee.pw_dir.map { String(cString: $0) } }
+            ?? NSHomeDirectory()
+        return URL(fileURLWithPath: home, isDirectory: true)
+            .appendingPathComponent("Library/Application Support/iGhostVT", isDirectory: true)
+            .appendingPathComponent("mcp-oauth.json")
     }
 
     static func revokeAll(at url: URL) throws {
@@ -94,10 +110,6 @@ final class OAuthStore {
         guard header.lowercased().hasPrefix(prefix) else { return false }
         let token = String(header.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
         guard !token.isEmpty else { return false }
-
-        if let staticToken, Self.constantTimeEqual(token, staticToken) {
-            return true
-        }
 
         let now = Date().timeIntervalSince1970
         lock.lock()
@@ -228,6 +240,18 @@ final class OAuthStore {
         }
 
         let scope = (q["scope"]?.isEmpty == false) ? q["scope"]! : "shell"
+        let consent: (id: UInt64, code: String)
+        do {
+            consent = try authority.beginConsent(clientName: client.clientName, redirect: redirectURI)
+        } catch {
+            return HTTPResponse.html(
+                Self.messageHTML(
+                    title: "Open iGhostVT to continue",
+                    body: "To let \(client.clientName) use your terminals, open iGhostVT, go to Settings, then Advanced, and keep that page open while you try again from \(client.clientName).",
+                ),
+                status: 403,
+            )
+        }
         let nonce = Self.randomURLSafeToken(byteCount: 24)
         let pending = PendingConsent(
             nonce: nonce,
@@ -238,6 +262,8 @@ final class OAuthStore {
             codeChallenge: codeChallenge,
             scope: scope,
             expiresAt: Date().timeIntervalSince1970 + Self.consentTTL,
+            requestID: consent.id,
+            consentCode: consent.code,
         )
 
         lock.lock()
@@ -245,67 +271,107 @@ final class OAuthStore {
         pendingConsents[nonce] = pending
         lock.unlock()
 
-        return HTTPResponse.html(Self.consentHTML(
-            clientName: client.clientName,
-            clientID: clientID,
-            scope: scope,
-            nonce: nonce,
-        ))
+        // The page's one script, by nonce; it polls this origin and then
+        // sends the browser to the client's redirect.
+        let scriptNonce = Self.randomURLSafeToken(byteCount: 16)
+        let redirectScheme = URL(string: redirectURI)?.scheme?.lowercased() ?? "https"
+        return HTTPResponse.html(
+            Self.consentHTML(
+                clientName: client.clientName,
+                consentCode: consent.code,
+                nonce: nonce,
+                scriptNonce: scriptNonce,
+            ),
+            contentSecurityPolicy: "default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-\(scriptNonce)'; "
+                + "connect-src 'self'; form-action 'self' \(redirectScheme):",
+        )
     }
 
+    /// Polled by the consent page: where the app's answer sends the browser.
+    /// Allowed, the authorization code is issued now, once; refused or run
+    /// out, the client is told so. Knowing the nonce gets nobody far — the
+    /// code is worthless without the PKCE verifier only the client holds.
+    func handleAuthorizeStatus(_ request: HTTPRequest) -> HTTPResponse {
+        guard let nonce = request.query["nonce"], !nonce.isEmpty else {
+            return oauthError("invalid_request", "Missing authorization nonce")
+        }
+        lock.lock()
+        pruneExpiredLocked()
+        let pending = pendingConsents[nonce]
+        lock.unlock()
+        guard let pending else {
+            return HTTPResponse.json(["state": MCPConsentState.expired.rawValue])
+        }
+        let state: MCPConsentState
+        do {
+            state = try authority.consentState(of: pending.requestID)
+        } catch {
+            return HTTPResponse.json(["state": MCPConsentState.pending.rawValue])
+        }
+        switch state {
+        case .pending:
+            return HTTPResponse.json(["state": state.rawValue])
+        case .allowed:
+            guard let location = takeAuthorization(nonce: nonce, granted: true) else {
+                return HTTPResponse.json(["state": MCPConsentState.expired.rawValue])
+            }
+            return HTTPResponse.json(["state": state.rawValue, "location": location])
+        case .denied, .expired:
+            let location = takeAuthorization(nonce: nonce, granted: false)
+            return HTTPResponse.json(["state": state.rawValue, "location": location ?? ""])
+        }
+    }
+
+    /// The pending request, gone once read: its redirect with a fresh code,
+    /// or with `access_denied`.
+    private func takeAuthorization(nonce: String, granted: Bool) -> String? {
+        lock.lock()
+        let pending = pendingConsents.removeValue(forKey: nonce)
+        lock.unlock()
+        guard let pending else { return nil }
+        var components = URLComponents(string: pending.redirectURI)
+        var items = components?.queryItems ?? []
+        if granted {
+            let code = Self.randomURLSafeToken(byteCount: 32)
+            lock.lock()
+            authCodes[code] = AuthCode(
+                code: code,
+                clientID: pending.clientID,
+                redirectURI: pending.redirectURI,
+                codeChallenge: pending.codeChallenge,
+                scope: pending.scope,
+                expiresAt: Date().timeIntervalSince1970 + Self.authCodeTTL,
+            )
+            lock.unlock()
+            items.append(URLQueryItem(name: "code", value: code))
+        } else {
+            items.append(URLQueryItem(name: "error", value: "access_denied"))
+            items.append(URLQueryItem(name: "error_description", value: "Not allowed in iGhostVT"))
+        }
+        if let state = pending.state, !state.isEmpty {
+            items.append(URLQueryItem(name: "state", value: state))
+        }
+        components?.queryItems = items
+        return components?.url?.absoluteString
+    }
+
+    /// The page's Cancel. There is no approval here: a form any process can
+    /// post proves nobody agreed — that answer is given in the app.
     func handleAuthorizePost(_ request: HTTPRequest) -> HTTPResponse {
         let form = request.formParameters()
         guard let nonce = form["nonce"], !nonce.isEmpty else {
             return oauthError("invalid_request", "Missing authorization nonce")
         }
-        let decision = form["decision"] ?? "deny"
-
-        lock.lock()
-        pruneExpiredLocked()
-        let pending = pendingConsents.removeValue(forKey: nonce)
-        lock.unlock()
-
-        guard let pending else {
+        guard form["decision"] == "deny" else {
+            return oauthError("invalid_request", "Approve this request in iGhostVT", status: 403)
+        }
+        guard let location = takeAuthorization(nonce: nonce, granted: false) else {
             return HTTPResponse.html(
-                Self.messageHTML(title: "Session Expired", body: "This authorization request has expired. Please restart OAuth from your MCP client."),
+                Self.messageHTML(title: "Request expired", body: "Start again from your MCP client."),
                 status: 400,
             )
         }
-
-        guard decision == "approve" else {
-            return redirectWithError(
-                to: pending.redirectURI,
-                error: "access_denied",
-                description: "User denied authorization",
-                state: pending.state,
-            )
-        }
-
-        let code = Self.randomURLSafeToken(byteCount: 32)
-        let authCode = AuthCode(
-            code: code,
-            clientID: pending.clientID,
-            redirectURI: pending.redirectURI,
-            codeChallenge: pending.codeChallenge,
-            scope: pending.scope,
-            expiresAt: Date().timeIntervalSince1970 + Self.authCodeTTL,
-        )
-
-        lock.lock()
-        authCodes[code] = authCode
-        lock.unlock()
-
-        var components = URLComponents(string: pending.redirectURI)
-        var items = components?.queryItems ?? []
-        items.append(URLQueryItem(name: "code", value: code))
-        if let state = pending.state, !state.isEmpty {
-            items.append(URLQueryItem(name: "state", value: state))
-        }
-        components?.queryItems = items
-        guard let destination = components?.url?.absoluteString else {
-            return oauthError("server_error", "Failed to construct redirect URI")
-        }
-        return HTTPResponse.redirect(to: destination)
+        return HTTPResponse.redirect(to: location)
     }
 
     // MARK: - Token & Revocation Endpoints
@@ -540,10 +606,15 @@ final class OAuthStore {
             .replacingOccurrences(of: "'", with: "&#39;")
     }
 
-    private static func consentHTML(clientName: String, clientID: String, scope: String, nonce: String) -> String {
+    /// Waits for the app's answer, polling `/authorize/status`, and shows
+    /// the code the app's alert shows, so the person approves this request
+    /// and not another one raised beside it.
+    private static func consentHTML(clientName: String, consentCode: String, nonce: String, scriptNonce: String) -> String {
         let safeName = escapeHTML(clientName)
-        let safeID = escapeHTML(clientID)
-        let safeScope = escapeHTML(scope)
+        let spaced = consentCode.count == 6
+            ? String(consentCode.prefix(3)) + " " + String(consentCode.suffix(3))
+            : consentCode
+        let safeCode = escapeHTML(spaced)
         let safeNonce = escapeHTML(nonce)
         return """
         <!doctype html>
@@ -551,7 +622,7 @@ final class OAuthStore {
         <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Authorize iGhostVT MCP</title>
+        <title>Approve in iGhostVT</title>
         <style>
           :root { color-scheme: light dark; }
           body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; min-height: 100vh; margin: 0; align-items: center; justify-content: center; background: #f5f5f7; color: #1d1d1f; }
@@ -559,24 +630,38 @@ final class OAuthStore {
           .card { max-width: 400px; width: calc(100% - 32px); padding: 24px; border-radius: 14px; background: #fff; border: 1px solid #d2d2d7; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
           h1 { margin: 0 0 8px; font-size: 20px; }
           p { margin: 0 0 16px; line-height: 1.5; font-size: 14px; }
-          .meta { font-size: 12px; color: #6e6e73; margin-bottom: 20px; word-break: break-all; }
-          .actions { display: flex; gap: 10px; }
-          button { flex: 1; padding: 10px 14px; border-radius: 8px; border: 0; font-size: 14px; font-weight: 600; cursor: pointer; }
-          .approve { background: #0071e3; color: #fff; }
-          .deny { background: rgba(128,128,128,.2); color: inherit; }
+          .code { font: 600 32px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; text-align: center; margin: 8px 0 16px; }
+          .meta { font-size: 13px; color: #6e6e73; margin-bottom: 20px; }
+          button { width: 100%; padding: 10px 14px; border-radius: 8px; border: 0; font-size: 14px; font-weight: 600; cursor: pointer; background: rgba(128,128,128,.2); color: inherit; }
         </style>
         </head>
         <body>
         <div class="card">
-          <h1>iGhostVT Local Shell</h1>
-          <p><strong>\(safeName)</strong> is requesting MCP access to run commands in your local iGhostVT terminal.</p>
-          <div class="meta">Client: \(safeID)<br>Scope: \(safeScope)</div>
-          <form method="POST" action="/authorize" class="actions">
+          <h1>Approve in iGhostVT</h1>
+          <p><strong>\(safeName)</strong> wants to use your terminals. In iGhostVT, Settings, then Advanced, allow the request that shows this code:</p>
+          <div class="code">\(safeCode)</div>
+          <div class="meta" id="status">Waiting for iGhostVT…</div>
+          <form method="POST" action="/authorize">
             <input type="hidden" name="nonce" value="\(safeNonce)">
-            <button type="submit" name="decision" value="deny" class="deny">Deny</button>
-            <button type="submit" name="decision" value="approve" class="approve">Approve</button>
+            <button type="submit" name="decision" value="deny">Cancel</button>
           </form>
         </div>
+        <script nonce="\(scriptNonce)">
+          (function () {
+            var nonce = "\(safeNonce)";
+            function poll() {
+              fetch("/authorize/status?nonce=" + encodeURIComponent(nonce), { cache: "no-store" })
+                .then(function (r) { return r.json(); })
+                .then(function (s) {
+                  if (s.location) { window.location.replace(s.location); return; }
+                  if (s.state === "expired") { document.getElementById("status").textContent = "This request ran out. Start again from your MCP client."; return; }
+                  setTimeout(poll, 1000);
+                })
+                .catch(function () { setTimeout(poll, 2000); });
+            }
+            poll();
+          })();
+        </script>
         </body>
         </html>
         """

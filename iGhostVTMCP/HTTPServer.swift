@@ -61,12 +61,19 @@ struct HTTPResponse {
         return HTTPResponse(status: status, headers: headers, body: data)
     }
 
-    static func html(_ html: String, status: Int = 200, extraHeaders: [(String, String)] = []) -> HTTPResponse {
+    static let defaultContentSecurityPolicy = "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'"
+
+    static func html(
+        _ html: String,
+        status: Int = 200,
+        extraHeaders: [(String, String)] = [],
+        contentSecurityPolicy: String = defaultContentSecurityPolicy,
+    ) -> HTTPResponse {
         var headers: [(String, String)] = [
             ("Content-Type", "text/html; charset=utf-8"),
             ("Cache-Control", "no-store"),
             ("X-Frame-Options", "DENY"),
-            ("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'"),
+            ("Content-Security-Policy", contentSecurityPolicy),
         ]
         headers.append(contentsOf: extraHeaders)
         return HTTPResponse(status: status, headers: headers, body: Data(html.utf8))
@@ -156,20 +163,12 @@ final class LocalHTTPServer {
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
 
-        if host != "0.0.0.0", host != "::" {
-            let nwHost = NWEndpoint.Host(host)
-            let nwPort = NWEndpoint.Port(rawValue: requestedPort) ?? .any
-            parameters.requiredLocalEndpoint = NWEndpoint.hostPort(host: nwHost, port: nwPort)
-        }
-
-        let listener: NWListener
-        if requestedPort == 0 {
-            listener = try NWListener(using: parameters)
-        } else if let nwPort = NWEndpoint.Port(rawValue: requestedPort) {
-            listener = try NWListener(using: parameters, on: nwPort)
-        } else {
-            throw NSError(domain: "LocalHTTPServer", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid port \(requestedPort)"])
-        }
+        // The address and the port go in one place: named again in
+        // `NWListener(using:on:)` beside a required local endpoint, the
+        // listener fails with EINVAL, so the fixed port never bound.
+        let nwPort = NWEndpoint.Port(rawValue: requestedPort) ?? .any
+        parameters.requiredLocalEndpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: nwPort)
+        let listener = try NWListener(using: parameters)
 
         let readySemaphore = DispatchSemaphore(value: 0)
         var startError: Error?

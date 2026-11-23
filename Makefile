@@ -219,9 +219,11 @@ check:
 	@grep -qF 'wiki.qaq.ighostvt-cli' "$(ROOT_DIR)/iGhostVTDaemon/Server/PeerAuthenticator.swift" \
 		&& grep -qF 'wiki.qaq.ighostvt-cli' "$(MAC_PACKAGER)" \
 		|| { echo "error: the CLI's signing identifier must match in PeerAuthenticator.swift and package-mac.sh" >&2; exit 65; }
-	@grep -qF 'wiki.qaq.ighostvt-mcp' "$(ROOT_DIR)/iGhostVTDaemon/Server/PeerAuthenticator.swift" \
-		&& grep -qF 'wiki.qaq.ighostvt-mcp' "$(MAC_PACKAGER)" \
-		|| { echo "error: the MCP binary's signing identifier must match in PeerAuthenticator.swift and package-mac.sh" >&2; exit 65; }
+	@# The MCP server is admitted for being the daemon's child (MCPSupervisor),
+	@# never by its path or signature: anything that admitted a copy run by hand
+	@# would let a client in without the app's consent.
+	@! grep -qF -e 'wiki.qaq.ighostvt-mcp' -e 'iGhostVT.app/ighostvt-mcp' "$(ROOT_DIR)/iGhostVTDaemon/Server/PeerAuthenticator.swift" "$(ROOT_DIR)/Shared/Protocol/iGhostVTProtocol.swift" \
+		|| { echo "error: ighostvt-mcp must not be admitted by path or signing identifier (PeerAuthenticator.swift, iGhostVTProtocol.clientPaths)" >&2; exit 65; }
 	@! grep -rnE '[A-Za-z0-9] \([A-Z0-9]{10}\)' "$(ROOT_DIR)/Scripts" "$(ROOT_DIR)/Makefile" "$(ROOT_DIR)/Packaging" \
 		|| { echo "error: a signing identity ('Name (TEAMID)') is hardcoded above — identities come from the keychain or MAC_ZIP_IDENTITY/MAC_UPDATE_IDENTITY, never the repo" >&2; exit 65; }
 	@test -f "$(XPC_SHIM_DIR)/module.modulemap" -a -f "$(XPC_SHIM_DIR)/shim.h" \

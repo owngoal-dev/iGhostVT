@@ -21,6 +21,7 @@ struct AdvancedSettingsView: View {
     /// Read by the scene delegate as a window opens; see `SessionLaunch`.
     @AppStorage(SessionLaunch.key) private var opensNewSession = true
     @ObservedObject private var updates = UpdateCheck.shared
+    @StateObject private var mcp = MCPServerModel()
     @State private var window: UIWindow?
 
     var body: some View {
@@ -32,6 +33,10 @@ struct AdvancedSettingsView: View {
                 launchSection
             }
             fileTransferSection
+            // The server needs this device's daemon, which Ghost Remote has none of.
+            if !AppEdition.isRemoteOnly {
+                MCPServerSection(model: mcp)
+            }
             experimentalSection
             debugSection
             #if !targetEnvironment(macCatalyst)
@@ -43,6 +48,12 @@ struct AdvancedSettingsView: View {
         .navigationTitle("Advanced")
         .navigationBarTitleDisplayMode(.inline)
         .background(WindowReader(window: $window))
+        .onAppear {
+            mcp.setWindow(window)
+            mcp.pageAppeared()
+        }
+        .onChange(of: window) { mcp.setWindow($0) }
+        .onDisappear { mcp.pageDisappeared() }
     }
 
     private var launchSection: some View {

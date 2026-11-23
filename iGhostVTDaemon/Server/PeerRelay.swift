@@ -7,18 +7,23 @@ import XPC
 /// Holds no session state and reads no request but its operation code:
 /// whatever the client sends goes to the child with this peer's id,
 /// whatever comes back for this id goes to the client. The exceptions:
-/// `goodbye`, after which the connection is the proxy's to close, and the
+/// `goodbye`, after which the connection is the proxy's to close, the
 /// remote-access management operations, which go to `RemoteSupervisor`
-/// instead — and which the remote helper itself may not send, nor
-/// `shutdown`: it is the one peer the network stands behind.
+/// instead, and the MCP operations, which `MCPSupervisor` answers. The two
+/// helpers the network stands behind — the remote helper and the MCP server
+/// — may send none of the management operations, nor `shutdown`; the MCP
+/// server not `hostUpdate` either (a paired device's update goes through the
+/// remote helper), and of the MCP operations only its two consent questions.
 final class PeerRelay: IOPeer {
     let peerID: UInt64
     private let connection: xpc_connection_t
     private let clientPID: Int32
     private let isRemoteHelper: Bool
+    private let mcpSender: MCPSupervisor.Sender
     private let queue: DispatchQueue
     private let supervisor: IOSupervisor
     private let remote: RemoteSupervisor
+    private let mcp: MCPSupervisor
     private let onInvalidate: (PeerRelay) -> Void
     private var isValid = true
     private var isSuspended = false
@@ -28,18 +33,22 @@ final class PeerRelay: IOPeer {
         connection: xpc_connection_t,
         clientPID: Int32,
         isRemoteHelper: Bool,
+        mcpSender: MCPSupervisor.Sender,
         queue: DispatchQueue,
         supervisor: IOSupervisor,
         remote: RemoteSupervisor,
+        mcp: MCPSupervisor,
         onInvalidate: @escaping (PeerRelay) -> Void,
     ) {
         self.peerID = peerID
         self.connection = connection
         self.clientPID = clientPID
         self.isRemoteHelper = isRemoteHelper
+        self.mcpSender = mcpSender
         self.queue = queue
         self.supervisor = supervisor
         self.remote = remote
+        self.mcp = mcp
         self.onInvalidate = onInvalidate
     }
 
@@ -68,10 +77,15 @@ final class PeerRelay: IOPeer {
 
         let reply = xpc_dictionary_create_reply(event)
         let operationCode = xpc_dictionary_get_uint64(event, iGhostVTWireKey.operation)
-        if Self.isRemoteManagement(operationCode) || operationCode == iGhostVTOperation.shutdown.rawValue,
-           isRemoteHelper
-        {
-            DaemonFileLog.log("peer \(peerID): the remote helper sent operation \(operationCode), refused")
+        let isNetworkHelper = isRemoteHelper || mcpSender == .server
+        let isManagement = Self.isRemoteManagement(operationCode)
+            || operationCode == iGhostVTOperation.shutdown.rawValue
+            // A paired device's Check for Update comes through the remote
+            // helper; an MCP client has no business updating the host.
+            || (mcpSender == .server && operationCode == iGhostVTOperation.hostUpdate.rawValue)
+            || (isRemoteHelper && MCPSupervisor.isMCPOperation(operationCode))
+        if isNetworkHelper, isManagement {
+            DaemonFileLog.log("peer \(peerID): a network helper sent operation \(operationCode), refused")
             if let reply {
                 xpc_dictionary_set_uint64(reply, iGhostVTWireKey.version, iGhostVTProtocol.version)
                 xpc_dictionary_set_int64(reply, iGhostVTWireKey.code, iGhostVTReplyCode.invalidRequest.rawValue)
@@ -82,6 +96,14 @@ final class PeerRelay: IOPeer {
         if Self.isRemoteManagement(operationCode) {
             remote.handle(event) { [weak self] result in
                 guard let self, isValid, let reply else { return }
+                IOCodec.copyEntries(from: result, into: reply)
+                xpc_connection_send_message(connection, reply)
+            }
+            return
+        }
+        if MCPSupervisor.isMCPOperation(operationCode) {
+            let result = mcp.handle(event, from: mcpSender)
+            if let reply {
                 IOCodec.copyEntries(from: result, into: reply)
                 xpc_connection_send_message(connection, reply)
             }

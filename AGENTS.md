@@ -21,13 +21,14 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   keep it that way, and watch for Xcode injecting these keys back.
 - **The app never spawns processes.** `ighostvtd-io` forks the shells
   (`forkpty`+`execve`), and on the Mac the three tools its update needs
-  (`ditto`, `xattr`, `open`; `MacUpdater`); `ighostvtd` spawns only its two
-  children — `ighostvtd-io` (`IOSupervisor`) and `ighostvtd-remote`
+  (`ditto`, `xattr`, `open`; `MacUpdater`); `ighostvtd` spawns only its
+  children — `ighostvtd-io` (`IOSupervisor`), `ighostvtd-remote`
   (`RemoteSupervisor`), which runs while remote access is on, and dormant
   (`--dormant`: no listener, no Bonjour, no relay; gone after a minute
   unasked) while it is off and the app asks about the paired devices, so
   turning the switch off stops them connecting and forgets nobody — the
-  devices stay listed and removable — via `posix_spawn`. Peer
+  devices stay listed and removable — and `ighostvt-mcp`
+  (`MCPSupervisor`, below), while its switch is on — via `posix_spawn`. Peer
   authentication is still the daemon's, gated by the kernel audit token
   before a byte is forwarded. Keep that boundary; don't add process APIs to
   the app or to the proxy.
@@ -480,6 +481,49 @@ row (a bar while it downloads) and one overall bar under the table. It
 outlives the sheet; a newer run or Cancel retires a host's run, whose
 asks then change nothing, and Cancel never reaches past the swap. The
 iPhone and iPad keep `HostUpdateFlow`'s alerts for one device.
+
+## The MCP server
+
+`ighostvt-mcp` lets an AI app on the same device (FlowDown, say) drive
+terminals over MCP: Streamable HTTP at `MCPConsent.endpoint`
+(`http://127.0.0.1:18765/mcp`), OAuth 2.1 with dynamic client registration
+and PKCE, and the tools `shell_exec` and `session_*`, which reach only the
+sessions it opened (attribute `mcp=1`). Settings ▸ Advanced ▸ MCP (the Mac's
+Advanced pane) turns it on; it is off by default, and Ghost Remote has none.
+
+- **The daemon's child, nothing else.** `MCPSupervisor` in the proxy keeps
+  the switch as a file only it can write, as remote access does, and spawns
+  the server beside its own executable (`/usr/libexec` on the device,
+  `Contents/MacOS` on the Mac). `PeerAuthenticator` admits it for being that
+  child — pid and path — and never by its path or signing identifier, which
+  `make check` holds: a copy run by hand reaches nothing. The server drops to
+  mobile on the device before it reads a byte, binds loopback only, keeps its
+  OAuth state in the session user's `Library/Application Support/iGhostVT`,
+  and holds one daemon connection for as long as it runs — that keeps the
+  daemon resident, and its loss makes the server exit, so a daemon that comes
+  back never meets an orphan on the port. `PeerRelay` lets it send the
+  session operations and its two consent questions, never the management
+  operations, `shutdown` or `hostUpdate`.
+- **Consent is the app's, while Settings is open.** The OAuth consent page
+  is served on a port anything on the device can reach — an App Store app
+  included — so a form there proves nothing: the first version of this
+  server took `POST /authorize decision=approve`, and any local process
+  registered itself, fetched the page, posted its own approval and had
+  `shell_exec`. Now the server asks the proxy (`beginMCPConsent`) and polls
+  (`mcpConsentState`); only the app may answer (`answerMCPConsent`), and only
+  while its settings page is up, which holds the consent window
+  (`setMCPConsentWindow`: renewed every 30 s, lapsing three minutes after the
+  last renewal — long enough to switch to the client and back — and closed,
+  refusing what waits, as the page goes). With no window open a request is
+  refused before anyone is asked, so nothing in the background can raise one.
+  Each request carries a six-digit code that the consent page and the app's
+  alert both show, so the person allows their client's request and not one
+  raised beside it. The page polls `/authorize/status` with its own script
+  (a CSP nonce) and is sent to the client's redirect with the code, or with
+  `access_denied`; its Cancel is the only thing the form still posts.
+- `LocalHTTPServer` names the port once, in the required local endpoint: named
+  again in `NWListener(using:on:)` the listener failed with EINVAL, and the
+  fixed port never bound.
 
 ## Ghost Remote
 

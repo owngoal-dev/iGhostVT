@@ -141,7 +141,7 @@ codesign --display --verbose=2 "$app/Contents/MacOS/ighostvt-cli" 2>&1 \
 if [[ -e "$app/Contents/MacOS/ighostvt-mcp" ]]; then
     codesign --display --verbose=2 "$app/Contents/MacOS/ighostvt-mcp" 2>&1 \
         | grep -x "Identifier=$mcp_identifier" >/dev/null \
-        || die "ighostvt-mcp lost its identifier $mcp_identifier; the daemon would refuse it"
+        || die "ighostvt-mcp lost its identifier $mcp_identifier"
 fi
 
 # MARK: - Notarization

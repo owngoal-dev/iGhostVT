@@ -162,7 +162,26 @@ defer { try? FileManager.default.removeItem(at: tempDir) }
 
 let stateFile = tempDir.appendingPathComponent("oauth.json")
 let issuer = "http://127.0.0.1:18765"
-let oauth = OAuthStore(issuer: issuer, stateURL: stateFile)
+/// The proxy's side of consent, which only the app answers.
+final class FakeAuthority: ConsentAuthority {
+    var isWindowOpen = false
+    var states: [UInt64: MCPConsentState] = [:]
+    var lastID: UInt64 = 0
+
+    func beginConsent(clientName _: String, redirect _: String) throws -> (id: UInt64, code: String) {
+        guard isWindowOpen else { throw MCPBackendError.refused("Open iGhostVT Settings to approve a new client.") }
+        lastID += 1
+        states[lastID] = .pending
+        return (lastID, String(123_456 + Int(lastID)))
+    }
+
+    func consentState(of id: UInt64) throws -> MCPConsentState {
+        states[id] ?? .expired
+    }
+}
+
+let authority = FakeAuthority()
+let oauth = OAuthStore(issuer: issuer, stateURL: stateFile, authority: authority)
 let backend = MockBackend()
 let mcp = MCPHandler(backend: backend, allowAllSessions: false)
 let router = MCPRouter(oauth: oauth, mcp: mcp)
@@ -205,25 +224,66 @@ let clientID = jsonBody(reg)["client_id"] as! String
 let verifier = "test-pkce-verifier-0123456789abcdef"
 let challenge = base64URLSHA256(verifier)
 
-let authGet = router.handle(makeRequest("GET", "/authorize", query: [
-    "response_type": "code",
-    "client_id": clientID,
-    "redirect_uri": redirectURI,
-    "code_challenge": challenge,
-    "code_challenge_method": "S256",
-    "state": "xyz123",
-]))
-expect(authGet.status == 200, "GET /authorize should return HTML consent page")
-let html = String(decoding: authGet.body, as: UTF8.self)
-let nonce = extractHiddenNonce(from: html)!
-expect(!nonce.isEmpty, "consent HTML must include hidden nonce")
+func authorizeQuery(state: String? = nil) -> [String: String] {
+    var query = [
+        "response_type": "code",
+        "client_id": clientID,
+        "redirect_uri": redirectURI,
+        "code_challenge": challenge,
+        "code_challenge_method": "S256",
+    ]
+    query["state"] = state
+    return query
+}
 
-let authPost = router.handle(makeFormRequest("POST", "/authorize", form: [
-    "nonce": nonce,
-    "decision": "approve",
-]))
-expect(authPost.status == 302, "POST /authorize approve must redirect")
-let location = authPost.headers.first { $0.0.lowercased() == "location" }!.1
+func status(_ nonce: String) -> [String: Any] {
+    jsonBody(router.handle(makeRequest("GET", "/authorize/status", query: ["nonce": nonce])))
+}
+
+/// Starts a request, has the app answer it, and returns where the consent
+/// page is sent.
+func authorize(answer: MCPConsentState, state: String? = nil) -> String {
+    let page = router.handle(makeRequest("GET", "/authorize", query: authorizeQuery(state: state)))
+    expect(page.status == 200, "GET /authorize with the window open must serve the waiting page")
+    let nonce = extractHiddenNonce(from: String(decoding: page.body, as: UTF8.self))!
+    expect((status(nonce)["state"] as? String) == "pending", "an unanswered request must read pending")
+    authority.states[authority.lastID] = answer
+    let answered = status(nonce)
+    expect((answered["state"] as? String) == answer.rawValue, "status must report the app's answer")
+    expect((status(nonce)["state"] as? String) == "expired", "an answer must be read once")
+    return answered["location"] as! String
+}
+
+// No settings page open in the app: nobody can be asked, nothing is pending.
+authority.isWindowOpen = false
+let closed = router.handle(makeRequest("GET", "/authorize", query: authorizeQuery()))
+expect(closed.status == 403, "GET /authorize with no consent window must be refused")
+expect(extractHiddenNonce(from: String(decoding: closed.body, as: UTF8.self)) == nil, "a refused request must carry no nonce")
+expect(authority.lastID == 0, "a refused request must not reach the app")
+
+authority.isWindowOpen = true
+
+// The page cannot approve itself: the consent bypass that let any local
+// process mint a token by posting the form.
+let waiting = router.handle(makeRequest("GET", "/authorize", query: authorizeQuery()))
+let html = String(decoding: waiting.body, as: UTF8.self)
+expect(html.contains("123 457"), "the waiting page must show the request's code")
+let csp = waiting.headers.first { $0.0 == "Content-Security-Policy" }?.1 ?? ""
+expect(csp.contains("script-src 'nonce-") && csp.contains("connect-src 'self'"), "the waiting page's CSP must allow only its own script and polling")
+let nonce = extractHiddenNonce(from: html)!
+let selfApproval = router.handle(makeFormRequest("POST", "/authorize", form: ["nonce": nonce, "decision": "approve"]))
+expect(selfApproval.status == 403, "POST /authorize approve must be refused")
+expect((status(nonce)["state"] as? String) == "pending", "a refused self-approval must leave the request waiting")
+let cancel = router.handle(makeFormRequest("POST", "/authorize", form: ["nonce": nonce, "decision": "deny"]))
+expect(cancel.status == 302, "Cancel must redirect")
+expect((cancel.headers.first { $0.0.lowercased() == "location" }?.1 ?? "").contains("error=access_denied"), "Cancel must deny")
+
+// Refused in the app.
+let refused = authorize(answer: .denied, state: "s0")
+expect(refused.contains("error=access_denied") && refused.contains("state=s0"), "a refusal must reach the client as access_denied")
+
+// Allowed in the app.
+let location = authorize(answer: .allowed, state: "xyz123")
 let callbackComponents = URLComponents(string: location)!
 let code = callbackComponents.queryItems!.first { $0.name == "code" }!.value!
 let returnedState = callbackComponents.queryItems!.first { $0.name == "state" }!.value!
@@ -240,16 +300,7 @@ let badTok = router.handle(makeFormRequest("POST", "/token", form: [
 expect(badTok.status == 400, "wrong PKCE verifier must fail")
 
 // Re-authorize and succeed
-let authGet2 = router.handle(makeRequest("GET", "/authorize", query: [
-    "response_type": "code",
-    "client_id": clientID,
-    "redirect_uri": redirectURI,
-    "code_challenge": challenge,
-    "code_challenge_method": "S256",
-]))
-let nonce2 = extractHiddenNonce(from: String(decoding: authGet2.body, as: UTF8.self))!
-let authPost2 = router.handle(makeFormRequest("POST", "/authorize", form: ["nonce": nonce2, "decision": "approve"]))
-let code2 = URLComponents(string: authPost2.headers.first { $0.0.lowercased() == "location" }!.1)!
+let code2 = URLComponents(string: authorize(answer: .allowed))!
     .queryItems!.first { $0.name == "code" }!.value!
 
 let tok = router.handle(makeFormRequest("POST", "/token", form: [

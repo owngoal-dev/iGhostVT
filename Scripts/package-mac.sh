@@ -191,7 +191,7 @@ codesign --display --verbose=2 "$staged_app/Contents/MacOS/ighostvt-cli" 2>&1 \
 }
 codesign --display --verbose=2 "$staged_app/Contents/MacOS/ighostvt-mcp" 2>&1 \
     | grep -x "Identifier=$mcp_identifier" >/dev/null || {
-    echo "error: ighostvt-mcp was not signed as $mcp_identifier; the daemon will refuse it" >&2
+    echo "error: ighostvt-mcp was not signed as $mcp_identifier" >&2
     exit 65
 }
 

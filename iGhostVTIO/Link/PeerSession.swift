@@ -236,6 +236,10 @@ final class PeerSession {
             // The proxy's and the remote helper's; none of them reaches
             // here from a client the proxy relays.
             return Outcome(.invalidRequest)
+        case .mcpStatus, .setMCPServer, .setMCPConsentWindow, .mcpConsentRequests, .answerMCPConsent,
+             .beginMCPConsent, .mcpConsentState, .forgetMCPClients:
+            // Answered by the proxy (`MCPSupervisor`), never relayed here.
+            return Outcome(.invalidRequest)
         }
     }
 

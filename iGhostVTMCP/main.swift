@@ -2,33 +2,34 @@ import Darwin
 import Dispatch
 import Foundation
 
+/// `ighostvt-mcp`: the MCP server `MCPSupervisor` in the daemon's proxy runs
+/// while Settings ▸ Advanced ▸ MCP Server is on. It listens on loopback only
+/// (`MCPConsent.port`), drops to the session user first on the device, and
+/// exits when the daemon goes — run by hand it is not the daemon's child, the
+/// daemon admits none of its connections, and it exits at once.
 private struct MCPConfig {
-    var host = "127.0.0.1"
-    var port: UInt16 = 18765
-    var issuer: String?
-    var allowAllSessions = false
-    var staticToken: String?
+    var port: UInt16 = MCPConsent.port
     var ephemeral = false
     var stateFile: String?
+    var forget = false
     var revokeAll = false
     var showHelp = false
 }
 
 private func usageText() -> String {
     """
-    usage: ighostvt-mcp [serve] [options]
+    usage: ighostvt-mcp serve [--forget] [--port <port>] [--state-file <path> | --ephemeral]
            ighostvt-mcp revoke-all [--state-file <path>]
 
-    Minimalist HTTP MCP server with OAuth 2.1 (PKCE S256 + DCR) backed by ighostvtd.
+    The MCP server iGhostVT runs while Settings, Advanced, MCP Server is on.
+    It listens on 127.0.0.1 only, and a client is let in only when the
+    iGhostVT app allows it.
 
     options:
-      --host <addr>          Bind address (default: 127.0.0.1)
-      --port <port>          TCP port (default: 18765)
-      --issuer <url>         Public OAuth issuer URL (default: http://<host>:<port>)
-      --allow-all-sessions   Allow MCP to view/control non-MCP terminal sessions
-      --token <secret>       Optional static Bearer token in addition to OAuth 2.1
+      --forget               Forget every authorized client before serving
+      --port <port>          TCP port (default: \(MCPConsent.port))
       --ephemeral            Keep OAuth clients and tokens in memory only
-      --state-file <path>    Path to persist OAuth state (mode 0600)
+      --state-file <path>    Where to keep OAuth state (mode 0600)
       -h, --help             Show this help
     """
 }
@@ -50,16 +51,11 @@ private func parseArgs(_ args: [String]) throws -> MCPConfig {
         case "-h", "--help":
             config.showHelp = true
             index += 1
-        case "--allow-all-sessions":
-            config.allowAllSessions = true
-            index += 1
         case "--ephemeral":
             config.ephemeral = true
             index += 1
-        case "--host":
-            index += 1
-            guard index < args.count else { throw MCPBackendError.invalidArgument("--host requires a value") }
-            config.host = args[index]
+        case "--forget":
+            config.forget = true
             index += 1
         case "--port":
             index += 1
@@ -67,16 +63,6 @@ private func parseArgs(_ args: [String]) throws -> MCPConfig {
                 throw MCPBackendError.invalidArgument("--port requires a valid TCP port (0-65535)")
             }
             config.port = port
-            index += 1
-        case "--issuer":
-            index += 1
-            guard index < args.count else { throw MCPBackendError.invalidArgument("--issuer requires a URL") }
-            config.issuer = args[index]
-            index += 1
-        case "--token":
-            index += 1
-            guard index < args.count else { throw MCPBackendError.invalidArgument("--token requires a value") }
-            config.staticToken = args[index]
             index += 1
         case "--state-file":
             index += 1
@@ -91,9 +77,30 @@ private func parseArgs(_ args: [String]) throws -> MCPConfig {
 }
 
 private func logStderr(_ line: String) {
-    if let data = (line + "\n").data(using: .utf8) {
+    if let data = ("ighostvt-mcp: " + line + "\n").data(using: .utf8) {
         FileHandle.standardError.write(data)
     }
+}
+
+/// The device's daemon is root, and nothing here needs it: the server
+/// becomes mobile — the user the sessions run as — before it reads a byte
+/// from the network or opens its state. The Mac's agent already is the user.
+private func dropToSessionUser() -> Bool {
+    guard getuid() == 0 || geteuid() == 0 else { return true }
+    guard let entry = getpwnam("mobile") else { return false }
+    let uid = entry.pointee.pw_uid
+    let gid = entry.pointee.pw_gid
+    var groups = [gid_t(gid)]
+    guard setgroups(1, &groups) == 0,
+          setgid(gid) == 0,
+          setuid(uid) == 0,
+          setuid(0) != 0
+    else { return false }
+    if let home = entry.pointee.pw_dir {
+        setenv("HOME", home, 1)
+    }
+    setenv("USER", "mobile", 1)
+    return true
 }
 
 private func run() -> Int32 {
@@ -105,10 +112,13 @@ private func run() -> Int32 {
         logStderr(usageText())
         return 64
     }
-
     if config.showHelp {
         print(usageText())
         return 0
+    }
+    guard dropToSessionUser() else {
+        logStderr("error: could not drop to the session user")
+        return 77
     }
 
     let stateURL: URL? = if config.ephemeral {
@@ -119,44 +129,44 @@ private func run() -> Int32 {
         OAuthStore.defaultStateURL
     }
 
-    if config.revokeAll {
-        guard let stateURL else {
-            logStderr("error: --ephemeral cannot be combined with revoke-all")
-            return 64
-        }
+    if config.revokeAll || config.forget, let stateURL {
         do {
             try OAuthStore.revokeAll(at: stateURL)
-            logStderr("Revoked all saved OAuth clients and tokens at \(stateURL.path)")
-            return 0
+            logStderr("forgot every authorized client")
         } catch {
             logStderr("error: \(error.localizedDescription)")
             return 1
         }
+        if config.revokeAll {
+            return 0
+        }
     }
 
-    let displayHost = (config.host == "0.0.0.0" || config.host == "::") ? "127.0.0.1" : config.host
-    let issuer = config.issuer ?? "http://\(displayHost):\(config.port)"
-    let oauth = OAuthStore(issuer: issuer, stateURL: stateURL, staticToken: config.staticToken)
-    let backend = DaemonShellBackend()
-    let mcp = MCPHandler(backend: backend, allowAllSessions: config.allowAllSessions)
-    let router = MCPRouter(oauth: oauth, mcp: mcp)
+    // Held for as long as this runs; without it nothing below could reach
+    // the daemon anyway.
+    guard DaemonShellBackend.holdDaemon(onLost: {
+        logStderr("the daemon closed its connection, exiting")
+        exit(0)
+    }) else {
+        logStderr("error: the daemon did not admit this process; it runs only as iGhostVT's own MCP server")
+        return 69
+    }
 
-    let server = LocalHTTPServer(host: config.host, port: config.port) { request in
+    let host = "127.0.0.1"
+    let issuer = "http://\(host):\(config.port)"
+    let backend = DaemonShellBackend()
+    let oauth = OAuthStore(issuer: issuer, stateURL: stateURL, authority: backend)
+    let router = MCPRouter(oauth: oauth, mcp: MCPHandler(backend: backend, allowAllSessions: false))
+    let server = LocalHTTPServer(host: host, port: config.port) { request in
         router.handle(request)
     }
-
     do {
         try server.start()
     } catch {
         logStderr("error: failed to start MCP HTTP server: \(error.localizedDescription)")
         return 69
     }
-
-    let boundIssuer = config.issuer ?? "http://\(displayHost):\(server.boundPort)"
-    logStderr("ighostvt-mcp listening on http://\(config.host):\(server.boundPort)")
-    logStderr("  MCP endpoint:   \(boundIssuer)/mcp")
-    logStderr("  OAuth metadata: \(boundIssuer)/.well-known/oauth-authorization-server")
-    logStderr("  Session scope:  \(config.allowAllSessions ? "all sessions" : "MCP-created sessions only")")
+    logStderr("listening on http://\(host):\(server.boundPort)/mcp")
 
     signal(SIGINT, SIG_IGN)
     signal(SIGTERM, SIG_IGN)

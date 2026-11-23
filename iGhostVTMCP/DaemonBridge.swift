@@ -414,6 +414,68 @@ final class DaemonShellBackend: ShellBackend {
         return full ? renderer.transcriptText() : renderer.screenText()
     }
 
+    // MARK: - Consent
+
+    /// Asks the proxy for a consent request, which only the app can answer.
+    /// Refused while no settings page is open there.
+    func beginConsent(clientName: String, redirect: String) throws -> (id: UInt64, code: String) {
+        try withConnection { connection, queue in
+            let reply = try send(.beginMCPConsent, on: connection, queue: queue) { message in
+                xpc_dictionary_set_string(message, iGhostVTWireKey.clientName, clientName)
+                xpc_dictionary_set_string(message, iGhostVTWireKey.redirect, redirect)
+            }
+            let id = xpc_dictionary_get_uint64(reply, iGhostVTWireKey.requestID)
+            guard id != 0, let code = Self.string(reply, iGhostVTWireKey.consentCode) else {
+                throw MCPBackendError.daemonUnreachable
+            }
+            return (id, code)
+        }
+    }
+
+    func consentState(of id: UInt64) throws -> MCPConsentState {
+        try withConnection { connection, queue in
+            let reply = try send(.mcpConsentState, on: connection, queue: queue) { message in
+                xpc_dictionary_set_uint64(message, iGhostVTWireKey.requestID, id)
+            }
+            return Self.string(reply, iGhostVTWireKey.mcpConsent).flatMap(MCPConsentState.init(rawValue:)) ?? .expired
+        }
+    }
+
+    /// The connection the server holds for as long as it runs: it keeps the
+    /// daemon resident, and its loss — the daemon gone, or this process not
+    /// its child — is the server's cue to exit, so a daemon that comes back
+    /// starts a server it knows instead of meeting an orphan on the port.
+    static func holdDaemon(onLost: @escaping () -> Void) -> Bool {
+        let queue = DispatchQueue(label: "wiki.qaq.ighostvt.mcp.hold")
+        guard let connection = iGhostVTProtocol.serviceName.withCString({
+            ighostvtMCPCreateMachServiceConnection($0, queue, 0)
+        }) else { return false }
+        xpc_connection_set_event_handler(connection) { event in
+            if xpc_get_type(event) == iGhostVTXPC.typeError {
+                onLost()
+            }
+        }
+        xpc_connection_activate(connection)
+        let hello = xpc_dictionary_create(nil, nil, 0)
+        xpc_dictionary_set_uint64(hello, iGhostVTWireKey.version, iGhostVTProtocol.version)
+        xpc_dictionary_set_uint64(hello, iGhostVTWireKey.operation, iGhostVTOperation.hello.rawValue)
+        let done = DispatchSemaphore(value: 0)
+        var admitted = false
+        xpc_connection_send_message_with_reply(connection, hello, queue) { reply in
+            admitted = xpc_get_type(reply) == iGhostVTXPC.typeDictionary
+                && xpc_dictionary_get_int64(reply, iGhostVTWireKey.code) == iGhostVTReplyCode.success.rawValue
+            done.signal()
+        }
+        guard done.wait(timeout: .now() + requestTimeout) == .success, admitted else {
+            xpc_connection_cancel(connection)
+            return false
+        }
+        heldConnection = connection
+        return true
+    }
+
+    private static var heldConnection: xpc_connection_t?
+
     private static func notifyAppToShow(sessionID: UInt64) {
         var token: Int32 = 0
         if notify_register_check(iGhostVTProtocol.showSessionNotification, &token) == NOTIFY_STATUS_OK {

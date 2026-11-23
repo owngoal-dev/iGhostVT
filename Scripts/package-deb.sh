@@ -122,8 +122,10 @@ installed_daemon_io="$installed_root/usr/libexec/ighostvtd-io"
 installed_remote="$installed_root/usr/libexec/ighostvtd-remote"
 installed_cli="$installed_app/ighostvt-cli"
 installed_cli_link="$installed_root/usr/bin/ighostvt-cli"
-installed_mcp="$installed_app/ighostvt-mcp"
-installed_mcp_link="$installed_root/usr/bin/ighostvt-mcp"
+# The MCP server is the daemon's child, like the remote helper: spawned
+# from beside it and admitted for being that child, never by its path, so
+# it is no command of its own and has no /usr/bin link.
+installed_mcp="$installed_root/usr/libexec/ighostvt-mcp"
 installed_plist="$installed_root/Library/LaunchDaemons/wiki.qaq.ighostvtd.plist"
 mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")" "$(dirname "$installed_plist")"
 /usr/bin/ditto "$app_bundle" "$installed_app"
@@ -138,7 +140,6 @@ mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")
 # target it executed, so PeerAuthenticator sees the bundle path either way.
 mkdir -p "$(dirname "$installed_cli_link")"
 ln -sfn ../../Applications/iGhostVT.app/ighostvt-cli "$installed_cli_link"
-ln -sfn ../../Applications/iGhostVT.app/ighostvt-mcp "$installed_mcp_link"
 sed -e "s|@PREFIX@|$install_prefix|g" "$launch_plist" >"$installed_plist"
 # The daemon recovers its install root by stripping this suffix off its own
 # executable path, so the plist has to launch it by the path it is installed
@@ -423,8 +424,11 @@ grep -F ".$install_prefix/usr/libexec/ighostvtd-io" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/usr/libexec/ighostvtd-remote" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/Applications/iGhostVT.app/ighostvt-cli" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/usr/bin/ighostvt-cli -> ../../Applications/iGhostVT.app/ighostvt-cli" <<<"$contents" >/dev/null
-grep -F ".$install_prefix/Applications/iGhostVT.app/ighostvt-mcp" <<<"$contents" >/dev/null
-grep -F ".$install_prefix/usr/bin/ighostvt-mcp -> ../../Applications/iGhostVT.app/ighostvt-mcp" <<<"$contents" >/dev/null
+grep -F ".$install_prefix/usr/libexec/ighostvt-mcp" <<<"$contents" >/dev/null
+if grep -F "/Applications/iGhostVT.app/ighostvt-mcp" <<<"$contents" >/dev/null; then
+    echo "error: ighostvt-mcp belongs beside the daemon, not in the app bundle" >&2
+    exit 65
+fi
 grep -F ".$install_prefix/Library/LaunchDaemons/wiki.qaq.ighostvtd.plist" <<<"$contents" >/dev/null
 [[ -z "$integration_source" ]] || grep -F ".$install_prefix/usr/share/ighostvt/shell-integration/zsh/.zshenv" <<<"$contents" >/dev/null
 
