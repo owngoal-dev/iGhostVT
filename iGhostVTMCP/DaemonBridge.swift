@@ -231,11 +231,16 @@ final class DaemonShellBackend: ShellBackend {
 
         let marker = "__IGHOSTVT_MCP_EXIT_\(OAuthStore.randomURLSafeToken(byteCount: 12))__"
         let shellPath = (shell?.isEmpty == false) ? shell! : "/bin/sh"
+        // The shell waits on its terminal after the marker instead of
+        // exiting: a command that finished in a few milliseconds took its
+        // session with it before the first snapshot, and every fast
+        // `shell_exec` came back with no output and no exit code. The
+        // `closeSession` below ends it (SIGHUP).
         let script = """
         \(command)
         __igvt_ec=$?
         printf '\\n\(marker):%d\\n' "$__igvt_ec"
-        exit "$__igvt_ec"
+        read -r __igvt_hold
         """
 
         return try withConnection { connection, queue in
