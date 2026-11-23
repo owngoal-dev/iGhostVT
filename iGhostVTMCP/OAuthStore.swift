@@ -647,28 +647,24 @@ final class OAuthStore {
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Approve in iGhostVT</title>
         <style>
-          :root { color-scheme: light dark; --page: #f5f5f7; --card: #fff; --edge: #d2d2d7; --text: #1d1d1f; --meta: #6e6e73; }
-          @media (prefers-color-scheme: dark) { :root { --page: #1c1c1e; --card: #2c2c2e; --edge: #3a3a3c; --text: #f5f5f7; --meta: #aeaeb2; } }
-          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; min-height: 100vh; margin: 0; align-items: center; justify-content: center; background: var(--page); color: var(--text); }
-          .card { max-width: 400px; width: calc(100% - 32px); padding: 24px; border-radius: 14px; background: var(--card); border: 1px solid var(--edge); box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+          :root { color-scheme: light dark; --page: #fff; --text: #1d1d1f; --meta: #6e6e73; }
+          @media (prefers-color-scheme: dark) { :root { --page: #1c1c1e; --text: #f5f5f7; --meta: #aeaeb2; } }
+          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 0 16px; box-sizing: border-box; text-align: center; background: var(--page); color: var(--text); }
           h1 { margin: 0 0 8px; font-size: 20px; }
-          p { margin: 0 0 16px; line-height: 1.5; font-size: 14px; }
-          .code { font: 600 32px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; text-align: center; margin: 8px 0 16px; }
-          .meta { font-size: 13px; color: var(--meta); margin-bottom: 20px; }
-          button { width: 100%; padding: 10px 14px; border-radius: 8px; border: 0; font-size: 14px; font-weight: 600; cursor: pointer; background: rgba(128,128,128,.2); color: inherit; }
+          p { margin: 0; max-width: 340px; line-height: 1.5; font-size: 14px; color: var(--meta); }
+          strong { color: var(--text); }
+          .code { font: 600 36px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; margin: 24px 0; }
+          button { padding: 8px 20px; border-radius: 8px; border: 0; font-size: 14px; cursor: pointer; background: rgba(128,128,128,.2); color: inherit; }
         </style>
         </head>
         <body>
-        <div class="card">
-          <h1>Approve in iGhostVT</h1>
-          <p><strong>\(safeName)</strong> wants to use your terminals. In iGhostVT, Settings, then Advanced, allow the request that shows this code:</p>
-          <div class="code">\(safeCode)</div>
-          <div class="meta" id="status">Waiting for iGhostVT…</div>
-          <form method="POST" action="/authorize">
-            <input type="hidden" name="nonce" value="\(safeNonce)">
-            <button type="submit" name="decision" value="deny">Cancel</button>
-          </form>
-        </div>
+        <h1>Approve in iGhostVT</h1>
+        <p id="status">In iGhostVT, allow <strong>\(safeName)</strong> if you see this code.</p>
+        <div class="code" id="code">\(safeCode)</div>
+        <form method="POST" action="/authorize" id="cancel">
+          <input type="hidden" name="nonce" value="\(safeNonce)">
+          <button type="submit" name="decision" value="deny">Cancel</button>
+        </form>
         <script nonce="\(scriptNonce)">
           (function () {
             var nonce = "\(safeNonce)";
@@ -677,7 +673,12 @@ final class OAuthStore {
                 .then(function (r) { return r.json(); })
                 .then(function (s) {
                   if (s.location) { window.location.replace(s.location); return; }
-                  if (s.state === "expired") { document.getElementById("status").textContent = "This request ran out. Start again from your MCP client."; return; }
+                  if (s.state === "expired") {
+                    document.getElementById("status").textContent = "This request ran out. Start again from your MCP client.";
+                    document.getElementById("code").remove();
+                    document.getElementById("cancel").remove();
+                    return;
+                  }
                   setTimeout(poll, 1000);
                 })
                 .catch(function () { setTimeout(poll, 2000); });
