@@ -57,7 +57,29 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026111701, Ghostty 5ebe501a on Zig 0.17.1).
+  (`upToNextMajor` from 2.2.2026112301, Ghostty 5ebe501a on Zig 0.17.1).
+  2.2.2026112301 keeps the Ghostty pin and adds one engine patch, 0023
+  (binary `upstream.5ebe501a6342-2`), and changes how a precision scroll
+  ends. On iOS a lift UIKit takes for a stop (slower than about 250 pt/s)
+  goes on to the row ahead at the finger's speed, where it slid back to
+  the nearer row from rest; while the hidden scroll view moves only the
+  render thread draws (a wakeup's frame is owed until it rests, since the
+  main thread's synchronous draw stood the picture still for a frame and
+  could land ahead of an older one), the surface's display link runs to
+  the end of the deceleration so the display keeps one rate, and
+  `scrollViewDidScroll` waits up to 6.5 ms for 0023 to say the frame
+  holding that step reached the layer, so the text moves in UIKit's own
+  commit, one frame less behind the finger. The AppKit view's snap after
+  a trackpad scroll now sets off at the scroll's speed, but this app's Mac
+  build is Catalyst, the UIKit view: there, as with an iPad's trackpad or
+  mouse, the snap waits out the pan's `idleDelay` (0.12 s), by when the
+  scroll's speed has faded (`velocityStaleAfter`, 0.1 s), so it eases in
+  and out from rest — where the cubic ease-out it used set off at three
+  times its average speed. 2.2.2026112201 added
+  `TerminalSurfaceOptions.scrollBehavior` — `.settlesOnRow`, the default
+  and what this app builds every surface with; `.restsAnywhere`;
+  `.rowAtATime` — and a read-only cell reader on `TerminalSurface`;
+  nothing here uses either.
   2.2.2026111701 moves from Ghostty cf5519b2 to 5ebe501a, 91 commits
   (binary `upstream.5ebe501a6342`). Upstream 8ad3f607 stops a column
   reflow leaving stale prompt copies behind and has the reflow write the
