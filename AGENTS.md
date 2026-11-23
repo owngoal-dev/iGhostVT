@@ -502,8 +502,15 @@ Advanced pane) turns it on; it is off by default, and Ghost Remote has none.
   and holds one daemon connection for as long as it runs — that keeps the
   daemon resident, and its loss makes the server exit, so a daemon that comes
   back never meets an orphan on the port. `PeerRelay` lets it send the
-  session operations and its two consent questions, never the management
-  operations, `shutdown` or `hostUpdate`.
+  session operations, its two consent questions and its client count,
+  never the management operations, `shutdown` or `hostUpdate`.
+- **Forget shows only when there is someone to forget.** The server tells
+  the proxy how many clients hold a token (`reportMCPClients`) as it starts
+  and whenever that changes, `mcpStatus` carries it, and Settings offers
+  Forget Authorized Apps only above zero — a Forget with nothing behind it
+  restarted the server and changed nothing anyone could see. The switch
+  reads Local MCP Server, the address is never shown — Copy Address puts it
+  on the clipboard — and the footer names no client app.
 - **Consent is the app's, while Settings is open.** The OAuth consent page
   is served on a port anything on the device can reach — an App Store app
   included — so a form there proves nothing: the first version of this

@@ -300,9 +300,11 @@ enum iGhostVTOperation: UInt64, Sendable {
     // itself — none reaches io, the remote helper or the network — and it
     // decides who may send which: the switch, the consent window and the
     // answers are the app's alone (a person in Settings), the two consent
-    // questions the server's alone, and the status anyone's.
+    // questions and the client count the server's alone, and the status
+    // anyone's.
 
-    /// `enabled`, `mcpState`, `port`.
+    /// `enabled`, `mcpState`, `port`, and `mcpClients` — how many clients
+    /// the server last said it has authorized.
     case mcpStatus = 40
     /// `enabled`: turns the server on or off; answered like `mcpStatus`.
     case setMCPServer = 41
@@ -325,6 +327,10 @@ enum iGhostVTOperation: UInt64, Sendable {
     /// Forgets every client the server authorized: the server is restarted
     /// and wipes what it kept before it listens again.
     case forgetMCPClients = 47
+    /// `mcpClients`: the server says how many clients hold a token, as it
+    /// starts and whenever that changes, so Settings offers Forget only
+    /// when there is someone to forget.
+    case reportMCPClients = 48
 }
 
 /// The attribute keys and values the app keeps on a session
@@ -586,6 +592,7 @@ enum iGhostVTWireKey {
     static let expiresAt = "expires"
     static let allow = "allow"
     static let mcpConsent = "consent"
+    static let mcpClients = "mcpclients"
 }
 
 /// Where the Mac's own update stands, as `hostUpdate` reports it.

@@ -13,7 +13,8 @@ import XPC
 /// helpers the network stands behind — the remote helper and the MCP server
 /// — may send none of the management operations, nor `shutdown`; the MCP
 /// server not `hostUpdate` either (a paired device's update goes through the
-/// remote helper), and of the MCP operations only its two consent questions.
+/// remote helper), and of the MCP operations only its two consent questions
+/// and its client count.
 final class PeerRelay: IOPeer {
     let peerID: UInt64
     private let connection: xpc_connection_t

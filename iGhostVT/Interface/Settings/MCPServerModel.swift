@@ -65,7 +65,9 @@ final class MCPServerModel: ObservableObject {
         }
     }
 
+    /// The button goes at once; the restarted server reports none.
     func forgetClients() {
+        status.authorizedClients = 0
         Task {
             status = await MCPServerControl.forgetClients()
         }
@@ -117,20 +119,19 @@ struct MCPServerSection: View {
 
     var body: some View {
         Section {
-            Toggle("MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
+            Toggle("Local MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
                 .disabled(model.status.isUnavailable)
             if model.status.isEnabled {
-                Button { model.copyEndpoint() } label: {
-                    SettingsValueText(title: "Address", value: MCPConsent.endpoint)
+                Button("Copy Address") { model.copyEndpoint() }
+                if model.status.authorizedClients > 0 {
+                    Button("Forget Authorized Apps", role: .destructive) { model.forgetClients() }
                 }
-                .foregroundColor(.primary)
-                Button("Forget Authorized Apps", role: .destructive) { model.forgetClients() }
             }
         } header: {
             Text("MCP")
                 .font(DS.Font.caption)
         } footer: {
-            Text("Lets AI apps on this device, such as FlowDown, run commands in your terminals. When an app asks to connect, approve it here, while this page is open.")
+            Text("Lets AI apps on this device use your terminals. Keep this page open while you connect a new app, so you can approve it.")
                 .font(DS.Font.detail)
         }
     }

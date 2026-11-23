@@ -3,7 +3,7 @@ import Dispatch
 import Foundation
 
 /// `ighostvt-mcp`: the MCP server `MCPSupervisor` in the daemon's proxy runs
-/// while Settings ▸ Advanced ▸ MCP Server is on. It listens on loopback only
+/// while Settings ▸ Advanced ▸ Local MCP Server is on. It listens on loopback only
 /// (`MCPConsent.port`), drops to the session user first on the device, and
 /// exits when the daemon goes — run by hand it is not the daemon's child, the
 /// daemon admits none of its connections, and it exits at once.
@@ -21,7 +21,7 @@ private func usageText() -> String {
     usage: ighostvt-mcp serve [--forget] [--port <port>] [--state-file <path> | --ephemeral]
            ighostvt-mcp revoke-all [--state-file <path>]
 
-    The MCP server iGhostVT runs while Settings, Advanced, MCP Server is on.
+    The MCP server iGhostVT runs while Settings, Advanced, Local MCP Server is on.
     It listens on 127.0.0.1 only, and a client is let in only when the
     iGhostVT app allows it.
 

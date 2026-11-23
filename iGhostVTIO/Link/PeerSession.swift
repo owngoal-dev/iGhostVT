@@ -237,7 +237,7 @@ final class PeerSession {
             // here from a client the proxy relays.
             return Outcome(.invalidRequest)
         case .mcpStatus, .setMCPServer, .setMCPConsentWindow, .mcpConsentRequests, .answerMCPConsent,
-             .beginMCPConsent, .mcpConsentState, .forgetMCPClients:
+             .beginMCPConsent, .mcpConsentState, .forgetMCPClients, .reportMCPClients:
             // Answered by the proxy (`MCPSupervisor`), never relayed here.
             return Outcome(.invalidRequest)
         }

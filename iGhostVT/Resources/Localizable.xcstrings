@@ -8772,6 +8772,88 @@
         }
       }
     },
+    "Copy Address" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسخ العنوان"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse kopieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Address"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier l’adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia indirizzo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アドレスをコピー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주소 복사"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar Endereço"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать адрес"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sao chép địa chỉ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝地址"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷貝位址"
+          }
+        }
+      }
+    },
     "Copy as Image" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -19803,84 +19885,84 @@
         }
       }
     },
-    "Lets AI apps on this device, such as FlowDown, run commands in your terminals. When an app asks to connect, approve it here, while this page is open." : {
+    "Lets AI apps on this device use your terminals. Keep this page open while you connect a new app, so you can approve it." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يتيح لتطبيقات الذكاء الاصطناعي على هذا الجهاز، مثل FlowDown، تشغيل الأوامر في الطرفيات لديك. عندما يطلب تطبيق الاتصال، وافق عليه هنا بينما تكون هذه الصفحة مفتوحة."
+            "value" : "يتيح لتطبيقات الذكاء الاصطناعي على هذا الجهاز استخدام الطرفيات لديك. أبقِ هذه الصفحة مفتوحة أثناء ربط تطبيق جديد لتتمكن من الموافقة عليه."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erlaubt KI-Apps auf diesem Gerät, etwa FlowDown, Befehle in Ihren Terminals auszuführen. Wenn eine App eine Verbindung anfragt, erlauben Sie sie hier, solange diese Seite geöffnet ist."
+            "value" : "Erlaubt KI-Apps auf diesem Gerät, Ihre Terminals zu verwenden. Lassen Sie diese Seite geöffnet, während Sie eine neue App verbinden, damit Sie sie erlauben können."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lets AI apps on this device, such as FlowDown, run commands in your terminals. When an app asks to connect, approve it here, while this page is open."
+            "value" : "Lets AI apps on this device use your terminals. Keep this page open while you connect a new app, so you can approve it."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permite que las apps de IA de este dispositivo, como FlowDown, ejecuten comandos en tus terminales. Cuando una app pida conectarse, apruébala aquí mientras esta página esté abierta."
+            "value" : "Permite que las apps de IA de este dispositivo usen tus terminales. Mantén esta página abierta mientras conectas una app nueva para poder aprobarla."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permet aux apps d’IA de cet appareil, comme FlowDown, d’exécuter des commandes dans vos terminaux. Lorsqu’une app demande à se connecter, approuvez-la ici, pendant que cette page est ouverte."
+            "value" : "Permet aux apps d’IA de cet appareil d’utiliser vos terminaux. Laissez cette page ouverte pendant que vous connectez une nouvelle app, afin de pouvoir l’approuver."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Consente alle app di IA su questo dispositivo, come FlowDown, di eseguire comandi nei tuoi terminali. Quando un’app chiede di connettersi, approvala qui mentre questa pagina è aperta."
+            "value" : "Consente alle app di IA su questo dispositivo di usare i tuoi terminali. Tieni aperta questa pagina mentre colleghi una nuova app, così potrai approvarla."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このデバイス上のAIアプリ（FlowDownなど）がターミナルでコマンドを実行できるようにします。アプリから接続を求められたら、このページを開いたままここで許可してください。"
+            "value" : "このデバイス上のAIアプリがターミナルを使用できるようにします。新しいアプリを接続するときは、許可できるようにこのページを開いたままにしてください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 기기의 AI 앱(예: FlowDown)이 터미널에서 명령을 실행할 수 있게 합니다. 앱이 연결을 요청하면 이 페이지를 열어 둔 상태에서 여기에서 허용하십시오."
+            "value" : "이 기기의 AI 앱이 터미널을 사용할 수 있게 합니다. 새 앱을 연결할 때는 허용할 수 있도록 이 페이지를 열어 두십시오."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permite que apps de IA neste dispositivo, como o FlowDown, executem comandos nos seus terminais. Quando um app pedir para se conectar, aprove-o aqui enquanto esta página estiver aberta."
+            "value" : "Permite que apps de IA neste dispositivo usem seus terminais. Mantenha esta página aberta enquanto conecta um novo app para poder aprová-lo."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Позволяет приложениям ИИ на этом устройстве, например FlowDown, выполнять команды в ваших терминалах. Когда приложение запросит подключение, разрешите его здесь, пока эта страница открыта."
+            "value" : "Позволяет приложениям ИИ на этом устройстве использовать ваши терминалы. Не закрывайте эту страницу при подключении нового приложения, чтобы разрешить ему доступ."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cho phép các ứng dụng AI trên thiết bị này, như FlowDown, chạy lệnh trong terminal của bạn. Khi một ứng dụng yêu cầu kết nối, hãy chấp thuận tại đây trong lúc trang này đang mở."
+            "value" : "Cho phép các ứng dụng AI trên thiết bị này sử dụng terminal của bạn. Hãy giữ trang này mở khi kết nối ứng dụng mới để có thể chấp thuận."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "让此设备上的 AI 应用（如 FlowDown）在你的终端中运行命令。应用请求连接时，请保持此页面打开，并在这里批准。"
+            "value" : "允许此设备上的 AI 应用使用你的终端。连接新应用时，请保持此页面打开，以便批准。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "讓此裝置上的 AI App（如 FlowDown）在你的終端機中執行指令。App 要求連線時，請保持此頁面開啟，並在這裡核准。"
+            "value" : "允許此裝置上的 AI App 使用你的終端機。連接新的 App 時，請保持此頁面開啟，以便核准。"
           }
         }
       }
@@ -20460,6 +20542,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "列出終端機工作階段"
+          }
+        }
+      }
+    },
+    "Local MCP Server" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خادم MCP محلي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokaler MCP-Server"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local MCP Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor MCP local"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur MCP local"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server MCP locale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ローカルMCPサーバ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 MCP 서버"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor MCP Local"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальный сервер MCP"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy chủ MCP cục bộ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地 MCP 服务"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本機 MCP 服務"
           }
         }
       }
@@ -21289,88 +21453,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MCP"
-          }
-        }
-      }
-    },
-    "MCP Server" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خادم MCP"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP-Server"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP Server"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servidor MCP"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serveur MCP"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server MCP"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCPサーバ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP 서버"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servidor MCP"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сервер MCP"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Máy chủ MCP"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP 服务器"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP 伺服器"
           }
         }
       }
