@@ -9,13 +9,15 @@ import UIKit
 
 /// What is set once or only troubleshooting needs, off the main sheet so
 /// it doesn't read as something to fill in: the default shell, whether a
-/// launch starts one, the keystroke-level log and the way into the logs,
-/// and the release package straight from GitHub. The Mac has its own
+/// launch starts one, the experimental switches, the keystroke-level log
+/// and the way into the logs, and the release package straight from
+/// GitHub. The Mac has its own
 /// pane for this (`MacSettingsPanes`), with the background helper's status
 /// beside it.
 struct AdvancedSettingsView: View {
     @AppStorage(DetailedTerminalLog.key) private var verboseTerminalLog = false
     @AppStorage(ZmodemSetting.key) private var zmodemEnabled = ZmodemSetting.defaultValue
+    @AppStorage(SmoothScrolling.key) private var smoothScrolling = SmoothScrolling.defaultValue
     /// Read by the scene delegate as a window opens; see `SessionLaunch`.
     @AppStorage(SessionLaunch.key) private var opensNewSession = true
     @ObservedObject private var updates = UpdateCheck.shared
@@ -30,6 +32,7 @@ struct AdvancedSettingsView: View {
                 launchSection
             }
             fileTransferSection
+            experimentalSection
             debugSection
             #if !targetEnvironment(macCatalyst)
                 if UpdateCheck.isAvailable {
@@ -57,6 +60,24 @@ struct AdvancedSettingsView: View {
         } header: {
             Text("File Transfer")
                 .font(DS.Font.caption)
+        }
+    }
+
+    /// What works but is not settled enough to be on by default.
+    private var experimentalSection: some View {
+        Section {
+            Toggle("Smooth Scrolling", isOn: $smoothScrolling)
+        } header: {
+            Text("Experimental Features")
+                .font(DS.Font.caption)
+        } footer: {
+            Text(
+                """
+                Smooth Scrolling moves the text pixel by pixel as you scroll, \
+                and lines it up on a row when you stop. Off, it moves a row at a time.
+                """,
+            )
+            .font(DS.Font.detail)
         }
     }
 
@@ -99,6 +120,25 @@ enum ZmodemSetting {
 
     static var isEnabled: Bool {
         UserDefaults.standard.object(forKey: key) as? Bool ?? defaultValue
+    }
+}
+
+/// Settings ▸ Advanced ▸ Experimental Features. Off, a precision scroll —
+/// a finger, a trackpad, a mouse — moves the terminal a row at a time, as
+/// Ghostty does; on, by the pixel, brought to a row once it stops
+/// (`TerminalScrollBehavior`). Every new surface reads it and `TerminalTab`
+/// switches the open ones when it flips. Off by default while it is
+/// experimental.
+enum SmoothScrolling {
+    static let key = "Terminal.smoothScrolling"
+    static let defaultValue = false
+
+    static var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: key) as? Bool ?? defaultValue
+    }
+
+    static var behavior: TerminalScrollBehavior {
+        isEnabled ? .settlesOnRow : .rowAtATime
     }
 }
 

@@ -12917,6 +12917,88 @@
         }
       }
     },
+    "Experimental Features" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ميزات تجريبية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimentelle Funktionen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimental Features"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciones experimentales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fonctionnalités expérimentales"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funzioni sperimentali"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実験的な機能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실험적 기능"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos Experimentais"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспериментальные функции"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tính năng thử nghiệm"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试验性功能"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "試驗性功能"
+          }
+        }
+      }
+    },
     "Expires in %lld:%02lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32828,6 +32910,170 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "縮小"
+          }
+        }
+      }
+    },
+    "Smooth Scrolling" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التمرير السلس"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanftes Scrollen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth Scrolling"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazamiento suave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défilement fluide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorrimento fluido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スムーズスクロール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부드러운 스크롤"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolagem suave"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавная прокрутка"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộn mượt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平滑滚动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平滑捲動"
+          }
+        }
+      }
+    },
+    "Smooth Scrolling moves the text pixel by pixel as you scroll, and lines it up on a row when you stop. Off, it moves a row at a time." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«التمرير السلس» يحرّك النص بكسلًا بكسلًا أثناء التمرير، ويحاذيه مع صف عند التوقف. وعند إيقافه، يتحرك النص صفًا واحدًا في كل مرة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Sanftes Scrollen“ bewegt den Text beim Scrollen pixelweise und richtet ihn an einer Zeile aus, sobald Sie anhalten. Ist es aus, bewegt sich der Text zeilenweise."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth Scrolling moves the text pixel by pixel as you scroll, and lines it up on a row when you stop. Off, it moves a row at a time."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Desplazamiento suave» mueve el texto píxel a píxel mientras te desplazas y lo alinea con una fila cuando te detienes. Desactivado, el texto se mueve fila a fila."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Défilement fluide » déplace le texte pixel par pixel pendant le défilement et l’aligne sur une ligne quand vous vous arrêtez. Désactivé, le texte défile ligne par ligne."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Scorrimento fluido” sposta il testo pixel per pixel mentre scorri e lo allinea a una riga quando ti fermi. Se è disattivato, il testo scorre una riga alla volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「スムーズスクロール」では、スクロール中はテキストが1ピクセルずつ動き、止めると行に揃います。オフのときは1行ずつ動きます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘부드러운 스크롤’은 스크롤하는 동안 텍스트를 픽셀 단위로 움직이고, 멈추면 행에 맞춰 정렬합니다. 끄면 한 행씩 움직입니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Rolagem suave” move o texto pixel a pixel enquanto você rola e o alinha a uma linha quando você para. Desativada, o texto se move uma linha por vez."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Плавная прокрутка» сдвигает текст попиксельно во время прокрутки и выравнивает его по строке, когда вы останавливаетесь. Если она выключена, текст сдвигается построчно."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Cuộn mượt” di chuyển văn bản theo từng điểm ảnh khi bạn cuộn và căn theo hàng khi bạn dừng. Khi tắt, văn bản di chuyển từng hàng một."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“平滑滚动”会在滚动时逐像素移动文字，停下后对齐到整行。关闭后，文字逐行移动。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「平滑捲動」會在捲動時逐像素移動文字，停下後對齊到整列。關閉後，文字逐列移動。"
           }
         }
       }

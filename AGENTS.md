@@ -76,10 +76,16 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   scroll's speed has faded (`velocityStaleAfter`, 0.1 s), so it eases in
   and out from rest — where the cubic ease-out it used set off at three
   times its average speed. 2.2.2026112201 added
-  `TerminalSurfaceOptions.scrollBehavior` — `.settlesOnRow`, the default
-  and what this app builds every surface with; `.restsAnywhere`;
-  `.rowAtATime` — and a read-only cell reader on `TerminalSurface`;
-  nothing here uses either.
+  `TerminalSurfaceOptions.scrollBehavior` — `.settlesOnRow` (the
+  library's default), `.restsAnywhere`, `.rowAtATime` — and a read-only
+  cell reader on `TerminalSurface`, which nothing here uses. This app
+  never takes the library's default: every surface is built with
+  `SmoothScrolling.behavior` — `.rowAtATime` unless Settings ▸ Advanced ▸
+  Experimental Features ▸ Smooth Scrolling is on, then `.settlesOnRow` —
+  and `TerminalTab` writes a flip into open tabs the way it writes the
+  resize throttle (the behavior is outside a surface's identity, so it
+  switches the live surface and rebuilds nothing). Pixel scrolling was
+  on from 1.6.29 to 1.6.35; 1.6.36 put it behind the switch, off.
   2.2.2026111701 moves from Ghostty cf5519b2 to 5ebe501a, 91 commits
   (binary `upstream.5ebe501a6342`). Upstream 8ad3f607 stops a column
   reflow leaving stale prompt copies behind and has the reflow write the
@@ -354,7 +360,10 @@ Activities and the Remote Access link — in Ghost Remote, which has no
 sessions of its own and so no Background Activities, Remote Access leads,
 since it must show there without scrolling; Keyboard puts Accessory Keys before Shortcuts. Default Shell and New
 Session at Launch (not in Ghost Remote, whose launch never starts a shell
-on a paired device) sit under About ▸ Advanced, and there is no Interface
+on a paired device) sit under About ▸ Advanced, beside Experimental
+Features — what works but is not yet on by default, each a switch that
+starts off (today Smooth Scrolling, `SmoothScrolling`); the Mac's
+Advanced pane has the same row — and there is no Interface
 stepper — on iOS the chrome follows Dynamic Type, and a step stored by an
 older build is ignored there (`InterfaceTextSizeModifier`); the Mac keeps
 the stepper because Catalyst ignores Dynamic Type. The Mac's window

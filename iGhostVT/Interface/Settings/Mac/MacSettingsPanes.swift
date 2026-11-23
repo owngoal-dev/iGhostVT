@@ -328,17 +328,31 @@ import SwiftUI
         }
     }
 
-    /// The keystroke log's switch, and the logs themselves — opened in
+    /// File transfer, the experimental switches, the keystroke log's
+    /// switch, and the logs themselves — opened in
     /// Console, which reads, searches and follows a log file better than
     /// anything a settings window could hold.
     private struct MacAdvancedPane: View {
         @AppStorage(DetailedTerminalLog.key) private var verboseTerminalLog = false
         @AppStorage(ZmodemSetting.key) private var zmodemEnabled = ZmodemSetting.defaultValue
+        @AppStorage(SmoothScrolling.key) private var smoothScrolling = SmoothScrolling.defaultValue
 
         var body: some View {
             MacSettingsForm {
                 MacSettingsRow("File Transfer") {
                     MacCheckbox(String(localized: "ZMODEM File Transfer"), isOn: $zmodemEnabled)
+                }
+                Divider()
+                MacSettingsRow("Experimental Features") {
+                    MacCheckbox(String(localized: "Smooth Scrolling"), isOn: $smoothScrolling)
+                } details: {
+                    MacSettingsNote(
+                        """
+                        Smooth Scrolling moves the text pixel by pixel as you scroll, \
+                        and lines it up on a row when you stop. Off, it moves a row \
+                        at a time.
+                        """,
+                    )
                 }
                 Divider()
                 MacSettingsRow("Debugging") {

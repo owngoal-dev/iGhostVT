@@ -69,6 +69,7 @@ final class TerminalTab: ObservableObject, Identifiable {
     private var activityObservation: AnyCancellable?
     private var titleObservation: AnyCancellable?
     private var resizeThrottleObservation: AnyCancellable?
+    private var scrollBehaviorObservation: AnyCancellable?
     private var lockObservation: AnyCancellable?
 
     /// The lock the daemon's session holds, as far as this tab knows — what
@@ -203,6 +204,7 @@ final class TerminalTab: ObservableObject, Identifiable {
             backend: .inMemory(store.session),
             fontSize: TerminalFontSize.preferred,
             resizeThrottleMilliseconds: Self.resizeThrottle(isShellInForeground: false),
+            scrollBehavior: SmoothScrolling.behavior,
         )
         // The right resize throttle depends on what is drawing: an
         // alt-screen program that repaints on every winsize (vim, Claude
@@ -238,6 +240,21 @@ final class TerminalTab: ObservableObject, Identifiable {
             terminal.configuration.resizeThrottleMilliseconds = milliseconds
             terminal.attachedPlatformView?.configuration.resizeThrottleMilliseconds = milliseconds
         }
+        // Settings ▸ Advanced ▸ Smooth Scrolling reaches open tabs at once.
+        // Like the throttle, the behavior is outside a surface's identity:
+        // written into a mounted view's configuration it switches the live
+        // surface, and into `terminal.configuration` it is what a remounted
+        // view starts from. The notification comes for every default
+        // written, on the writer's thread, so the setting is read there and
+        // only a change hops to the main queue.
+        scrollBehaviorObservation = NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification)
+            .map { _ in SmoothScrolling.behavior }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] behavior in
+                MainActor.assumeIsolated { self?.applyScrollBehavior(behavior) }
+            }
         // The user's arrangement of the keyboard accessory bar; later edits
         // reach existing tabs through RootView's store subscription.
         KeyboardBarStore.shared.apply(to: terminal)
@@ -502,6 +519,14 @@ final class TerminalTab: ObservableObject, Identifiable {
     /// resize: none for a shell at its prompt, 128 for a program in front of
     /// it — a step above the library's 96 for full-repaint TUIs, enough for an
     /// A12Z iPad; 200 was tried and taken back as too long a blank strip.
+    /// Settings ▸ Advanced ▸ Smooth Scrolling, flipped while this tab is
+    /// open.
+    private func applyScrollBehavior(_ behavior: TerminalScrollBehavior) {
+        guard terminal.configuration.scrollBehavior != behavior else { return }
+        terminal.configuration.scrollBehavior = behavior
+        terminal.attachedPlatformView?.configuration.scrollBehavior = behavior
+    }
+
     private static func resizeThrottle(isShellInForeground: Bool) -> Double {
         isShellInForeground ? 0 : 128
     }
