@@ -647,14 +647,14 @@ final class OAuthStore {
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Approve in iGhostVT</title>
         <style>
-          :root { color-scheme: light dark; }
-          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; min-height: 100vh; margin: 0; align-items: center; justify-content: center; background: #f5f5f7; color: #1d1d1f; }
-          @media (prefers-color-scheme: dark) { body { background: #1c1c1e; color: #f5f5f7; } .card { background: #2c2c2e; border-color: #3a3a3c; } .meta { color: #aeaeb2; } }
-          .card { max-width: 400px; width: calc(100% - 32px); padding: 24px; border-radius: 14px; background: #fff; border: 1px solid #d2d2d7; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+          :root { color-scheme: light dark; --page: #f5f5f7; --card: #fff; --edge: #d2d2d7; --text: #1d1d1f; --meta: #6e6e73; }
+          @media (prefers-color-scheme: dark) { :root { --page: #1c1c1e; --card: #2c2c2e; --edge: #3a3a3c; --text: #f5f5f7; --meta: #aeaeb2; } }
+          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; min-height: 100vh; margin: 0; align-items: center; justify-content: center; background: var(--page); color: var(--text); }
+          .card { max-width: 400px; width: calc(100% - 32px); padding: 24px; border-radius: 14px; background: var(--card); border: 1px solid var(--edge); box-shadow: 0 8px 30px rgba(0,0,0,.08); }
           h1 { margin: 0 0 8px; font-size: 20px; }
           p { margin: 0 0 16px; line-height: 1.5; font-size: 14px; }
           .code { font: 600 32px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; text-align: center; margin: 8px 0 16px; }
-          .meta { font-size: 13px; color: #6e6e73; margin-bottom: 20px; }
+          .meta { font-size: 13px; color: var(--meta); margin-bottom: 20px; }
           button { width: 100%; padding: 10px 14px; border-radius: 8px; border: 0; font-size: 14px; font-weight: 600; cursor: pointer; background: rgba(128,128,128,.2); color: inherit; }
         </style>
         </head>
