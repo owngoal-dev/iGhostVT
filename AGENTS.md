@@ -58,7 +58,31 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026112301, Ghostty 5ebe501a on Zig 0.17.1).
+  (`upToNextMajor` from 2.2.2026112303, Ghostty 56de3f0f on Zig 0.17.1).
+  2.2.2026112303, the same binary as 2.2.2026112302, lets a finger reach
+  links on iOS: a plain tap on an http or https link opens it and leaves
+  the keyboard alone (any other link — Ghostty's regex matches file paths —
+  still gets the plain click and the keyboard toggle), a tap carries the
+  accessory bar's sticky modifiers, so ⌘ armed Command-clicks, and the
+  touch menu leads with Open Link (`terminal.openLink`) when a link lies
+  under the press or where the selection began. A long press now selects
+  the word under the finger, a drag before the lift extends it, and the
+  lift opens the selection menu. None of it opens anything unless the host
+  takes the link: Ghostty's own opener opens nothing on iOS and refuses
+  every link it finds on Catalyst, and a tap whose link was not taken
+  falls back to the keyboard toggle. Every tab therefore sets
+  `TerminalViewState.onOpenURL` (`TerminalLinkOpener`): an http or https
+  link goes to the system's browser, and anything else — a file path, an
+  OSC 8 target in `tel:` or another app's scheme, which a program chose —
+  goes back to Ghostty and opens nothing. Before this a ⌘-click on the Mac
+  opened nothing either. `LockableTerminalView` already offered an
+  Open Link of its own for a selection that is one web link, put back
+  together across the rows a program broke it over; when both apply, its
+  own takes the library's place, so the menu never lists two.
+  2.2.2026112302 moves from Ghostty 5ebe501a to 56de3f0f, 42 commits
+  (binary `upstream.56de3f0f6786`), most of them Kitty's OSC 72 drag and
+  drop reworked and none in `Parser.zig`, `stream.zig`, `modes.zig` or
+  `Terminal.zig`, so `TerminalStreamTracker` needs nothing.
   2.2.2026112301 keeps the Ghostty pin and adds one engine patch, 0023
   (binary `upstream.5ebe501a6342-2`), and changes how a precision scroll
   ends. On iOS a lift UIKit takes for a stop (slower than about 250 pt/s)

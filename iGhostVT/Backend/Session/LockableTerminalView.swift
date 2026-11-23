@@ -515,7 +515,7 @@ final class LockableTerminalView: TerminalView {
 
         /// A selection over more than one row gets Copy as One Line right
         /// after Copy, and one that is a web link, and nothing else, gets
-        /// Open Link after that.
+        /// Open Link after that — or in the place of the library's own.
         override func touchSelectionMenuItems(for context: TerminalTouchSelectionMenuContext) -> [UIMenuElement] {
             var items = routingPaste(super.touchSelectionMenuItems(for: context))
             var extras: [UIMenuElement] = []
@@ -529,13 +529,23 @@ final class LockableTerminalView: TerminalView {
                 })
             }
             if let url = Self.link(in: context.selectedText) {
-                extras.append(UIAction(
+                let open = UIAction(
                     title: String(localized: "Open Link"),
                     image: UIImage(systemName: "safari"),
                     identifier: UIAction.Identifier("ighostvt.openLink"),
                 ) { _ in
                     UIApplication.shared.open(url)
-                })
+                }
+                // The library leads with its own Open Link when a link lies
+                // where the selection began (2.2.2026112303). That one opens
+                // the link Ghostty finds in that cell's row; this one opens
+                // the selection, its rows put back together, so it takes the
+                // library's place rather than standing beside it.
+                if let index = items.firstIndex(where: { ($0 as? UIAction)?.identifier.rawValue == "terminal.openLink" }) {
+                    items[index] = open
+                } else {
+                    extras.append(open)
+                }
             }
             let selection = context.selectedText
             if !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
