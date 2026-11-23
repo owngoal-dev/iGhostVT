@@ -642,11 +642,9 @@ enum MCPConsentState: String, Sendable {
 
 /// The MCP server's fixed facts, shared by the proxy, the server and the app.
 enum MCPConsent {
-    /// Loopback only; the server binds nothing else.
+    /// On every address this device has; the server serves this device and
+    /// the local network (`MCPServerAddress` is what the app hands out).
     static let port: UInt16 = 18765
-    static var endpoint: String {
-        "http://127.0.0.1:\(port)/mcp"
-    }
 
     /// How long an opened consent window stays open without being opened
     /// again; the app renews it while the page stays up.

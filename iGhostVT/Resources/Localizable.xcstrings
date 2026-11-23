@@ -4457,6 +4457,88 @@
         }
       }
     },
+    "Authorized Apps" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيقات المصرّح بها"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autorisierte Apps"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authorized Apps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps autorizadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps autorisées"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App autorizzate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "許可したアプリ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허용한 앱"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps Autorizados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешенные приложения"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng đã cấp quyền"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授权的应用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授權的 App"
+          }
+        }
+      }
+    },
     "Authorized Devices" : {
       "localizations" : {
         "ar" : {
@@ -14412,84 +14494,84 @@
         }
       }
     },
-    "Forget Authorized Apps" : {
+    "Forget All" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "نسيان التطبيقات المصرّح بها"
+            "value" : "نسيان الكل"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autorisierte Apps vergessen"
+            "value" : "Alle vergessen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Forget Authorized Apps"
+            "value" : "Forget All"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Olvidar apps autorizadas"
+            "value" : "Olvidar todas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oublier les apps autorisées"
+            "value" : "Tout oublier"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dimentica app autorizzate"
+            "value" : "Dimentica tutte"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "許可したアプリを削除"
+            "value" : "すべて削除"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "허용한 앱 삭제"
+            "value" : "모두 삭제"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esquecer Apps Autorizados"
+            "value" : "Esquecer Todos"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Забыть разрешенные приложения"
+            "value" : "Забыть все"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quên các ứng dụng đã cấp quyền"
+            "value" : "Quên tất cả"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "忘记已授权的应用"
+            "value" : "全部忘记"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "忘記已授權的 App"
+            "value" : "全部忘記"
           }
         }
       }
@@ -14656,6 +14738,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "忘記「%@」？"
+          }
+        }
+      }
+    },
+    "Forgotten apps must be approved again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجب الموافقة مجددًا على التطبيقات التي تنساها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergessene Apps müssen erneut erlaubt werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forgotten apps must be approved again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las apps olvidadas tendrán que aprobarse de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les apps oubliées devront être approuvées à nouveau."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le app dimenticate dovranno essere approvate di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除したアプリは、もう一度許可する必要があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "삭제한 앱은 다시 허용해야 합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps esquecidos precisarão ser aprovados novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забытые приложения нужно будет разрешить снова."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các ứng dụng đã quên sẽ cần được chấp thuận lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忘记的应用需要重新批准。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忘記的 App 需要重新核准。"
           }
         }
       }
@@ -19885,84 +20049,84 @@
         }
       }
     },
-    "Lets AI apps on this device use your terminals. Keep this page open while you connect a new app, so you can approve it." : {
+    "Lets AI apps on this device and on your local network use your terminals. Keep this page open while you connect a new app, so you can approve it." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يتيح لتطبيقات الذكاء الاصطناعي على هذا الجهاز استخدام الطرفيات لديك. أبقِ هذه الصفحة مفتوحة أثناء ربط تطبيق جديد لتتمكن من الموافقة عليه."
+            "value" : "يتيح لتطبيقات الذكاء الاصطناعي على هذا الجهاز وعلى شبكتك المحلية استخدام الطرفيات لديك. أبقِ هذه الصفحة مفتوحة أثناء ربط تطبيق جديد لتتمكن من الموافقة عليه."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erlaubt KI-Apps auf diesem Gerät, Ihre Terminals zu verwenden. Lassen Sie diese Seite geöffnet, während Sie eine neue App verbinden, damit Sie sie erlauben können."
+            "value" : "Ermöglicht KI-Apps auf diesem Gerät und im lokalen Netzwerk, Ihre Terminals zu verwenden. Lassen Sie diese Seite geöffnet, während Sie eine neue App verbinden, damit Sie sie erlauben können."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lets AI apps on this device use your terminals. Keep this page open while you connect a new app, so you can approve it."
+            "value" : "Lets AI apps on this device and on your local network use your terminals. Keep this page open while you connect a new app, so you can approve it."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permite que las apps de IA de este dispositivo usen tus terminales. Mantén esta página abierta mientras conectas una app nueva para poder aprobarla."
+            "value" : "Permite que las apps de IA de este dispositivo y de tu red local usen tus terminales. Mantén esta página abierta mientras conectas una app nueva para poder aprobarla."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permet aux apps d’IA de cet appareil d’utiliser vos terminaux. Laissez cette page ouverte pendant que vous connectez une nouvelle app, afin de pouvoir l’approuver."
+            "value" : "Permet aux apps d’IA de cet appareil et de votre réseau local d’utiliser vos terminaux. Laissez cette page ouverte pendant que vous connectez une nouvelle app, afin de pouvoir l’approuver."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Consente alle app di IA su questo dispositivo di usare i tuoi terminali. Tieni aperta questa pagina mentre colleghi una nuova app, così potrai approvarla."
+            "value" : "Consente alle app di IA su questo dispositivo e sulla rete locale di usare i tuoi terminali. Tieni aperta questa pagina mentre colleghi una nuova app, così potrai approvarla."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このデバイス上のAIアプリがターミナルを使用できるようにします。新しいアプリを接続するときは、許可できるようにこのページを開いたままにしてください。"
+            "value" : "このデバイスとローカルネットワーク上のAIアプリがターミナルを使用できるようにします。新しいアプリを接続するときは、許可できるようにこのページを開いたままにしてください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 기기의 AI 앱이 터미널을 사용할 수 있게 합니다. 새 앱을 연결할 때는 허용할 수 있도록 이 페이지를 열어 두십시오."
+            "value" : "이 기기와 로컬 네트워크에 있는 AI 앱이 터미널을 사용할 수 있게 합니다. 새 앱을 연결할 때는 허용할 수 있도록 이 페이지를 열어 두십시오."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permite que apps de IA neste dispositivo usem seus terminais. Mantenha esta página aberta enquanto conecta um novo app para poder aprová-lo."
+            "value" : "Permite que apps de IA neste dispositivo e na sua rede local usem seus terminais. Mantenha esta página aberta enquanto conecta um novo app para poder aprová-lo."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Позволяет приложениям ИИ на этом устройстве использовать ваши терминалы. Не закрывайте эту страницу при подключении нового приложения, чтобы разрешить ему доступ."
+            "value" : "Позволяет приложениям ИИ на этом устройстве и в локальной сети использовать ваши терминалы. Не закрывайте эту страницу при подключении нового приложения, чтобы разрешить ему доступ."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cho phép các ứng dụng AI trên thiết bị này sử dụng terminal của bạn. Hãy giữ trang này mở khi kết nối ứng dụng mới để có thể chấp thuận."
+            "value" : "Cho phép các ứng dụng AI trên thiết bị này và trong mạng cục bộ sử dụng terminal của bạn. Hãy giữ trang này mở khi kết nối ứng dụng mới để có thể chấp thuận."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许此设备上的 AI 应用使用你的终端。连接新应用时，请保持此页面打开，以便批准。"
+            "value" : "允许此设备及本地网络上的 AI 应用使用你的终端。连接新应用时，请保持此页面打开，以便批准。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允許此裝置上的 AI App 使用你的終端機。連接新的 App 時，請保持此頁面開啟，以便核准。"
+            "value" : "允許此裝置及區域網路上的 AI App 使用你的終端機。連接新的 App 時，請保持此頁面開啟，以便核准。"
           }
         }
       }
@@ -20542,88 +20706,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "列出終端機工作階段"
-          }
-        }
-      }
-    },
-    "Local MCP Server" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خادم MCP محلي"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokaler MCP-Server"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Local MCP Server"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servidor MCP local"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serveur MCP local"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server MCP locale"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ローカルMCPサーバ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "로컬 MCP 서버"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servidor MCP Local"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Локальный сервер MCP"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Máy chủ MCP cục bộ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本地 MCP 服务"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本機 MCP 服務"
           }
         }
       }
@@ -21453,6 +21535,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MCP"
+          }
+        }
+      }
+    },
+    "MCP Server" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خادم MCP"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-Server"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor MCP"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur MCP"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server MCP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCPサーバ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 서버"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor MCP"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер MCP"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy chủ MCP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 服务"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 服務"
           }
         }
       }

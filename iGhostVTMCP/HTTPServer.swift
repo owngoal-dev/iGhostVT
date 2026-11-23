@@ -140,11 +140,15 @@ struct HTTPResponse {
 }
 
 /// Minimal HTTP/1.1 server built on Network.framework (zero third-party deps).
+///
+/// It listens on every address this device has, so an app on another device
+/// on the local network can reach it, and serves only a peer on the local
+/// network or this device (`RemoteNetwork.isLocal`): a Mac with a public
+/// address takes no request from the internet, and neither does a tunnel.
 final class LocalHTTPServer {
     private static let maxHeaderBytes = 32 * 1024
     private static let maxBodyBytes = 2 * 1024 * 1024
 
-    private let host: String
     private let requestedPort: UInt16
     private let handler: (HTTPRequest) -> HTTPResponse
     private let listenerQueue = DispatchQueue(label: "wiki.qaq.ighostvt.mcp.http")
@@ -153,8 +157,7 @@ final class LocalHTTPServer {
     private var listener: NWListener?
     private(set) var boundPort: UInt16 = 0
 
-    init(host: String, port: UInt16, handler: @escaping (HTTPRequest) -> HTTPResponse) {
-        self.host = host
+    init(port: UInt16, handler: @escaping (HTTPRequest) -> HTTPResponse) {
         self.requestedPort = port
         self.handler = handler
     }
@@ -162,13 +165,14 @@ final class LocalHTTPServer {
     func start() throws {
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
+        // Off every tunnel and cellular, as remote access keeps its own
+        // local links; loopback, Wi-Fi and wired stay.
+        parameters.prohibitedInterfaceTypes = [.cellular, .other]
 
-        // The address and the port go in one place: named again in
-        // `NWListener(using:on:)` beside a required local endpoint, the
-        // listener fails with EINVAL, so the fixed port never bound.
+        // The port is named once, here. A required local endpoint beside it
+        // (how the loopback-only listener was bound) fails with EINVAL.
         let nwPort = NWEndpoint.Port(rawValue: requestedPort) ?? .any
-        parameters.requiredLocalEndpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: nwPort)
-        let listener = try NWListener(using: parameters)
+        let listener = try NWListener(using: parameters, on: nwPort)
 
         let readySemaphore = DispatchSemaphore(value: 0)
         var startError: Error?
@@ -197,7 +201,7 @@ final class LocalHTTPServer {
 
         if readySemaphore.wait(timeout: .now() + 5) == .timedOut {
             listener.cancel()
-            throw NSError(domain: "LocalHTTPServer", code: 2, userInfo: [NSLocalizedDescriptionKey: "Timed out binding \(host):\(requestedPort)"])
+            throw NSError(domain: "LocalHTTPServer", code: 2, userInfo: [NSLocalizedDescriptionKey: "Timed out binding port \(requestedPort)"])
         }
         if let startError {
             listener.cancel()
@@ -211,6 +215,10 @@ final class LocalHTTPServer {
     }
 
     private func handleConnection(_ connection: NWConnection) {
+        guard RemoteNetwork.isLocal(connection.endpoint) else {
+            connection.cancel()
+            return
+        }
         connection.start(queue: listenerQueue)
         readRequest(on: connection, buffer: Data())
     }

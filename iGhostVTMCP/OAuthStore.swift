@@ -4,10 +4,10 @@ import Foundation
 import Security
 
 /// Who decides a consent request. The page this server serves cannot: it is
-/// on a port anything on the device can reach, and a process can fetch it
-/// and post an approval as easily as a person can. The daemon's proxy holds
-/// the request instead, and only the iGhostVT app — while its settings page
-/// is open — answers it (`MCPSupervisor`).
+/// on a port anything on the device or the local network can reach, and a
+/// process can fetch it and post an approval as easily as a person can. The
+/// daemon's proxy holds the request instead, and only the iGhostVT app —
+/// while its settings page is open — answers it (`MCPSupervisor`).
 protocol ConsentAuthority: AnyObject {
     /// Throws when no one can be asked: the app's settings page is closed.
     func beginConsent(clientName: String, redirect: String) throws -> (id: UInt64, code: String)
@@ -72,7 +72,6 @@ final class OAuthStore {
     private static let consentTTL: TimeInterval = 5 * 60
     private static let authCodeTTL: TimeInterval = 60
 
-    let issuer: String
     private let stateURL: URL?
     private let authority: ConsentAuthority
 
@@ -87,8 +86,7 @@ final class OAuthStore {
     private var reportedClientCount: Int?
     private let reportQueue = DispatchQueue(label: "wiki.qaq.ighostvt.mcp.clients")
 
-    init(issuer: String, stateURL: URL?, authority: ConsentAuthority) {
-        self.issuer = issuer.hasSuffix("/") ? String(issuer.dropLast()) : issuer
+    init(stateURL: URL?, authority: ConsentAuthority) {
         self.stateURL = stateURL
         self.authority = authority
         loadState()
@@ -130,7 +128,10 @@ final class OAuthStore {
         }
     }
 
-    func unauthorizedResponse() -> HTTPResponse {
+    // `issuer` is the server as this request reached it (`MCPRouter`):
+    // the same server answers by more than one name.
+
+    func unauthorizedResponse(issuer: String) -> HTTPResponse {
         let metadataURL = "\(issuer)/.well-known/oauth-protected-resource"
         return HTTPResponse.json(
             ["error": "invalid_token", "error_description": "Authorization required"],
@@ -143,7 +144,7 @@ final class OAuthStore {
 
     // MARK: - Discovery Metadata
 
-    func protectedResourceMetadata() -> HTTPResponse {
+    func protectedResourceMetadata(issuer: String) -> HTTPResponse {
         HTTPResponse.json([
             "resource": "\(issuer)/mcp",
             "authorization_servers": [issuer],
@@ -152,7 +153,7 @@ final class OAuthStore {
         ])
     }
 
-    func authorizationServerMetadata() -> HTTPResponse {
+    func authorizationServerMetadata(issuer: String) -> HTTPResponse {
         HTTPResponse.json([
             "issuer": issuer,
             "authorization_endpoint": "\(issuer)/authorize",

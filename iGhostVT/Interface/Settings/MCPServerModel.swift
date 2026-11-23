@@ -15,6 +15,9 @@ import UIKit
 @MainActor
 final class MCPServerModel: ObservableObject {
     @Published private(set) var status = MCPServerStatus()
+    /// Read again with the status: the address on the network can change
+    /// while the page is up.
+    @Published private(set) var address = MCPServerAddress.url
 
     private var loop: Task<Void, Never>?
     private weak var window: UIWindow?
@@ -35,6 +38,7 @@ final class MCPServerModel: ObservableObject {
                 guard let model = self else { return }
                 if Date().timeIntervalSince(askedStatusAt) >= 3 {
                     model.status = await MCPServerControl.status()
+                    model.refreshAddress()
                     askedStatusAt = Date()
                 }
                 if model.status.isEnabled {
@@ -73,9 +77,17 @@ final class MCPServerModel: ObservableObject {
         }
     }
 
-    func copyEndpoint() {
-        UIPasteboard.general.string = MCPConsent.endpoint
+    func copyAddress() {
+        refreshAddress()
+        UIPasteboard.general.string = address
         CopiedIndicator.present(in: window)
+    }
+
+    private func refreshAddress() {
+        let current = MCPServerAddress.url
+        if current != address {
+            address = current
+        }
     }
 
     /// One alert at a time, for the oldest request not answered yet; an
@@ -113,26 +125,58 @@ final class MCPServerModel: ObservableObject {
     }
 }
 
-/// Settings ▸ Advanced ▸ MCP on iPhone and iPad.
+/// Settings ▸ Advanced ▸ MCP on iPhone and iPad: the switch, and while
+/// it is on the address with its copy button, how many apps are
+/// authorized, and Forget All — all of them at once, since nothing tells
+/// one client from another.
 struct MCPServerSection: View {
     @ObservedObject var model: MCPServerModel
 
     var body: some View {
         Section {
-            Toggle("Local MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
+            Toggle("MCP Server", isOn: Binding(get: { model.status.isEnabled }, set: { model.setEnabled($0) }))
                 .disabled(model.status.isUnavailable)
             if model.status.isEnabled {
-                Button("Copy Address") { model.copyEndpoint() }
+                HStack(spacing: DS.Padding.m) {
+                    Text(verbatim: model.address)
+                        .font(.system(.footnote, design: .monospaced))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                    Spacer(minLength: 0)
+                    Button {
+                        model.copyAddress()
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Copy Address")
+                }
+                HStack {
+                    Text("Authorized Apps")
+                    Spacer()
+                    Text(model.status.authorizedClients.formatted())
+                        .foregroundColor(.secondary)
+                }
                 if model.status.authorizedClients > 0 {
-                    Button("Forget Authorized Apps", role: .destructive) { model.forgetClients() }
+                    Button("Forget All", role: .destructive) { model.forgetClients() }
                 }
             }
         } header: {
             Text("MCP")
                 .font(DS.Font.caption)
         } footer: {
-            Text("Lets AI apps on this device use your terminals. Keep this page open while you connect a new app, so you can approve it.")
+            Text(MCPServerModel.note)
                 .font(DS.Font.detail)
         }
     }
+}
+
+extension MCPServerModel {
+    /// Under the switch on both platforms.
+    static let note: LocalizedStringKey = """
+    Lets AI apps on this device and on your local network use your terminals. \
+    Keep this page open while you connect a new app, so you can approve it.
+    """
 }
