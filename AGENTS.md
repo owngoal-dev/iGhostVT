@@ -58,7 +58,17 @@ which launchd never sized — so a session's buffers cannot jetsam the daemon.
   for exactly this reason.
 - Depends on the **released**
   [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package
-  (`upToNextMajor` from 2.2.2026112303, Ghostty 56de3f0f on Zig 0.17.1).
+  (`upToNextMajor` from 2.2.2026112401, Ghostty 56de3f0f on Zig 0.17.1).
+  2.2.2026112401, the same binary (`upstream.56de3f0f6786`), reworks
+  `AppTerminalView`'s direct-touch scrolling on a Mac's touch display:
+  reports are resampled once per refresh (`TerminalTouchResampler`,
+  internal in `Platform/Shared/`), glides start from the finger's last
+  25 ms instead of `NSPanGestureRecognizer`'s stale running average, slow
+  lifts and caught glides settle forward to the row ahead (with a
+  glide-stopping tap clicking nothing), and main-thread wakeup draws are
+  skipped while scrolling. This app's Mac build is Catalyst (the UIKit
+  view), so none of those AppKit paths run here and nothing in iGhostVT
+  changes.
   2.2.2026112303, the same binary as 2.2.2026112302, lets a finger reach
   links on iOS: a plain tap on an http or https link opens it and leaves
   the keyboard alone (any other link — Ghostty's regex matches file paths —
