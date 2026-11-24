@@ -173,6 +173,7 @@ else
         pkill -u "$uid" -x ighostvtd 2>/dev/null || true
         pkill -u "$uid" -x ighostvtd-io 2>/dev/null || true
         pkill -u "$uid" -x ighostvtd-remote 2>/dev/null || true
+        pkill -u "$uid" -x ighostvt-mcp 2>/dev/null || true
         as_user defaults delete "$bundle_id" "$digest_key" 2>/dev/null || true
     fi
     echo "==> installing $new_version at $dest"

@@ -158,7 +158,7 @@ final class MacUpdater: @unchecked Sendable {
         /// Every program in `Contents/MacOS` besides the app: each is
         /// checked against the team on its own, since the bundle's seal
         /// covers their bytes but not who signed them.
-        private static let helperExecutables = ["ighostvtd", "ighostvtd-io", "ighostvtd-remote", "ighostvt-cli"]
+        private static let helperExecutables = ["ighostvtd", "ighostvtd-io", "ighostvtd-remote", "ighostvt-mcp", "ighostvt-cli"]
         private static let latestReleaseURL = URL(string: "https://api.github.com/repos/owngoal-dev/iGhostVT/releases/latest")!
 
         private struct Release: Decodable {

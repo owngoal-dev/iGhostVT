@@ -106,6 +106,7 @@ if [[ -n "$identity" && "$identity" != "-" ]]; then
     [[ ! -e "$app/Contents/MacOS/ighostvtd-remote" ]] || resign "$app/Contents/MacOS/ighostvtd-remote"
     resign "$app/Contents/MacOS/ighostvtd"
     resign "$app/Contents/MacOS/ighostvt-cli"
+    [[ ! -e "$app/Contents/MacOS/ighostvt-mcp" ]] || resign "$app/Contents/MacOS/ighostvt-mcp"
     resign "$app"
     codesign --verify --deep --strict "$app"
 else
@@ -131,6 +132,7 @@ rm -f "$harness_plist"
 pkill -x ighostvtd 2>/dev/null || true
 pkill -x ighostvtd-io 2>/dev/null || true
 pkill -x ighostvtd-remote 2>/dev/null || true
+pkill -x ighostvt-mcp 2>/dev/null || true
 defaults delete "$bundle_id" "$digest_key" 2>/dev/null || true
 
 echo "==> replacing $dest"
